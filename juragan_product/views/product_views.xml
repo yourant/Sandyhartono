@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+		<record model='ir.ui.view' id='product_staging_tree'>
+		    <field name='name'>product_staging.tree</field>
+		    <field name='model'>product.staging</field>
+		    <field name='arch' type='xml'>
+				<tree string="description" decoration-muted="not active">
+					<field name="mp_type"/>
+                    <field name="name"/>
+					<field name="barcode"/>
+					<field name="default_code"/>
+					<!-- <field name="description_sale"/> -->
+					<field name="brand_id"/>
+					<field name="list_price"/>
+					<field name="active" invisible='1'/>
+                    <button name="mp_upload" attrs="{'invisible':[('active','=',False)]}" string="Upload to Marketplace" type="object" class="btn-sm btn-warning"/>
+				</tree>
+		    </field>
+		</record>
+		<record model="ir.ui.view" id="mp_tokopedia_etalase_form">
+		    <field name="name">mp.tokopedia.etalase.form</field>
+		    <field name="model">mp.tokopedia.etalase</field>
+		    <field name="arch" type="xml">
+		        <form string="Etalase">
+                    <group>
+                        <field name="etalase_name" required='1'/>
+                        <field name="shop_id" required='1'  options="{'no_create': True, 'no_open': True}"/>
+                        <field name="mp_id" widget='statinfo'/>
+                    </group>
+                </form>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="product_staging_form">
+            <field name="name">product_staging.form</field>
+            <field name="model">product.staging</field>
+            <field name="arch" type="xml">
+                <form string="description">
+                    <header>
+                        <button name="mp_upload" attrs="{'invisible':[('active','=',False)]}" string="Upload to Marketplace" type="object" class="btn-sm btn-warning"/>
+                    </header>
+		            <sheet>
+		            	<group>
+                        <div class="oe_button_box" name="button_box">
+                            <div><label for='active' attrs="{'invisible':[('active','=',False)]}"/>
+                            <label for='active' string='Inactive' attrs="{'invisible':[('active','!=',False)]}" class='text-muted'/></div>
+                            <field name="active" widget="boolean_toggle" />
+                        </div>
+		            		<group>
+			                	<field name="mp_type" widget='radio'/>
+			                	<field name="product_template_id" widget='statinfo' invisible='1'/>
+			                </group>
+			                <group colspan='2'>
+			                    <field name="name"/>
+		                    	<field name="description_sale"  placeholder='Sale description...'/>
+			                </group>
+			                <group>
+			                    <field name="brand_id" options="{'no_create': False, 'no_open': True, }"/>
+			                    <field name="barcode"/>
+			                    <field name="default_code"/>
+			                    <field name="list_price"/>
+                                <field name="min_order"/>
+                                <label for="qty_available"/>
+                                <div class="o_row">
+                                    <field name="qty_available"/>
+                                    <field name="product_uom_id" groups="uom.group_uom"/>
+                                </div>
+			                </group>
+			                <group>
+			                    <field name="weight"/>
+			                    <field name="length"/>
+			                    <field name="width"/>
+			                    <field name="height"/>
+                                <field name="package_content"/>
+			                    <field name="is_uploaded" readonly='1'/>
+			                </group>
+			            </group>
+		                <group string='Tokopedia' attrs="{'invisible': [('mp_type','!=','Tokopedia')]}">
+		                	<group>
+			                	<field name="mp_tokopedia_id" options="{'no_create': True, 'no_open': True, 'no_create_edit': True}"/>
+			                	<field name="mp_tokopedia_product_id" invisible='1' options="{'no_create': True, 'no_open': True, }"/>
+			                	<field name="tp_condition"/>
+			                	<field name="tp_weight_unit"/>
+			                	<field name="tp_category_id" domain="[('child_ids','=',False)]" options="{'no_create': True, 'no_open': True, }"/>
+                            </group>
+                            <group>
+                                <field name="tp_available_status"/>
+                                <field name="tp_active_status"/>
+                                <field name="tp_etalase_id" options="{'no_create': False, 'no_open': False, 'quick_create': False}"  context="{'default_mp_id': mp_tokopedia_id, 'form_view_ref': 'juragan_product.mp_tokopedia_etalase_form'}"/>
+			                </group>
+                        </group>
+                        <group string='Shopee' attrs="{'invisible': [('mp_type','!=','Shopee')]}">
+                            <group>
+                                <field name="mp_shopee_id" options="{'no_create': True, 'no_open': True, }"/>
+                                <field name="sp_condition"/>
+                                <field name="sp_status"/>
+                                <field name="sp_is_pre_order"/>
+                            </group>
+                        </group>
+                        <!-- <group> -->
+                            <group string="Harga Grosir">
+                                <field name="product_wholesale_ids" view_mode='tree' nolabel='1'>
+                                    <tree string='description' editable='botom'>
+                                        <field name='product_stg_id' invisible='1'/>
+                                        <!-- <field name='izi_id' readonly='1' groups='base.group_no_one'/> -->
+                                        <field name='min_qty'/>
+                                        <field name='max_qty'/>
+                                        <field name='price_wholesale'/>
+                                    </tree>
+                                </field>
+                            </group>
+                        <!-- </group> -->
+                        <notebook>
+                            <page string='Varian Produk' >
+                                <field name="product_variant_stg_id" view_mode='tree,kanban'>
+                                    <tree string='description' create="false" editable='bottom' decoration-muted="not active">
+                                        <field name='name' readonly='0'/>
+                                        <field name='prdp_ids' required='1' readonly='0' domain="[ ('product_tmpl_id', '=', parent.product_template_id )]" options="{'no_create': True, 'no_open': True, }"/>
+                                        <field name='attribute_value_ids' widget='many2many_tags'/>
+                                        <field name='price_custom'/>
+                                        <field name='qty_available'/>
+                                        <!-- <field name='default_code'/> -->
+                                        <field name='image' widget='image' height='30px'/>
+                                        <field name='image_url'/>
+                                        <field name='image_url_external'/>
+                                        <field name='product_stg_id' invisible='1'/>
+                                        <field name='active' invisible='1'/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page name="product_varian_images" string="Product Image Staging">
+                                <group name="extra_images">
+                                    <field name="product_image_staging_ids" class="o_website_sale_image_list"
+                                        context="{'default_product_stg_id': active_id}" nolabel="1" view_mode='tree,form'>
+                                        <tree>
+                                            <field name="name"/>
+                                            <field name="variant_name"/>
+                                            <field name="image" widget='image' height='30px'/>
+                                            <!-- <field name="image_variant" widget='image' height='30px'/> -->
+                                        </tree>
+                                        <form>
+                                            <group>
+                                                <group>
+                                                    <field name="image" filename="name" widget='image' max-height='80px' readonly='1'/>
+                                                    <field name="name" invisible='1'/>
+                                                    <!-- <field name="product_stg_id" invisible='1'/> -->
+                                                    <field name="image_variant" filename="variant_name"/> <!-- widget='image' height='500px'/> -->
+                                                    <field name="variant_name" invisible='1'/>
+                                                </group>
+                                            </group>
+                                        </form>
+                                    </field>
+                                </group>
+                            </page>
+                            <!-- <page string='Wholesale' >
+
+                            </page> -->
+                        </notebook>
+                    </sheet>
+		        </form>
+		    </field>
+		</record>
+		<record id="product_template_form_common_view" model="ir.ui.view">
+			<field name="name">product.template.common.form</field>
+			<field name="model">product.template</field>
+			<field name="inherit_id"
+				ref="product.product_template_form_view" />
+			<field name="arch" type="xml">
+                <xpath expr='//header/button[last()]' position='after'>
+                    <button name="upload_self" string="Upload" type="object" icon="fa-upload"/>
+                </xpath>
+                <xpath expr="//group[@name='group_lots_and_weight']" position="inside">
+                    <field name="brand_id"/>
+                    <field name="length"/>
+                    <field name="width"/>
+                    <field name="height"/>
+                    <field name="package_content"/>
+                </xpath>
+				<xpath expr="//page[@name='general_information']/group" position="after">
+					<group string='Marketplace'>
+                        <field name="mp_tokopedia_ids" widget='many2many_tags' readonly='1'/>
+                        <field name="mp_shopee_ids" widget='many2many_tags' readonly='1'/>
+                        <field name="mp_lazada_ids" widget='many2many_tags' readonly='1'/>
+                        <field name="product_status"/>
+                        <!-- <field name='izi_id' readonly='1' groups='base.group_no_one'/> -->
+						<field name="product_staging_ids" view_mode='tree,form' context="{'default_tmpl_id': id, 'default_name': name, 'default_description_sale': description_sale, 'default_length': length, 'default_weight': weight, 'default_volume': volume, 'default_width': width, 'default_height': height, 'default_brand_id': brand_id, 'default_package_content': package_content, }" string='Product Staging' colspan='2'/>
+                        <field name="product_wholesale_ids" view_mode='tree,form' string="Wholesale">
+                            <tree string='description' editable='botom'>
+                                <field name='product_tmpl_id' invisible='1'/>
+                                <!-- <field name='izi_id' readonly='1' groups='base.group_no_one'/> -->
+                                <field name='min_qty'/>
+                                <field name='max_qty'/>
+                                <field name='price_wholesale'/>
+                            </tree>
+                        </field>
+					</group>
+				</xpath>
+
+                <xpath expr="//page[@name='sales']" position="after">
+                    <page name="product_images" string="Extra Images">
+                        <group name="extra_images">
+                            <field name="product_image_ids" class="o_website_sale_image_list" context="{'default_product_tmpl_id': active_id}" nolabel="1" view_mode='tree,form'>
+                    	        <form string="Upload or remove image">
+                	                <group>
+                    	                <group>
+                    	                    <!-- <field name="image" filename="name" string="Default Image" widget='image' height='30px' readonly='0'/>
+                    	                    <field name="name" invisible='1'/> -->
+                                            <field name="image_variant" filename="variant_name" widget='image' height='10px' string="New Image"/>
+                                            <label for="variant_name" string=''/>
+                                            <field name="variant_name" nolabel='1' widget='statinfo'/>
+                    	                    <field name="product_tmpl_id" invisible='1'/>
+                    	                </group>
+                    	            </group>
+                    	        </form>
+                                <tree string="Upload or remove image">
+                                    <field name="name" />
+                                    <!-- <field name="variant_name" /> -->
+                                    <!-- <field name="image" widget='image' height='30px'/> -->
+                                    <field name="image_variant" widget='image' height='30px'/>
+                                    <field name="product_tmpl_id" invisible='1'/>
+                                </tree>
+                            </field>
+                        </group>
+                    </page>
+                </xpath>
+			</field>
+		</record>
+		<record id="product_category_form_view" model="ir.ui.view">
+			<field name="name">product.category.form</field>
+			<field name="model">product.category</field>
+			<field name="inherit_id"
+				ref="product.product_category_form_view" />
+			<field name="arch" type="xml">
+				<xpath expr="//group[last()]" position="after">
+					<group name="marketplace" string="Marketplace Category" >
+						<field name="mp_tokopedia_category_id" options="{'no_create': True, 'no_open': True, }" />
+					</group>
+				</xpath>
+			</field>
+		</record>
+	</data>
+</odoo>
