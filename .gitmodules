@@ -7,3 +7,8 @@
 	path = fastprintid/izi
 	url = git@github.com:fastprintid/izi.git
 	branch = main
+
+[submodule "fastprintid/web_notify"]
+	path = fastprintid/web_notify
+	url = git@github.com:fastprintid/web_notify.git
+	branch = main
