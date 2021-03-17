@@ -1,0 +1,4 @@
+[submodule "fastprintid/izi"]
+	path = fastprintid/izi
+	url = git@github.com:fastprintid/izi.git
+	branch = main
