@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="view_quotation_tree">
+            <field name="name">sale.order.tree</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_quotation_tree"/>
+            <field name="arch" type="xml">
+                <field name="state" position="before">
+                    <field name="mp_buyer_name"/>
+                    <field name="mp_delivery_type" string="Delivery Type"/>
+                    <field name="order_status" string="Marketplace Status"/>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_order_tree">
+            <field name="name">sale.order.tree</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_tree"/>
+            <field name="arch" type="xml">
+                <field name="state" position="before">
+                    <field name="mp_buyer_name"/>
+                    <field name="mp_delivery_type"/>
+                    <field name="order_status" string="Marketplace Status"/>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_order_form">
+            <field name="name">sale.order.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <page name="order_lines" position="after">
+                    <page string="Marketplace" name="izi_info">
+                        <div>
+                            <button class="btn-izi" attrs="{'invisible':[('order_status', 'not in', ('ready-process'))]}" style="margin-right:5px;" name="action_orders_accept" string="Accept" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':[('order_status', 'not in', ('ready-process'))]}" style="margin-right:5px;" name="action_orders_reject" string="Reject" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|',('mp_shopee_id','not in',False),('order_status', 'not in', ['process', 'ready-ship']), ('mp_delivery_type','=','pickup')]}" style="margin-right:5px;" name="action_orders_confirm_shipping" string="Confirm Shipping" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|',('order_status', 'not in', ('process', 'ready-ship')),('order_status_notes', 'in', ('In Cancel')), ('mp_delivery_type','=','drop off')]}" style="margin-right:5px;" name="action_orders_request_pickup" string="Request Pickup" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':[('order_status', 'not in', ['ready-process', 'process', 'ready-ship'])]}" style="margin-right:5px;" name="action_orders_get_label" string="Get Label" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':[('order_status_notes', 'not in', ('In Cancel'))]}" style="margin-right:5px;" name="action_orders_accept_cancel" string="Accept Cancel" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':[('order_status_notes', 'not in', ('In Cancel'))]}" style="margin-right:5px;" name="action_orders_reject_cancel" string="Reject Cancel" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':['|',('order_status', 'not in', ('ready-process', 'process', 'ready-ship')),('order_status_notes', 'in', ('In Cancel'))]}" style="margin-right:5px;" name="action_orders_cancel" string="Cancel" type="object"/>
+                        </div>
+                        <group>
+                            <group string="Account Information">
+                                <field name="mp_invoice_number" readonly="1"/>
+                                <field name="mp_tokopedia_id" readonly="1"/>
+                                <field name="mp_shopee_id" readonly="1"/>
+                                <field name="mp_buyer_username" readonly="1"/>
+                                <field name="mp_buyer_name" readonly="1"/>
+                                <field name="mp_buyer_email" readonly="1"/>
+                                <field name="mp_buyer_phone" readonly="1"/>
+                                <field name="mp_update_order_time" invisible="1"/>
+                            </group>
+                            <group string="Order Status">
+                                <field name="order_status" readonly="1"/>
+                                <field name="order_status_notes" readonly="1"/>
+                                <field name="tp_order_status" invisible="1"/>
+                                <field name="sp_order_status" invisible="1"/>
+                                <field name="tp_order_id" invisible="1"/>
+                                <field name="sp_cancel_by" readonly="1"/>
+                                <field name="cancel_by_customer" readonly="1"/>
+                                <field name="mp_cancel_reason" readonly="1"/>
+                                <field name="mp_payment_method_info" readonly="1"/>
+                                <field name="tp_invoice_url" widget="url" readonly="1"/>
+                            </group>
+                            <group string="Recipient Address">
+                                <field name="mp_recipient_address_city" readonly="1"/>
+                                <field name="mp_recipient_address_name" readonly="1"/>
+                                <field name="mp_recipient_address_district" readonly="1"/>
+                                <field name="mp_recipient_address_country" readonly="1"/>
+                                <field name="mp_recipient_address_zipcode" readonly="1"/>
+                                <field name="mp_recipient_address_phone" readonly="1"/>
+                                <field name="mp_recipient_address_state" readonly="1"/>
+                                <field name="mp_recipient_address_full" readonly="1"/>
+                            </group>
+                            <group string="AWB Information">
+                                <field name="mp_delivery_carrier_name" readonly="1"/>
+                                <field name="mp_awb_number" readonly="1"/>
+                                <field name="mp_awb_url" widget="url" readonly="1"/>
+                                <field name="mp_delivery_type" readonly="1" string="Delivery Type"/>
+                                <field name="shipping_date" readonly="1"/>
+                                <field name="pickup_ids" readonly="1" string="Informasi Pickup">
+                                    <tree>    
+                                            <field name="start_datetime"/>
+                                            <field name="end_datetime"/>
+                                            <field name="address_id"/>
+                                    </tree>
+                                </field>
+                            </group>
+                        </group>
+                    </page>
+                </page>
+            </field>
+        </record>
+    </data>
+</odoo>
