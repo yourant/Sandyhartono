@@ -1,6 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_webhook_server,access_webhook_server,model_webhook_server,base.group_system,1,1,1,1
-access_webhook_server_mq_status,access_webhook_server_mq_status,model_webhook_server_mq_status,base.group_system,1,1,1,1
-access_webhook_server_mq,access_webhook_server_mq,model_webhook_server_mq,base.group_system,1,1,1,1
-access_webhook_server_token,access_webhook_server_token,model_webhook_server_token,base.group_system,1,1,1,1
-access_oauth_access_token,access_oauth_access_token,model_oauth_access_token,base.group_system,1,1,1,1
