@@ -1,0 +1,51 @@
+<odoo>
+    <record id="update_staging_stock_form" model="ir.ui.view">
+        <field name="name">update.staging.stock.form.wizard</field>
+        <field name="model">staging.stock.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Update Qty Available">
+                <group class="oe_title">
+                    <field name="qty_available"/>
+                </group>
+                <footer>
+                    <button name="do_update_stock" string="Update" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="staging_stock_wizard" model="ir.actions.act_window">
+        <field name="name">Update Qty Available</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">staging.stock.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="update_staging_stock_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <record id="update_staging_variant_stock_form" model="ir.ui.view">
+        <field name="name">update.staging.variant.stock.form.wizard</field>
+        <field name="model">staging.variant.stock.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Update Qty Available">
+                <group class="oe_title">
+                    <field name="qty_available"/>
+                </group>
+                <footer>
+                    <button name="do_update_stock" string="Update" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="staging_variant_stock_wizard" model="ir.actions.act_window">
+        <field name="name">Update Qty Available</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">staging.variant.stock.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="update_staging_variant_stock_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

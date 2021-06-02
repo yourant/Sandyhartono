@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record model="ir.actions.server" id="multi_confirm">
+            <field name="name">Confirm Orders</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="sequence">6</field>
+            <field name="code">
+if records:
+    order_statuses = records.mapped('state')
+    allowed_statuses = ['draft']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    records.action_confirm()
+else:
+    raise Warning("Please select sale order first!")
+            </field>
+        </record>
+        <record model="ir.actions.server" id="multi_get_label">
+            <field name="name">Get Label</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="sequence">8</field>
+            <field name="code">
+if records:
+    order_statuses = records.mapped('order_status')
+    allowed_statuses = ['ready-process', 'process', 'ready-ship', 'ship']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.action_orders_get_label()
+else:
+    raise Warning("Please select sale order first!")
+            </field>
+        </record>
+
+        <record model="ir.actions.server" id="multi_cancel">
+            <field name="name">Cancel Orders</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="sequence">10</field>
+            <field name="code">
+if records:
+    tp_orders = records.mapped('mp_tokopedia_id')
+    shp_orders = records.mapped('mp_shopee_id')
+    lz_orders = records.mapped('mp_lazada_id')
+
+    if tp_orders and shp_orders:
+        raise Warning("You can only select orders from same marketplace!")
+
+    mp_type = None
+    if tp_orders:
+        mp_type = 'tp'
+    elif shp_orders:
+        mp_type = 'shp'
+    elif lz_orders:
+        mp_type = 'lz'
+
+    order_statuses = records.mapped('order_status')
+    allowed_statuses = ['ready-process', 'process', 'ready-ship']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in ['ready-process', 'process', 'ready-ship']")
+    form_view = env.ref('juragan_product.sale_cancel_form')
+    action = {
+        'name': 'Cancel Order',
+        'view_mode': 'form',
+        'res_model': 'sale.cancel.wizard',
+        'view_id': form_view.id,
+        'type': 'ir.actions.act_window',
+        'target': 'new',
+        'context': {'mp_type': mp_type, 'order_ids': records.ids},
+    }
+else:
+    raise Warning("Please select sale order first!")
+            </field>
+        </record>
+    </data>
+</odoo>

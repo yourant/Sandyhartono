@@ -1,0 +1,26 @@
+<odoo>
+    <record id="confirm_shipping_form" model="ir.ui.view">
+        <field name="name">confirm.shipping.form.wizard</field>
+        <field name="model">confirm.shipping.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Confirm Shipping">
+                <group class="oe_title">
+                    <field name="mp_awb_number" />
+                </group>
+                <footer>
+                    <button name="do_confirm_shipping" string="Submit" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="confirm_shipping_wizard" model="ir.actions.act_window">
+        <field name="name">Confirm Shipping</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">confirm.shipping.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="confirm_shipping_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

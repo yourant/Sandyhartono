@@ -1,0 +1,30 @@
+<odoo>
+
+    <record id="request_pickup_form" model="ir.ui.view">
+        <field name="name">request.pickup.form.wizard</field>
+        <field name="model">request.pickup.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Request Pickup">
+                <group class="oe_title">
+                    <field name="pickup_id" widget="many2one" domain="[('order_id', '=', context.get('order_id')),'|',('active','=',False),('active','=',True)]" options="{'no_create': True, 'no_create_edit':True, 'no_quick_create': True}"/>
+                    <field name="address_id" widget="many2one" domain="[('mp_shopee_ids', 'in', context.get('mp_shopee_ids')),'|',('default_address', '=', True),('pickup_address', '=', True)]"/>
+                </group>
+                <footer>
+                    <button name="request_pickup" string="Submit" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field> 
+    </record>
+
+
+
+    <record id="request_pickup_wizard" model="ir.actions.act_window">
+      <field name="name">Request Pickup</field>  
+      <field name="type">ir.actions.act_window</field>  
+      <field name="res_model">request.pickup.wizard</field>  
+      <field name="view_mode">form</field>
+      <field name="view_id" ref="request_pickup_form"/>
+      <field name="target">new</field>  
+    </record>
+</odoo>
