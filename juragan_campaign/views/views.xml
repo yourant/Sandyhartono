@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><odoo>
+    <data>
+        <record id="view_juragan_campaign_form" model="ir.ui.view">
+            <field name="model">juragan.campaign</field>
+            <field name="arch" type="xml">
+                <form string="Campaign Generator">
+                    <header>
+                        <button attrs="{'invisible':[('state','!=','draft')]}" context="{'state':'done'}" name="change_state" string="Schedule" type="object"/>
+                        <button attrs="{'invisible':[('state','!=','draft')]}" context="{'state':'cancel'}" name="change_state" string="Reject" type="object"/>
+                        <field name="state" statusbar_visible="draft,done" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="datetime_start"/>
+                                <field name="datetime_end"/>
+                            </group>
+                            <group>
+                                <field name="pricelist_ids" widget="many2many_tags"/>
+                                <field name="company_id"/>
+                                <field name="currency_id"/>
+                            </group>
+                        </group>
+                        <separator string="Computed Price"/>
+                        <group>
+                            <group>
+                                <field name="compute_price"/>
+                            </group>
+                            <group>
+                                <field attrs="{'invisible':[('compute_price','!=','fixed')],'required':[('compute_price','=','fixed')]}" name="fixed_price"/>
+                                <field attrs="{'invisible':[('compute_price','!=','percentage')],'required':[('compute_price','=','percentage')]}" name="percent_price"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Item">
+                                <field name="item_ids">
+                                    <tree editable="bottom">
+                                        <field invisible="1" name="campaign_id"/>
+                                        <field invisible="1" name="currency_id"/>
+                                        <field invisible="1" name="company_id"/>
+                                        <field name="product_tmpl_id" required="1" string="Products"/>
+                                        <field domain="[('product_tmpl_id','=',product_tmpl_id)]" groups="product.group_product_variant" name="product_id" options="{'no_create':1}" string="Variants"/>
+                                        <field name="min_quantity"/>
+                                        <field name="max_quantity"/>
+                                        <field name="compute_price"/>
+                                        <field attrs="{'invisible':[('compute_price','!=','fixed')],'required':[('compute_price','=','fixed')]}" name="fixed_price"/>
+                                        <field attrs="{'invisible':[('compute_price','!=','percentage')],'required':[('compute_price','=','percentage')]}" name="percent_price"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Marketplace">
+                                <field name="mp_ids">
+                                    <tree editable="bottom">
+                                        <field invisible="1" name="campaign_id"/>
+                                        <field name="mp_id"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="juragan_campaign_act" model="ir.actions.act_window">
+            <field name="name">Campaign Server</field>
+            <field name="res_model">juragan.campaign</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_mode">tree,form</field>
+            <!-- <field name="target">inline</field> -->
+        </record>
+        <menuitem groups="product.group_product_pricelist" id="menu_izi_campaign" name="Campaign" parent="juragan_webhook.menu_webhook" sequence="100"/>
+        <menuitem action="juragan_campaign_act" groups="product.group_product_pricelist" id="menu_juragan_campaign" name="Campaign Generator" parent="menu_izi_campaign" sequence="10"/>
+        <menuitem action="product.product_pricelist_action2" groups="base.group_no_one" id="menu_product_pricelist" name="Pricelists" parent="menu_izi_campaign" sequence="100"/>
+    </data>
+</odoo>

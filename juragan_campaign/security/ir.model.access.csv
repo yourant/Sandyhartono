@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_juragan_campaign,access_juragan_campaign,model_juragan_campaign,product.group_product_pricelist,1,1,1,1
+access_juragan_campaign_item,access_juragan_campaign_item,model_juragan_campaign_item,product.group_product_pricelist,1,1,1,1
+access_juragan_campaign_mp,access_juragan_campaign_mp,model_juragan_campaign_mp,product.group_product_pricelist,1,1,1,1
