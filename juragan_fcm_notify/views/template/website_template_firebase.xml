@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <!-- @formatter:off -->
+<template id="firebase_messaging_sw">
+// Import and configure the Firebase SDK
+// These scripts are made available when the app is served or deployed on Firebase Hosting
+// If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup
+importScripts('https://www.gstatic.com/firebasejs/8.4.2/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.4.2/firebase-messaging.js');
+importScripts('https://www.gstatic.com/firebasejs/8.4.2/firebase-analytics.js');
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+let firebaseConfig = {
+  apiKey: '<t t-esc="config.get('fcm_api_key')"/>',
+  authDomain: '<t t-esc="config.get('fcm_auth_domain')"/>',
+  projectId: '<t t-esc="config.get('fcm_project_id')"/>',
+  storageBucket: '<t t-esc="config.get('fcm_storage_bucket')"/>',
+  messagingSenderId: '<t t-esc="config.get('fcm_messaging_sender_id')"/>',
+  appId: '<t t-esc="config.get('fcm_app_id')"/>',
+  measurementId: '<t t-esc="config.get('fcm_measurement_id')"/>'
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+const messaging = firebase.messaging();
+</template>
+    <!-- @formatter:on -->
+  </data>
+</odoo>

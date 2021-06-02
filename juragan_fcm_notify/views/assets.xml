@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <template id="web_assets_frontend" name="" inherit_id="web.assets_backend">
+      <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/webclient.scss" position="after">
+        <link rel="stylesheet" type="text/scss" href="/juragan_fcm_notify/static/src/scss/webclient.scss"/>
+      </link>
+      <xpath expr="//script[last()]" position="after">
+        <script type="text/javascript" src="/juragan_fcm_notify/static/src/js/widgets/notification.js"/>
+        <!-- The core Firebase JS SDK is always required and must be listed first -->
+        <script src="https://www.gstatic.com/firebasejs/8.4.2/firebase-app.js"/>
+
+        <!-- Add SDKs for Firebase products that you want to use
+             https://firebase.google.com/docs/web/setup#available-libraries -->
+        <script src="https://www.gstatic.com/firebasejs/8.4.2/firebase-messaging.js"/>
+        <script src="https://www.gstatic.com/firebasejs/8.4.2/firebase-analytics.js"/>
+        <script src="/juragan_fcm_notify/static/src/js/messaging.js" type="text/javascript"/>
+      </xpath>
+    </template>
+  </data>
+</odoo>
