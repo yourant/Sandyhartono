@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_juragan_product_code_sequence_juragan_product_code_sequence,juragan_product_code_sequence.juragan_product_code_sequence,model_juragan_product_code_sequence_juragan_product_code_sequence,,1,0,0,0
