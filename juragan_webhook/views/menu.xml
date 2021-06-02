@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><odoo>
-    <data noupdate="0">
-        <!-- <menuitem id="juragan_webhook.menu_root_access_izi" name="Access IZI" sequence="301"
-              action="juragan_webhook.access_izi"
-              web_icon="juragan_webhook,static/img/izi_access.png"/> -->
-    </data>
-</odoo>
