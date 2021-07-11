@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.actions.act_window" id="order_component_config_action">
+            <field name="name">Order Component Config</field>
+            <field name="res_model">order.component.config</field>
+            <!-- <field name="view_type">form</field> -->
+            <field name="binding_view_types">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="sub_order_component_config_menu" parent="juragan_webhook.menu_webhook" name="Order Component Config" sequence="50" action="order_component_config_action" />
+        
+        <!-- Tree view for the menuitem -->
+        <record id="order_component_config_tree" model="ir.ui.view">
+            <field name="name">order.component.config.tree</field>
+            <field name="model">order.component.config</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form view for the menuitem -->
+        <record id="order_component_config_form" model="ir.ui.view">
+            <field name="name">order.component.config.form</field>
+            <field name="model">order.component.config</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="date_start"/>
+                                <field name="date_end"/>
+                                <field name="active"/>
+                            </group>
+                            <group>
+                                <field name="mp_tokopedia_ids" widget="many2many_tags"/>
+                                <field name="mp_shopee_ids" widget="many2many_tags"/>
+                                <field name="mp_lazada_ids" widget="many2many_tags"/>
+                            </group>
+                        </group>
+                        <notebook>
+							<page string="Component Details">
+                                <field name="line_ids">
+                                    <tree>
+                                        <field name="name"/>
+                                        <field name="component_type"/>
+                                        <field name="percentage_value"/>
+                                        <field name="fixed_value"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="order_component_config_line_form" model="ir.ui.view">
+            <field name="name">order.component.config.line.form</field>
+            <field name="model">order.component.config.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="component_type"/>
+                            
+                            <!-- remove_product -->
+                            <field name="remove_product_ids" widget="many2many_tags" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_insurance" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_delivery" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_discount" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_adjustment" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+
+                            <!-- add_product -->
+                            <field name="additional_product_id"  attrs="{'invisible': [('component_type', '!=', 'add_product')]}"/>
+
+                            <!-- discount_line -->
+                            <field name="discount_line_method" attrs="{'invisible': [('component_type', '!=', 'discount_line')]}"/>
+                            <field name="discount_line_product_type" attrs="{'invisible': [('component_type', '!=', 'discount_line')]}"/>
+                            <field name="discount_line_product_ids" domain="[('type','!=','service')]" widget="many2many_tags" attrs="{'invisible': [('discount_line_product_type', '!=', 'specific')]}"/>
+
+                            <!-- tax_line -->
+                            <field name="account_tax_id" attrs="{'invisible': [('component_type', '!=', 'tax_line')]}"/>
+                            
+                            <!--  -->
+                            <field name="percentage_value" attrs="{'invisible': [('component_type', 'in', ('remove_product') )]}"/>
+                            <field name="fixed_value" attrs="{'invisible': [('component_type', 'in', ('remove_product') )]}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

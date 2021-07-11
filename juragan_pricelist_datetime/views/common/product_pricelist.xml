@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="form_product_pricelist_item" model="ir.ui.view">
+      <field name="name">Product Pricelist Item Form View</field>
+      <field name="model">product.pricelist.item</field>
+      <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
+      <field name="arch" type="xml">
+        <field name="date_end" position="after">
+          <field name="set_mode"/>
+          <field name="set_datetime" invisible="1"/>
+          <field name="set_weekday" invisible="1"/>
+        </field>
+        <xpath expr="//field[@name='applied_on']/../.." position="after">
+          <separator string="Datetime Range Configuration" attrs="{'invisible': [('set_datetime', '=', False)]}"/>
+          <group attrs="{'invisible': [('set_datetime', '=', False)]}">
+            <field name="date_time_start" attrs="{'required': [('set_datetime', '=', True)]}"/>
+            <field name="date_time_end" attrs="{'required': [('set_datetime', '=', True)]}"/>
+          </group>
+          <separator string="Weekday Configuration" attrs="{'invisible': [('set_weekday', '=', False)]}"/>
+          <group attrs="{'invisible': [('set_weekday', '=', False)]}">
+            <group>
+              <label for="time_start" string="Start &amp; End Time"/>
+              <div>
+                <div class="o_row" name="time_start">
+                  <field name="time_start" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                  <span>to</span>
+                  <field name="time_end" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                </div>
+                <small class="text-info oe_edit_only"><i class="fa fa-info-circle"></i> Use 24-hours time format.</small>
+              </div>
+              <separator></separator>
+              <field name="weekday_tz" attrs="{'required': [('set_weekday', '=', True)]}"/>
+            </group>
+            <group>
+              <div><i>Select day(s) on which you want to apply the pricelist rule. If none of the days selected, by
+                default it will applied on all days.</i>
+                <group>
+                  <group>
+                    <field name="day_0"/>
+                    <field name="day_1"/>
+                    <field name="day_2"/>
+                    <field name="day_3"/>
+                  </group>
+                  <group>
+                    <field name="day_4"/>
+                    <field name="day_5"/>
+                    <field name="day_6"/>
+                  </group>
+                </group>
+              </div>
+            </group>
+          </group>
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.actions.act_window" id="stock_distribution_action">
+            <field name="name">Stock Distribution</field>
+            <field name="res_model">stock.distribution</field>
+            <field name="binding_view_types">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="sub_stock_distribution_menu" parent="juragan_webhook.menu_webhook" name="Stock Distribution" sequence="50" action="stock_distribution_action" />
+        
+        <!-- Tree view for the menuitem -->
+        <record id="stock_distribution_tree" model="ir.ui.view">
+            <field name="name">stock.distribution.tree</field>
+            <field name="model">stock.distribution</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="mp_account_type"/>
+                    <field name="name"/>
+                    <field name="distribution_date"/>
+                    <field name="location_id"/>
+                    <field name="location_dest_id"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form view for the menuitem -->
+        <record id="stock_distribution_form" model="ir.ui.view">
+            <field name="name">stock.distribution.form</field>
+            <field name="model">stock.distribution</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button class="" type="object" name="check_stock" string="Check Stock" />
+                        <button class="" type="object" name="open_warehouse_config_wizard" string="WH Config" />
+                        <button states='draft' class="" type="object" name="distribute_by_percentage" string="Distribute by Percentage" 
+                            confirm="Are you sure you want to calculate qty based on distribution percentage? This action cannot be undone!"/>
+                        <button states='draft' class="oe_highlight" type="object" name="transfer_stock" string="Transfer Stock" 
+                            confirm="Are you sure you want to process the transfer? This action cannot be undone!"/>
+                        <button states='transferred' class="oe_highlight" type="object" name="return_stock" string="Return Stock" 
+                            confirm="Are you sure you want to process the return? This action cannot be undone!"/>
+                        <field name="state" statusbar_visible="draft,transferred,returned" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="mp_account_type"/>
+                                <field name="mp_tokopedia_id" attrs="{'invisible': [('mp_account_type', '!=', 'tokopedia')]}"/>
+                                <field name="mp_shopee_id" attrs="{'invisible': [('mp_account_type', '!=', 'shopee')]}"/>
+                                <field name="mp_lazada_id" attrs="{'invisible': [('mp_account_type', '!=', 'lazada')]}"/>
+                            </group>
+                            <group>
+                                <field name="location_id" domain="[('usage','=','internal')]"/>
+                                <field name="location_dest_id" domain="[('usage','=','internal')]"/>
+                                <field name="distribution_date"/>
+                                <field name="distribution_percentage"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Distribution Details">
+                                <field name="line_ids">
+                                    <tree editable="bottom" create="false" delete="false">
+                                        <field name="product_id" readonly="1"/>
+                                        <field name="qty_available" readonly="1"/>
+                                        <field name="qty_available_dest" readonly="1"/>
+                                        <field name="qty_transfer" attrs="{'readonly': [('parent.state', '!=', 'draft')]}"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Stock Moves">
+                                <field name="move_ids" readonly="1">
+                                    <tree>
+                                        <field name="product_id" />
+                                        <field name="quantity_done" />
+                                        <field name="location_id" />
+                                        <field name="location_dest_id" />
+                                        <field name="state" />
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,7 @@
+.vscode/
+*.pyc
+cypress.env.json
+cypress/screenshots
+cypress/videos
+/.project
+/.pydevproject

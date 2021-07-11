@@ -1,6 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
+        <record model="ir.ui.view" id="juragan_product.batch_upload_product_view">
+            <field name="name">Batch Upload</field>
+            <field name="model">batch.upload.product.wizard</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Batch Upload Product">
+                    <group string="Marketplace">
+                        <field name="marketplace"/>
+                        <field name="mp_tokopedia_id" attrs="{'invisible': [('marketplace', '!=', 'tokopedia'), ]}" options="{'no_create_edit': True, 'no_open': True, }" />
+                        <field name="mp_shopee_id" attrs="{'invisible': [('marketplace', '!=', 'shopee'), ]}" options="{'no_create_edit': True, 'no_open': True, }" />
+                        <field name="mp_lazada_id" attrs="{'invisible': [('marketplace', '!=', 'lazada'), ]}" options="{'no_create_edit': True, 'no_open': True, }" />
+                    </group>
+                    <group attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
+                        <field name="is_replace_fields"/>
+                    </group>
+                    <group string="Generic Fields" attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
+                        <group>
+                            <field name="list_price" />
+                            <field name="min_order" />
+                            <field name="is_active" />
+                            <field name="qty_available" />
+                            <field name="weight" />
+                            <field name="length" />
+                            <field name="width" />
+                            <field name="height" />
+                        </group>
+                    </group>
+                    <group string="Product Images" attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
+                        <field name="batch_upload_image_ids" class="o_website_sale_image_list" nolabel="1" view_mode='tree,form'>
+                            <tree string="Upload Image">
+                                <field name="image" widget='image'/>
+                            </tree>
+                            <form string="Upload Image">
+                                <group>
+                                    <group>
+                                        <field name='image' widget='image'/>
+                                    </group>
+                                </group>
+                            </form>
+                        </field>
+                    </group>
+                    <group string='Tokopedia Fields' attrs="{'invisible': [('mp_tokopedia_id', '==', False), ]}">
+                        <group>
+                            <field name="tp_condition" />
+                            <field name="tp_weight_unit" />
+                            <field name="tp_category_id" domain="[('child_ids','=',False)]" options="{'no_create': True, 'no_open': True, }" />
+                        </group>
+                    </group>
+                    <group string='Shopee Fields' attrs="{'invisible': [('mp_shopee_id', '==', False), ]}">
+                        <group>
+                            <!-- <field name="tp_condition" />
+                            <field name="tp_weight_unit" />
+                            <field name="tp_category_id" domain="[('child_ids','=',False)]" options="{'no_create': True, 'no_open': True, }" /> -->
+                        </group>
+                    </group>
+                    <group string='Lazada Fields' attrs="{'invisible': [('mp_lazada_id', '==', False), ]}">
+                        <group>
+                            <field name="lz_category_id" />
+                            <field name="lz_brand_id" />
+                        </group>
+                    </group>
+                    <group string="Attribute Category" attrs="{'invisible': [('mp_lazada_id', '==', False), ]}">
+                        <field name="lz_attributes" string="Attributes">
+                            <tree create="false" delete="false" editable="false">
+                                <field name='item_id_staging' invisible='1' />
+                                <field name="attribute_id" force_save="1" readonly="1" />
+                                <field name="value" force_save="1" readonly="1" />
+                                <field name="is_mandatory" readonly="1" />
+                                <field name="values" invisible="1" />
+                                <field name="option_id" attrs="{'required':[('is_mandatory','=',True)]}" />
+                            </tree>
+                        </field>
+                    </group>
+                    <footer>
+                        <button name="batch_upload" string="Batch Upload" type="object" class="btn-primmary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_batch_upload_product" model="ir.actions.act_window">
+            <field name="name">Batch Upload Product</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">batch.upload.product.wizard</field>
+            <field name="binding_model_id" ref="product.model_product_template"/>
+            <field name="binding_view_types">form</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="juragan_product.batch_upload_product_view"/>
+            <field name="target">new</field>
+        </record>
+
         <record id="view_partner_form" model="ir.ui.view">
             <field name="name">res.partner.form</field>
             <field name="model">res.partner</field>
@@ -92,7 +184,7 @@
                                 <div class="o_row">
                                     <field name="qty_available"/>
                                     <field name="product_uom_id" groups="uom.group_uom"/>
-                                    <button class="btn-izi" name="update_staging_stock" string="Update Qty" type="object"/>
+                                    <button class="btn-izi btn-izi-mini" name="update_staging_stock" string="Update Qty" type="object" attrs="{'invisible': [('product_variant_stg_ids', '!=', []), ]}"/>
                                 </div>
                             </group>
                             <group>
@@ -138,6 +230,7 @@
                                 <field name="sp_is_pre_order"/>
                                 <field name="sp_days_to_ship"/>
                                 <field name="sp_category_id" options="{'no_create': True, 'no_open': True, }"/>
+                                <field name="sp_brand_id" options="{'no_create': True, 'no_open': True, }" domain="[('categories', 'child_of', sp_category_id)]"/>
                             </group>
                         </group>
 
@@ -249,7 +342,7 @@
                             </field>
                         </group>
                         <group attrs="{'invisible': [('mp_type','=', False)]}">
-                            <button style="width: 200px;height: 30px;font-size: 12px;font-weight: bold;" name="generate_staging_variant" string="Generate Variant" type="object" class="btn-izi btn-sm btn-primary"/>
+                            <button icon="fa-cogs" name="generate_staging_variant" string="Variants" type="object" class="btn-izi btn-primary"/>
                         </group>
                         <group attrs="{'invisible': [('mp_type','=', False)]}">
                             <field name="product_variant_stg_ids" view_mode='tree' nolabel='1'>
@@ -263,13 +356,13 @@
                                     <field name='barcode' />
                                     <field name='price_custom' />
                                     <field name='qty_available' />
-                                    <button class="btn-izi" name="update_staging_variant_stock" string="Update Qty" type="object"/>
+                                    <button class="btn-izi btn-izi-mini" name="update_staging_variant_stock" string="Update Qty" type="object"/>
                                     <field name='active' invisible='1'/>
                                 </tree>
                             </field>
                         </group>
                         <group attrs="{'invisible': [('mp_type','=', False)]}">
-                            <button style="width: 200px;height: 30px;font-size: 12px;font-weight: bold;" name="upload_product_stg_izi" string="Upload to Marketplace" type="object" class="btn-izi btn-sm btn-primary"/>
+                            <button icon="fa-upload" style="width: 200px;height: 34px;font-size: 13px;font-weight: bold;display: block;margin: auto;" name="upload_product_stg_izi" string="Upload" type="object" class="btn-izi btn-primary"/>
                         </group>
                     </sheet>
                 </form>
@@ -286,8 +379,13 @@
                     <field name="height"/>
                 </xpath>
                 <xpath expr="//page[@name='general_information']/group" position="after">
+                    <group>
+                        <group>
+                            <button icon="fa-list" name="mapping_master_fields" string="Mapping Fields" type="object" class="btn-izi btn-primary"/>
+                        </group>
+                    </group>
                     <group string='Marketplace'>
-                        <!-- <field name="izi_id" string="IZI-ID" readonly="1"/> -->
+                        <!-- <field name="izi_id" string="IZI ID" groups="base.group_no_one"/> -->
                         <field name="mp_tokopedia_ids" widget='many2many_tags' readonly='1'/>
                         <field name="mp_shopee_ids" widget='many2many_tags' readonly='1'/>
                         <field name="mp_lazada_ids" widget='many2many_tags' readonly='1'/>

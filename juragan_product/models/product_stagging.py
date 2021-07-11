@@ -82,7 +82,7 @@ class ProductStaging(models.Model):
         ('1', 'EMPTY'),
         ('2', 'LIMITED'),
         ('3', 'UNLIMITED')
-    ], string='Availability', default=2)
+    ], string='Availability', default='2')
     tp_active_status = fields.Selection([
         ('-2', 'Banned'),
         ('-1', 'Pending'),
@@ -90,15 +90,15 @@ class ProductStaging(models.Model):
         ('1', 'Active'),
         ('2', 'Best (Featured Product)'),
         ('3', 'Inactive (Warehouse)')
-    ], string='Active Status')
+    ], string='Active Status', default='3')
     tp_condition = fields.Selection([
         ('1', 'NEW'),
         ('2', 'USED')
-    ], string="Condition")
+    ], string="Condition", default='1')
     tp_weight_unit = fields.Selection([
         ('1', 'Gr'),
         ('2', 'KG')
-    ], string='Weight Unit')
+    ], string='Weight Unit', default='1')
     tp_category_id = fields.Many2one(
         'mp.tokopedia.category', string='Category')
     tp_etalase_id = fields.Many2one(
@@ -114,13 +114,13 @@ class ProductStaging(models.Model):
     tp_preorder_time_unit = fields.Selection([
         ('1', 'DAY'),
         ('2', 'WEEK'),
-    ], string='Pre-Order Time Unit')
+    ], string='Pre-Order Time Unit', default='1')
 
     mp_shopee_id = fields.Many2one('mp.shopee', string='Shopee ID',
         domain=['|', ('active', '=', False), ('active', '=', True), ],
         context={'active_test': False})
     sp_condition = fields.Selection(
-        [('NEW', 'NEW'), ('USED', 'USED')], 'Condition')
+        [('NEW', 'NEW'), ('USED', 'USED')], 'Condition', default='NEW')
     sp_status = fields.Selection(
         [('NORMAL', 'NORMAL'), ('UNLIST', 'UNLIST')], 'Status Produk', compute='_set_sp_status')
     sp_is_pre_order = fields.Boolean('Pre Order')
@@ -133,7 +133,7 @@ class ProductStaging(models.Model):
         'mp.shopee.item.logistic', 'item_id_staging')
     sp_attributes = fields.One2many(
         'mp.shopee.item.attribute.val', 'item_id_staging')
-
+    sp_brand_id =  fields.Many2one('mp.shopee.item.brand', string='Shopee Brand')
     sp_attribute_line_ids = fields.One2many('mp.shopee.attribute.line', 'product_staging_id', 'Product Attributes Variations')
 
     mp_lazada_id = fields.Many2one('mp.lazada', string='Lazada ID',
@@ -163,13 +163,15 @@ class ProductStaging(models.Model):
     izi_md5 = fields.Char()
 
     def _get_image_url(self):
-        base_url = self.env['ir.config_parameter'].get_param('web.base.url')
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         for rec in self:
             if rec.image:
                 rec.image_url = '%s/jpg/product.staging/image/%s.jpg' % (
                     base_url, str(rec.id))
             elif rec.image_url_external:
                 rec.image_url = rec.image_url_external
+            else:
+                rec.image_url = False
 
     def get_webhook_server(self):
         server = self.env['webhook.server'].search([], limit=1)
@@ -239,13 +241,24 @@ class ProductStaging(models.Model):
         self.barcode = pd_tmpl.barcode
         self.description_sale = pd_tmpl.description_sale
         self.list_price = pd_tmpl.list_price
-        self.image = pd_tmpl.image
+        image = False
+        if pd_tmpl.image_1920:
+            image = pd_tmpl.image_1920
+        elif pd_tmpl.image_1920:
+            image = pd_tmpl.image_1024
+        elif pd_tmpl.image_1920:
+            image = pd_tmpl.image_512
+        elif pd_tmpl.image_1920:
+            image = pd_tmpl.image_256
+        elif pd_tmpl.image_1920:
+            image = pd_tmpl.image_128
+        self.image = image
         self.image_url_external = pd_tmpl.image_url_external
         self.min_order = 1
-        self.tp_active_status = 3
-        self.tp_available_status = 2
-        self.tp_condition = 1
-        self.tp_weight_unit = 1
+        self.tp_active_status = '3'
+        self.tp_available_status = '2'
+        self.tp_condition = '1'
+        self.tp_weight_unit = '1'
 
         images = []
         for image in pd_tmpl.product_image_ids:
@@ -290,7 +303,7 @@ class ProductStaging(models.Model):
     def _get_qty_available(self):
         for rec in self:
             lot_stock_id = False
-            product_id = []
+            product_ids = []
             if rec.mp_tokopedia_id:
                 lot_stock_id = rec.mp_tokopedia_id.wh_id.lot_stock_id.id
             elif rec.mp_shopee_id:
@@ -299,11 +312,27 @@ class ProductStaging(models.Model):
                 lot_stock_id = rec.mp_lazada_id.wh_id.lot_stock_id.id
             if rec.product_template_id and rec.product_template_id.product_variant_ids:
                 for variant in rec.product_template_id.product_variant_ids:
+                    is_product_staging_variant = False
                     if variant.active:
-                        product_id.append(variant.id)
-            if lot_stock_id and product_id:
+                        if rec.is_uploaded:
+                            if len(variant.product_variant_stg_ids) > 0:
+                                for staging_variant in variant.product_variant_stg_ids:
+                                    if staging_variant.product_stg_id.id == rec.id:
+                                        is_product_staging_variant = True
+                            else:
+                                is_product_staging_variant = True
+                        else:
+                            if len(variant.product_variant_stg_ids) > 0:
+                                for staging_variant in variant.product_variant_stg_ids:
+                                    if staging_variant.product_stg_id.id == rec.id:
+                                        is_product_staging_variant = True
+                            else:
+                                is_product_staging_variant = True
+                    if is_product_staging_variant:
+                        product_ids.append(variant.id)
+            if lot_stock_id and product_ids:
                 quants = self.env['stock.quant'].search(
-                    [('product_id', 'in', product_id),
+                    [('product_id', 'in', product_ids),
                      ('location_id', '=', lot_stock_id)])
                 rec.qty_available = sum(
                     q['quantity'] - q['reserved_quantity'] for q in quants)
@@ -312,6 +341,22 @@ class ProductStaging(models.Model):
                 rec.qty_available = 0
                 # rec.product_uom_id = False
 
+            # check last stock quantity for tokopedia product
+            if rec.mp_tokopedia_id:
+                if rec.qty_available <= 0:
+                    rec.write({
+                        'is_active': False,
+                        'tp_available_status': 1,
+                        'tp_active_status': 3,
+                    })
+                elif rec.qty_available > 0 and rec.tp_available_status == 1 and rec.tp_active_status == 3:
+                    rec.write({
+                        'is_active': True,
+                        'tp_available_status': 2,
+                        'tp_active_status': 1,
+                    })
+
+    # @api.multi
     # @api.onchange('product_template_id', 'mp_type')
     # def onchange_product_template_id(self):
     #     mp_tp = [('id', 'in', self.product_template_id and self.product_template_id.mp_tokopedia_ids.ids or []), ]
@@ -331,6 +376,8 @@ class ProductStaging(models.Model):
                 if server:
                     if not self.sp_category_id.attributes:
                         res = server.sp_get_attribute_category(category_id,mp_id_by_izi_id)
+                    if not self.sp_category_id.brands:
+                        res = server.sp_get_attribute_brand(category_id,mp_id_by_izi_id)
                 # self.mp_ids[0].get_item_category(category_ids=self.category_id.ids)
                 self.sp_attributes = [(5, 0, 0), *[(0, 0, {
                     'attribute_id': attribute.id
@@ -425,7 +472,7 @@ class ProductStaging(models.Model):
                     "<p><strong>Please save this product to create marketplace product.<br/>Press button 'discard' bellow...</strong></p>"))
                 res['arch'] = etree.tostring(doc, encoding='unicode')
                 return res
-            mp_button_xml = """<button type="object" name="action_toggle_mp" class="btn-bg btn-info" context="{'mp_int_id': %(mp_int_id)d,'mp_tipe': '%(mp_tipe)s'}"><strong>%(mp_tipe)s</strong><p>%(mp_name)s</p></button>"""
+            mp_button_xml = """<button type="object" name="action_toggle_mp" class="btn-bg btn-info btn-mp-izi" context="{'mp_int_id': %(mp_int_id)d,'mp_tipe': '%(mp_tipe)s'}"><strong>%(mp_tipe)s</strong><p>%(mp_name)s</p></button>"""
             mp_list = []
             mp_tokopedia_ids = self.env['mp.tokopedia'].with_context(
                 active_test=True).search([])
@@ -457,11 +504,26 @@ class ProductStaging(models.Model):
                 [('active', 'in', [False, True])],
                 limit=1, order='write_date desc')
             if not server:
+                form_view = self.env.ref('juragan_product.popup_message_wizard')
+                view_id = form_view and form_view.id or False
+                context = dict(self._context or {})
+                context['default_name'] = 'Buatkan minimal 1 webhook server!'
+                return {
+                    'name': 'Opps, Something Went Wrong.',
+                    'type': 'ir.actions.act_window',
+                    'view_mode': 'form',
+                    'view_type': 'form',
+                    'res_model': 'popup.message.wizard',
+                    'views': [(view_id,'form')],
+                    'view_id' : form_view.id,
+                    'target': 'new',
+                    'context': context,
+                }
                 raise UserError('Buatkan minimal 1 webhook server!')
             if product_stg_id.product_template_id.izi_id == 0 or not product_stg_id.product_template_id.izi_id or product_stg_id.product_template_id.izi_id == None:
                 product_stg_id.product_template_id.upload_product_tmpl_izi()
             json_data = {
-                "id": product_stg_id.id,
+                "id": product_stg_id.izi_id,
                 'product_template_id': product_stg_id.product_template_id.izi_id,
                 "name": product_stg_id.name,
                 "description_sale": product_stg_id.description_sale,
@@ -477,42 +539,31 @@ class ProductStaging(models.Model):
                 "qty_available": product_stg_id.qty_available,
                 "mp_external_id": product_stg_id.mp_external_id,
                 "is_active": product_stg_id.is_active,
-
-                # tokopedia
-                "mp_tokopedia_id": product_stg_id.mp_tokopedia_id.izi_id,
-                "tp_category_id": product_stg_id.tp_category_id.izi_id,
-                "tp_etalase_id": product_stg_id.tp_etalase_id.izi_id,
-                "tp_condition": product_stg_id.tp_condition,
-                "tp_available_status": product_stg_id.tp_available_status,
-                "tp_weight_unit": product_stg_id.tp_weight_unit,
-                "tp_active_status": product_stg_id.tp_active_status,
-                "tp_is_must_insurance": product_stg_id.tp_is_must_insurance,
-                "tp_is_free_return": product_stg_id.tp_is_free_return,
-                "tp_preorder": product_stg_id.tp_preorder,
-                "tp_preorder_duration": product_stg_id.tp_preorder_duration,
-                "tp_preorder_time_unit": product_stg_id.tp_preorder_time_unit,
-            
-                # shopee
-                "mp_shopee_id": product_stg_id.mp_shopee_id.izi_id,
-                "sp_is_pre_order": product_stg_id.sp_is_pre_order,
-                "sp_category_int": product_stg_id.sp_category_id.izi_id,
-                "sp_days_to_ship": product_stg_id.sp_days_to_ship,
-                "sp_condition": product_stg_id.sp_condition,
-                "sp_status": product_stg_id.sp_status,
-
-                # lazada
-                "mp_lazada_id": product_stg_id.mp_lazada_id.izi_id,
-                "lz_sku_id": product_stg_id.lz_sku_id,
-                "lz_category_id": product_stg_id.lz_category_id.izi_id,
-                "lz_brand_id": product_stg_id.lz_brand_id.izi_id,
+                
             }
 
-            # check tokopedia etalse
-            if not product_stg_id.tp_etalase_id.izi_id or product_stg_id.tp_etalase_id.izi_id == 0:
+            if product_stg_id.mp_tokopedia_id:
                 json_data.update({
-                    'tp_etalase_id': False,
-                    'tp_etalase_name': product_stg_id.tp_etalase_id.etalase_name
+                     # tokopedia
+                    "mp_tokopedia_id": product_stg_id.mp_tokopedia_id.izi_id,
+                    "tp_category_id": product_stg_id.tp_category_id.izi_id,
+                    "tp_etalase_id": product_stg_id.tp_etalase_id.izi_id,
+                    "tp_condition": product_stg_id.tp_condition,
+                    "tp_available_status": product_stg_id.tp_available_status,
+                    "tp_weight_unit": product_stg_id.tp_weight_unit,
+                    "tp_active_status": product_stg_id.tp_active_status,
+                    "tp_is_must_insurance": product_stg_id.tp_is_must_insurance,
+                    "tp_is_free_return": product_stg_id.tp_is_free_return,
+                    "tp_preorder": product_stg_id.tp_preorder,
+                    "tp_preorder_duration": product_stg_id.tp_preorder_duration,
+                    "tp_preorder_time_unit": product_stg_id.tp_preorder_time_unit,
                 })
+                # check tokopedia etalse
+                if not product_stg_id.tp_etalase_id.izi_id or product_stg_id.tp_etalase_id.izi_id == 0:
+                    json_data.update({
+                        'tp_etalase_id': False,
+                        'tp_etalase_name': product_stg_id.tp_etalase_id.etalase_name
+                    })
 
             images = []
             for image in product_stg_id.product_image_staging_ids:
@@ -583,29 +634,29 @@ class ProductStaging(models.Model):
                         'sp_attribute_line_ids': attribute_lines
                     })
 
-                elif product_stg_id.sp_attribute_line_ids and product_stg_id.mp_shopee_id:
+                elif product_stg_id.lz_attribute_line_ids and product_stg_id.mp_lazada_id:
                     variant_table = {}
                     attribute_lines = []
-                    for sp_attribute_line in product_stg_id.sp_attribute_line_ids:
-                        if sp_attribute_line.izi_id != 0 and sp_attribute_line.attribute_id.izi_id != 0:
+                    for lz_attribute_line in product_stg_id.lz_attribute_line_ids:
+                        if lz_attribute_line.izi_id != 0 and lz_attribute_line.attribute_id.izi_id != 0:
                             attribute_data = {
-                                'id': sp_attribute_line.izi_id,
-                                'product_staging_id': sp_attribute_line.product_staging_id.izi_id,
-                                'attribute_id': sp_attribute_line.attribute_id.izi_id,
+                                'id': lz_attribute_line.izi_id,
+                                'product_staging_id': lz_attribute_line.product_staging_id.izi_id,
+                                'attribute_id': lz_attribute_line.attribute_id.izi_id,
                             }
                             values = []
-                            for sp_value in sp_attribute_line.value_ids:
-                                values.append(sp_value.izi_id)
+                            for lz_value in lz_attribute_line.lz_variant_value_ids:
+                                values.append(lz_value.izi_id)
                             attribute_data.update({
-                                'value_ids': values
+                                'lz_variant_value_ids': values
                             })
                             attribute_lines.append(attribute_data)
                     variant_table.update({
-                        'sp_attribute_line_ids': attribute_lines
+                        'lz_attribute_line_ids': attribute_lines
                     })
 
-            # if variant_table and attribute_lines and product_stg_id.product_variant_stg_ids:
-            if product_stg_id.product_variant_stg_ids:
+            if variant_table and attribute_lines and product_stg_id.product_variant_stg_ids:
+            # if product_stg_id.product_variant_stg_ids:
                 if not variant_table:
                     variant_table = {}
                 variant_ids = []
@@ -657,49 +708,70 @@ class ProductStaging(models.Model):
                 'varian_table': variant_table
             })
 
-            sp_attributes = []
-            for attr in product_stg_id.sp_attributes:
-                attr_value = False
-                if attr.attribute_id.input_type == 'TEXT_FILED':
-                    attr_value = attr.attribute_value
-                else:
-                    attr_value = self.env['mp.shopee.item.attribute.option'].search(
-                        [('name', '=', attr.attribute_value)], limit=1).izi_id
-                sp_attributes.append({
-                    'attr_id': attr.attribute_id.izi_id,
-                    'attr_value': attr_value,
-                })
-            json_data.update({
-                'sp_attributes': sp_attributes
-            })
 
-            sp_logistics = []
-            for line in product_stg_id.sp_logistics:
-                if line.enabled:
-                    sp_logistics.append({
-                        "logistic_name": line.logistic_id and line.logistic_id.izi_id,
-                        "estimated_shipping_fee": line.estimated_shipping_fee,
-                        "is_free": line.is_free,
-                        "is_active": line.enabled,
+            if product_stg_id.mp_shopee_id:
+                json_data.update({
+                     # shopee
+                    "mp_shopee_id": product_stg_id.mp_shopee_id.izi_id,
+                    "sp_is_pre_order": product_stg_id.sp_is_pre_order,
+                    "sp_category_int": product_stg_id.sp_category_id.izi_id,
+                    "sp_days_to_ship": product_stg_id.sp_days_to_ship,
+                    "sp_condition": product_stg_id.sp_condition,
+                    "sp_status": product_stg_id.sp_status,
+                    "sp_brand_id": product_stg_id.sp_brand_id.izi_id
+                })
+                sp_attributes = []
+                for attr in product_stg_id.sp_attributes:
+                    attr_value = False
+                    if attr.attribute_id.input_type == 'TEXT_FILED':
+                        attr_value = attr.attribute_value
+                    else:
+                        attr_value = self.env['mp.shopee.item.attribute.option'].search(
+                            [('name', '=', attr.attribute_value)], limit=1).izi_id
+                    sp_attributes.append({
+                        'attr_id': attr.attribute_id.izi_id,
+                        'attr_value': attr_value,
                     })
-            json_data.update({
-                'sp_logistics': sp_logistics
-            })
-
-            lz_attributes = []
-            for attr in product_stg_id.lz_attributes:
-                attr_value = False
-                if attr.attribute_id.input_type == 'text':
-                    attr_value = attr.value
-                else:
-                    attr_value = attr.option_id.izi_id
-                lz_attributes.append({
-                    'attr_id': attr.attribute_id.izi_id,
-                    'attr_value': attr_value,
+                json_data.update({
+                    'sp_attributes': sp_attributes
                 })
-            json_data.update({
-                'lz_attributes': lz_attributes
-            })
+
+                sp_logistics = []
+                for line in product_stg_id.sp_logistics:
+                    if line.enabled:
+                        sp_logistics.append({
+                            "logistic_name": line.logistic_id and line.logistic_id.izi_id,
+                            "estimated_shipping_fee": line.estimated_shipping_fee,
+                            "is_free": line.is_free,
+                            "is_active": line.enabled,
+                        })
+                json_data.update({
+                    'sp_logistics': sp_logistics
+                })
+
+            if product_stg_id.mp_lazada_id:
+                json_data.update({
+                    # lazada
+                    "mp_lazada_id": product_stg_id.mp_lazada_id.izi_id,
+                    "lz_sku_id": product_stg_id.lz_sku_id,
+                    "lz_category_id": product_stg_id.lz_category_id.izi_id,
+                    "lz_brand_id": product_stg_id.lz_brand_id.izi_id,
+                })
+
+                lz_attributes = []
+                for attr in product_stg_id.lz_attributes:
+                    attr_value = False
+                    if attr.attribute_id.input_type == 'text':
+                        attr_value = attr.value
+                    else:
+                        attr_value = attr.option_id.izi_id
+                    lz_attributes.append({
+                        'attr_id': attr.attribute_id.izi_id,
+                        'attr_value': attr_value,
+                    })
+                json_data.update({
+                    'lz_attributes': lz_attributes
+                })
 
             jsondata = server.get_updated_izi_id(product_stg_id, json_data)
 
@@ -740,7 +812,9 @@ class ProductStaging(models.Model):
                                             model_data_response.unlink()
                                     else:
                                         model_data_response.unlink()
-                            self.env.cr.commit()
+                                elif model_data_response.izi_id == 0 or model_data_response.izi_id == False:
+                                    model_data_response.unlink()
+                            #### self.env.cr.commit()
 
                         response_data = response.get('data')
                         product_stg_id.izi_id = response_data.get('id')
@@ -760,6 +834,7 @@ class ProductStaging(models.Model):
                                 if product_variant.id != product_stg_id.product_template_id.product_variant_id.id and product_variant.izi_id not in response_data.get('product_variant_ids') and not product_variant.product_variant_stg_ids and product_variant.product_tmpl_id.id == product_stg_id.product_template_id.id:
                                     product_variant.active = False
 
+                        #### self.env.cr.commit()
                         if do_export:
                             izi_id = product_stg_id.izi_id
                             if izi_id != 0:
@@ -782,40 +857,149 @@ class ProductStaging(models.Model):
                                                 var_stg.mp_external_id = variant_exid[str(var_stg.izi_id)]
                                     else:
                                         if response.get('data').get('error_descrip'):
+                                            form_view = self.env.ref('juragan_product.popup_message_wizard')
+                                            view_id = form_view and form_view.id or False
+                                            context = dict(self._context or {})
+                                            context['default_name'] = response.get('data').get('error_descrip')
+                                            return {
+                                                'name': 'Opps, Something Went Wrong.',
+                                                'type': 'ir.actions.act_window',
+                                                'view_mode': 'form',
+                                                'view_type': 'form',
+                                                'res_model': 'popup.message.wizard',
+                                                'views': [(view_id,'form')],
+                                                'view_id' : form_view.id,
+                                                'target': 'new',
+                                                'context': context,
+                                            }
                                             raise UserError(response.get(
                                                 'data').get('error_descrip'))
 
                                 else:
                                     if response.get('data').get('error_descrip'):
+                                        form_view = self.env.ref('juragan_product.popup_message_wizard')
+                                        view_id = form_view and form_view.id or False
+                                        context = dict(self._context or {})
+                                        context['default_name'] = response.get('data').get('error_descrip')
+                                        return {
+                                            'name': 'Opps, Something Went Wrong.',
+                                            'type': 'ir.actions.act_window',
+                                            'view_mode': 'form',
+                                            'view_type': 'form',
+                                            'res_model': 'popup.message.wizard',
+                                            'views': [(view_id,'form')],
+                                            'view_id' : form_view.id,
+                                            'target': 'new',
+                                            'context': context,
+                                        }
                                         raise UserError(response.get(
                                             'data').get('error_descrip'))
                     else:
                         if response.get('data').get('error_descrip') != None:
+                            form_view = self.env.ref('juragan_product.popup_message_wizard')
+                            view_id = form_view and form_view.id or False
+                            context = dict(self._context or {})
+                            context['default_name'] = response.get('data').get('error_descrip')
+                            return {
+                                'name': 'Opps, Something Went Wrong.',
+                                'type': 'ir.actions.act_window',
+                                'view_mode': 'form',
+                                'view_type': 'form',
+                                'res_model': 'popup.message.wizard',
+                                'views': [(view_id,'form')],
+                                'view_id' : form_view.id,
+                                'target': 'new',
+                                'context': context,
+                            }
                             raise UserError(response.get(
                                 'data').get('error_descrip'))
                         else:
+                            form_view = self.env.ref('juragan_product.popup_message_wizard')
+                            view_id = form_view and form_view.id or False
+                            context = dict(self._context or {})
+                            context['default_name'] = "Error from IZI. Failed Upload to IZI"
+                            return {
+                                'name': 'Opps, Something Went Wrong.',
+                                'type': 'ir.actions.act_window',
+                                'view_mode': 'form',
+                                'view_type': 'form',
+                                'res_model': 'popup.message.wizard',
+                                'views': [(view_id,'form')],
+                                'view_id' : form_view.id,
+                                'target': 'new',
+                                'context': context,
+                            }
                             raise UserError(
                                 "Error from IZI. Failed Upload to IZI")
             except Exception as e:
+                form_view = self.env.ref('juragan_product.popup_message_wizard')
+                view_id = form_view and form_view.id or False
+                context = dict(self._context or {})
+                context['default_name'] = str(e)
+                return {
+                    'name': 'Opps, Something Went Wrong.',
+                    'type': 'ir.actions.act_window',
+                    'view_mode': 'form',
+                    'view_type': 'form',
+                    'res_model': 'popup.message.wizard',
+                    'views': [(view_id,'form')],
+                    'view_id' : form_view.id,
+                    'target': 'new',
+                    'context': context,
+                }
                 raise UserError(str(e))
         return True
-    
+
     def upload_product_stg_izi(self):
         for product_staging in self:
-            product_staging._do_upload_product_stg_izi(generate_variant=True, do_export=True)
-
+            do_upload = False
+            do_upload = product_staging._do_upload_product_stg_izi(generate_variant=True, do_export=True)
+            if self.env.context.get('batch_upload'):
+                result = {
+                    'product': product_staging.name,
+                    'default_code': product_staging.default_code,
+                }
+                if type(do_upload) != bool:
+                    result.update({
+                        'status': False,
+                        'message': do_upload.get('context').get('message'),
+                    })
+                else:
+                    result.update({
+                        'status': True,
+                        'message': 'Success',
+                    })
+                return result
+            if type(do_upload) != bool:
+                return do_upload
             server = self.env['webhook.server'].search(
                 [('active', 'in', [False, True])],
                 limit=1, order='write_date desc')
             if not server:
+                form_view = self.env.ref('juragan_product.popup_message_wizard')
+                view_id = form_view and form_view.id or False
+                context = dict(self._context or {})
+                context['default_name'] = 'Buatkan minimal 1 webhook server!'
+                return {
+                    'name': 'Opps, Something Went Wrong.',
+                    'type': 'ir.actions.act_window',
+                    'view_mode': 'form',
+                    'view_type': 'form',
+                    'res_model': 'popup.message.wizard',
+                    'views': [(view_id,'form')],
+                    'view_id' : form_view.id,
+                    'target': 'new',
+                    'context': context,
+                }
                 raise UserError('Buatkan minimal 1 webhook server!')
             # custom get records tokopedia product
             if product_staging.mp_tokopedia_id and product_staging.mp_external_id:
                 if not product_staging.tp_etalase_id:
-                    server.get_records('mp.tokopedia.etalase',domain_code='all_active')
+                    server.get_records('mp.tokopedia.etalase', domain_code='all_active', loop_commit=False)
                     # get product staging by izi_id
                     domain_url = "[('id', 'in', [%s])]" % str(product_staging.izi_id)
-                    server.get_records('product.staging', domain_url=domain_url, force_update=True)
+                    server.get_records('product.staging', domain_url=domain_url, force_update=True, loop_commit=False)
+                    #### self.env.cr.commit()
                     etalase_ids = product_staging.env['mp.tokopedia.etalase'].search(
                         [('izi_id', '=', False)])
                     for etalase_id in etalase_ids:
@@ -851,7 +1035,23 @@ class ProductStaging(models.Model):
 
                     # get Image Shopee
                     server.get_records('product.image.staging', domain_url="[('product_stg_id', '=', %i)]" % product_izi_id)
-               
+            
+            if do_upload and type(do_upload) == bool:
+                form_view = self.env.ref('juragan_product.popup_message_wizard')
+                view_id = form_view and form_view.id or False
+                context = dict(self._context or {})
+                context['default_name'] = 'Upload to marketplace, Success !'
+                return {
+                    'name': 'Success',
+                    'type': 'ir.actions.act_window',
+                    'view_mode': 'form',
+                    'view_type': 'form',
+                    'res_model': 'popup.message.wizard',
+                    'views': [(view_id,'form')],
+                    'view_id' : form_view.id,
+                    'target': 'new',
+                    'context': context,
+                }          
                 
 
     def generate_staging_variant(self):
@@ -862,68 +1062,68 @@ class ProductStaging(models.Model):
                 product_staging.generate_shopee_variant()
             elif product_staging.mp_lazada_id:
                 product_staging.generate_lazada_variant()
-                
     
     @api.onchange('tp_category_id')
     def _change_tp_category_id(self):
-        if self.mp_tokopedia_id and self.tp_category_id:
-            server = self.env['webhook.server'].search(
-                [('active', 'in', [False, True])],
-                limit=1, order='write_date desc')
-            if not server:
-                raise UserError('Buatkan minimal 1 webhook server!')
-            url = '{}/ui/products/change_category/tokopedia'.format(
-                server.name)
-            req = requests.post(
-                url,
-                headers={'X-Openerp-Session-Id': server.session_id},
-                json={'tp_category_id': self.tp_category_id.izi_id, 'mp_tokopedia_id': self.mp_tokopedia_id.izi_id})
-            if req.status_code == 200:
-                response = req.json().get('result')
-                if response.get('code') == 200:
-                    response_data = response.get('data')
-                    if response_data.get('tp_variant_ids'):
-                        domain_url = "[('id', 'in', %s)]" % str(
-                            response_data.get('tp_variant_ids'))
-                        server.get_records(
-                            'mp.tokopedia.category.variant', domain_url=domain_url, force_update=True)
-                    if response_data.get('tp_unit_ids'):
-                        domain_url = "[('id', 'in', %s)]" % str(
-                            response_data.get('tp_unit_ids'))
-                        server.get_records(
-                            'mp.tokopedia.category.unit', domain_url=domain_url, force_update=True)
-                    if response_data.get('tp_value_ids'):
-                        domain_url = "[('id', 'in', %s)]" % str(
-                            response_data.get('tp_value_ids'))
-                        server.get_records(
-                            'mp.tokopedia.category.value', domain_url=domain_url, force_update=True)
+        for rec in self:
+            if rec.mp_tokopedia_id and rec.tp_category_id:
+                server = self.env['webhook.server'].search(
+                    [('active', 'in', [False, True])],
+                    limit=1, order='write_date desc')
+                if not server:
+                    raise UserError('Buatkan minimal 1 webhook server!')
+                url = '{}/ui/products/change_category/tokopedia'.format(
+                    server.name)
+                req = requests.post(
+                    url,
+                    headers={'X-Openerp-Session-Id': server.session_id},
+                    json={'tp_category_id': rec.tp_category_id.izi_id, 'mp_tokopedia_id': rec.mp_tokopedia_id.izi_id})
+                if req.status_code == 200:
+                    response = req.json().get('result')
+                    if response.get('code') == 200:
+                        response_data = response.get('data')
+                        if response_data.get('tp_variant_ids'):
+                            domain_url = "[('id', 'in', %s)]" % str(
+                                response_data.get('tp_variant_ids'))
+                            server.get_records(
+                                'mp.tokopedia.category.variant', domain_url=domain_url, force_update=True, loop_commit=False, commit_on_finish=False)
+                        if response_data.get('tp_unit_ids'):
+                            domain_url = "[('id', 'in', %s)]" % str(
+                                response_data.get('tp_unit_ids'))
+                            server.get_records(
+                                'mp.tokopedia.category.unit', domain_url=domain_url, force_update=True, loop_commit=False, commit_on_finish=False)
+                        if response_data.get('tp_value_ids'):
+                            domain_url = "[('id', 'in', %s)]" % str(
+                                response_data.get('tp_value_ids'))
+                            server.get_records(
+                                'mp.tokopedia.category.value', domain_url=domain_url, force_update=True, loop_commit=False, commit_on_finish=False)
     
     @api.onchange('is_active')
     def _change_is_active(self):
-        if self.mp_tokopedia_id:
-            if self.is_active:
-                self.tp_active_status = 1
-            else:
-                self.tp_active_status = 3
-        if self.izi_id != 0 and self.izi_id != False and self.izi_id != None:
-            server = self.env['webhook.server'].search(
-                [('active', 'in', [False, True])],
-                limit=1, order='write_date desc')
-            if not server:
-                raise UserError('Buatkan minimal 1 webhook server!')
-            url = '{}/ui/products/set_active'.format(
-                server.name)
-            req = requests.post(
-                url,
-                headers={'X-Openerp-Session-Id': server.session_id},
-                json={'product_staging_id': self.izi_id, 'set_active': self.is_active})
-            if req.status_code == 200:
-                response = req.json().get('result')
-                if response.get('code') == 200:
-                    domain_url = "[('id', 'in', [%s])]" % str(self.izi_id)
-                    server.get_records(
-                        'product.staging', domain_url=domain_url, force_update=True)
-
+        for rec in self:
+            if rec.mp_tokopedia_id:
+                if rec.is_active:
+                    rec.tp_active_status = '1'
+                else:
+                    rec.tp_active_status = '3'
+            if rec.izi_id != 0 and rec.izi_id != False and rec.izi_id != None:
+                server = self.env['webhook.server'].search(
+                    [('active', 'in', [False, True])],
+                    limit=1, order='write_date desc')
+                if not server:
+                    raise UserError('Buatkan minimal 1 webhook server!')
+                url = '{}/ui/products/set_active'.format(
+                    server.name)
+                req = requests.post(
+                    url,
+                    headers={'X-Openerp-Session-Id': server.session_id},
+                    json={'product_staging_id': rec.izi_id, 'set_active': rec.is_active})
+                if req.status_code == 200:
+                    response = req.json().get('result')
+                    if response.get('code') == 200:
+                        domain_url = "[('id', 'in', [%s])]" % str(rec.izi_id)
+                        server.get_records(
+                            'product.staging', domain_url=domain_url, force_update=True, loop_commit=False)
 
     def generate_shopee_variant(self):
         server = self.env['webhook.server'].search(
@@ -966,7 +1166,7 @@ class ProductStaging(models.Model):
                     })
 
                     try:
-                        url = '{}/ui/products/sp/generate/variant'.format(
+                        url = '{}/ui/public/products/sp/generate/variant'.format(
                             server.name)
                         req = requests.post(
                             url,
@@ -1032,12 +1232,42 @@ class ProductStaging(models.Model):
 
                             else:
                                 if response.get('data').get('error_descrip'):
+                                    form_view = self.env.ref('juragan_product.popup_message_wizard')
+                                    view_id = form_view and form_view.id or False
+                                    context = dict(self._context or {})
+                                    context['default_name'] = response.get('data').get('error_descrip')
+                                    return {
+                                        'name': 'Opps',
+                                        'type': 'ir.actions.act_window',
+                                        'view_mode': 'form',
+                                        'view_type': 'form',
+                                        'res_model': 'popup.message.wizard',
+                                        'views': [(view_id,'form')],
+                                        'view_id' : form_view.id,
+                                        'target': 'new',
+                                        'context': context,
+                                    }
                                     raise UserError(response.get(
                                         'data').get('error_descrip'))
                         else:
                             is_success = (False, "Upload Failed")
 
                     except Exception as e:
+                        form_view = self.env.ref('juragan_product.popup_message_wizard')
+                        view_id = form_view and form_view.id or False
+                        context = dict(self._context or {})
+                        context['default_name'] = str(e)
+                        return {
+                            'name': 'Opps',
+                            'type': 'ir.actions.act_window',
+                            'view_mode': 'form',
+                            'view_type': 'form',
+                            'res_model': 'popup.message.wizard',
+                            'views': [(view_id,'form')],
+                            'view_id' : form_view.id,
+                            'target': 'new',
+                            'context': context,
+                        }
                         raise UserError(str(e))
             else:
                 raise UserError(
@@ -1061,7 +1291,8 @@ class ProductStaging(models.Model):
         # make sure the product have a izi_id
         if self.izi_id and self.izi_id != 0 and self.izi_id != None:
             body = {
-                'product_staging': self.izi_id
+                'product_staging': self.izi_id,
+                'category_id': self.lz_category_id.izi_id
             }
             tier_variation = False
             if self.lz_attribute_line_ids and self.mp_lazada_id:
@@ -1146,12 +1377,42 @@ class ProductStaging(models.Model):
 
                             else:
                                 if response.get('data').get('error_descrip'):
+                                    form_view = self.env.ref('juragan_product.popup_message_wizard')
+                                    view_id = form_view and form_view.id or False
+                                    context = dict(self._context or {})
+                                    context['default_name'] = response.get('data').get('error_descrip')
+                                    return {
+                                        'name': 'Opps, Something Went Wrong.',
+                                        'type': 'ir.actions.act_window',
+                                        'view_mode': 'form',
+                                        'view_type': 'form',
+                                        'res_model': 'popup.message.wizard',
+                                        'views': [(view_id,'form')],
+                                        'view_id' : form_view.id,
+                                        'target': 'new',
+                                        'context': context,
+                                    }
                                     raise UserError(response.get(
                                         'data').get('error_descrip'))
                         else:
                             is_success = (False, "Upload Failed")
 
                     except Exception as e:
+                        form_view = self.env.ref('juragan_product.popup_message_wizard')
+                        view_id = form_view and form_view.id or False
+                        context = dict(self._context or {})
+                        context['default_name'] = str(e)
+                        return {
+                            'name': 'Opps, Something Went Wrong.',
+                            'type': 'ir.actions.act_window',
+                            'view_mode': 'form',
+                            'view_type': 'form',
+                            'res_model': 'popup.message.wizard',
+                            'views': [(view_id,'form')],
+                            'view_id' : form_view.id,
+                            'target': 'new',
+                            'context': context,
+                        }
                         raise UserError(str(e))
             else:
                 raise UserError(

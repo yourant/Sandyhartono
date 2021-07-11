@@ -1,9 +1,8 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import UserError
 import requests
 import json
-import datetime
-from odoo.addons.juragan_webhook import BigMany2one, BigInteger
+from odoo.addons.juragan_webhook import BigInteger
 
 
 ORDER_STATUS_DICT = {
@@ -79,9 +78,34 @@ class ResPartner(models.Model):
 class ProductProduct(models.Model):
     _inherit = 'product.product'
     izi_id = fields.Integer()
+    
+    _sql_constraints = [
+        ('izi_unique', 'unique(izi_id)', 'Product with izi_id has already'),
+    ]
+
+    @api.model
+    def create(self, vals_list):
+        products = super(ProductProduct, self.with_context(create_product_product=True)).create(vals_list)
+        for product in products:
+            if 'izi_id' in self._fields:
+                if not product.izi_id or product.izi_id == 0:
+                    self._cr.execute('UPDATE %s SET izi_id = NULL WHERE id = %s' % (self._table, product.id))
+        return products
+
+    def write(self, values):
+        res = super(ProductProduct, self).write(values)
+        if 'izi_id' in self._fields:
+            if not self.izi_id or self.izi_id == 0:
+                self._cr.execute('UPDATE %s SET izi_id = NULL WHERE id = %s' % (self._table, self.id))
+        return res
+
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
     izi_id = fields.Integer()
+    is_delivery = fields.Boolean(string="Is a Delivery", default=False)
+    is_insurance = fields.Boolean(string="Is a Insurance", default=False)
+    is_adjustment = fields.Boolean(string="Is a Adjustment", default=False)
+    is_discount = fields.Boolean(string="Is a Discount", default=False)
 class ResCompany(models.Model):
     _inherit = 'res.company'
     izi_id = fields.Integer()
@@ -95,46 +119,44 @@ class StockLocation(models.Model):
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    # Change Order Status
     def action_done(self):
         for picking in self:
+            server = self.env['webhook.server'].search([], limit=1)
+            if not server:
+                raise UserError('There is no webhook server.')
+            if server.no_action_marketplace or server.no_action_picking_marketplace:
+                continue
+            # Check Marketplaces
             if picking.sale_id and picking.sale_id.mp_tokopedia_id:
-                server = self.env['webhook.server'].search([], limit=1)
-                if not server:
-                    raise UserError('There is no webhook server.')
                 order = picking.sale_id
                 if order.mp_delivery_type == 'drop off' and order.order_status in ('process', 'ready-ship'):
                     res = server.action_orders('confirm_shipping', [order.izi_id])
                     if not (res and res.get('code') == 200):
-                        raise UserError('Failed to Confirm Shipping Tokopedia.')
-                elif order.mp_delivery_type == 'pickup' and order.order_status in ('process', 'ready-ship'):
-                    res = server.action_orders('request_pickup', [order.izi_id])
-                    if not (res and res.get('code') == 200):
-                        raise UserError('Failed to Request Pickup Tokopedia.')
-            elif picking.sale_id and picking.sale_id.mp_shopee_ud:
-                server = self.env['webhook.server'].search([], limit=1)
-                if not server:
-                    raise UserError('There is no webhook server.')
+                        raise UserError('Failed to Confirm Shipping Tokopedia. %s' % str(res))
+                # TODO: No Request Pickup From Validate Picking. Request Pickup is From Order Only
+                # elif order.mp_delivery_type == 'pickup' and order.order_status in ('process', 'ready-ship'):
+                #     res = server.action_orders('request_pickup', [order.izi_id])
+                #     if not (res and res.get('code') == 200):
+                #         raise UserError('Failed to Request Pickup Tokopedia. %s' % str(res))
+            elif picking.sale_id and picking.sale_id.mp_shopee_id:
                 order = picking.sale_id
                 if order.mp_delivery_type == 'drop off':
                     res = server.action_orders('get_label', [order.izi_id])
                     if not (res and res.get('code') == 200):
                         raise UserError('Failed to DropOff Shopee.')
-                elif order.mp_delivery_type == 'pickup':
-                    order.action_orders_request_pickup()
-                    # res = server.action_orders('request_pickup', [order.izi_id])
-                    # if not (res and res.get('code') == 200):
-                    #     raise UserError('Failed to Request Pickup Shopee.')
-                elif order.mp_delivery_type == 'both':
-                    order.action_orders_request_pickup()
+                # TODO: No Request Pickup From Validate Picking. Request Pickup is From Order Only
+                # elif order.mp_delivery_type == 'pickup':
+                #     order.action_orders_request_pickup()
+                # elif order.mp_delivery_type == 'both':
+                #     order.action_orders_request_pickup()
             elif picking.sale_id and picking.sale_id.mp_lazada_id:
-                server = self.env['webhook.server'].search([], limit=1)
-                if not server:
-                    raise UserError('There is no webhook server.')
                 order = picking.sale_id
                 if order.mp_delivery_type == 'drop off' and order.order_status == 'process':
                     res = server.action_orders('confirm_shipping', [order.izi_id])
                     if not (res and res.get('code') == 200):
-                        raise UserError('Failed to Confirm Shipping Lazada.')
+                        raise UserError('Failed to Confirm Shipping Lazada. %s' % str(res))
+                # TODO: No Request Pickup From Validate Picking. Request Pickup is From Order Only
                 # elif order.mp_delivery_type == 'pickup' and order.order_status == 'ready-ship':
                 #     res = server.action_orders('request_pickup', [order.izi_id])
                 #     if not (res and res.get('code') == 200):
@@ -144,10 +166,12 @@ class StockPicking(models.Model):
 class StockInventorySync(models.Model):
     _inherit = 'stock.inventory'
 
+    # Syncronize Stock
     def action_validate(self):
         if not self.env.context.get('no_push'):
             for inventory in self:
-                wh = self.env['stock.warehouse'].sudo().search([('lot_stock_id', '=', inventory.location_id.id)])
+                location = inventory.location_ids.ensure_one()
+                wh = self.env['stock.warehouse'].sudo().search([('lot_stock_id', '=', location.id)])
                 if (wh and wh.izi_id):
                     adjustment_data = []
                     for line in inventory.line_ids:
@@ -159,6 +183,8 @@ class StockInventorySync(models.Model):
                     if adjustment_data:
                         # Post to IZI
                         server = self.env['webhook.server'].sudo().search([], limit=1)
+                        if server.no_action_marketplace:
+                            continue
                         if server:
                             body = {
                                 'warehouse_id': wh.izi_id if wh else False,
@@ -181,6 +207,7 @@ class StockInventorySync(models.Model):
 class StockPickingSync(models.Model):
     _inherit = 'stock.picking'
 
+    # Syncronize Stock
     def action_done(self):
         for picking in self:
             if not picking.sale_id:
@@ -202,6 +229,8 @@ class StockPickingSync(models.Model):
                             })
                     # Post to IZI
                     server = self.env['webhook.server'].search([], limit=1)
+                    if server.no_action_marketplace:
+                        continue
                     if server:
                         body = {
                             'name': picking.name,
@@ -239,7 +268,7 @@ class SaleOrder(models.Model):
             ('ship', 'Dalam Pengiriman'),
             ('done', 'Selesai'),
             ('return', 'Dikembalikan'),
-        ])
+        ], track_visibility='always')
     # ,compute='_compute_order_status',store=True,
     
     order_status_notes = fields.Char()
@@ -384,8 +413,11 @@ class SaleOrder(models.Model):
                 elif (lazada_order_status == 'delivered'):
                     order_status = 'done'
                     order.action_done()
-                elif (lazada_order_status in ('pending', 'packed', 'repacked')):
+                elif (lazada_order_status == 'pending'):
                     order_status = 'process'
+                    order.action_draft()
+                elif (lazada_order_status in ('packed', 'repacked')):
+                    order_status = 'ready-process'
                     order.action_draft()
                 elif (lazada_order_status in ('ready_to_ship', 'ready_to_ship_pending')):
                     order_status = 'ready-ship'
@@ -403,31 +435,56 @@ class SaleOrder(models.Model):
             # Set Status
             order.order_status = order_status
 
+    # TODO: Where is Shopee and Lazada Code?
     def action_confirm(self):
         if not self.env.context.get('no_push'):
             for order in self:
                 if order.mp_tokopedia_id:
                     server = order.get_webhook_server()
+                    if server.no_action_marketplace:
+                        continue
                     # First, Accept The Order
-                    res = server.action_orders('accept_order', [order.izi_id], refresh=False)
-                    if not (res and res.get('code') == 200):
-                        raise UserError('Failed to Accept Order Tokopedia.')
+                    if order.order_status == 'ready-process':
+                        res = server.action_orders('accept_order', [order.izi_id], refresh=False)
+                        if not (res and res.get('code') == 200):
+                            raise UserError('Failed to Accept Order Tokopedia. %s' % str(res))
                     # Second, Get No Resi
                     res = server.action_orders('get_label', [order.izi_id])
                     if not (res and res.get('code') == 200):
-                        raise UserError('Failed to Get No Resi Tokopedia.')
+                        raise UserError('Failed to Get No Resi Tokopedia. %s' % str(res))
                     elif res.get('data') and res.get('data').get('awb_number'):
                         order.mp_awb_number = res['data']['awb_number'][0]
         return super(SaleOrder, self).action_confirm()
 
+    # TODO: Where is Shopee and Lazada Code?
     def action_cancel(self):
         if not self.env.context.get('no_push'):
             for order in self:
                 if order.mp_tokopedia_id:
                     server = order.get_webhook_server()
-                    res = server.action_orders('reject_order', [order.izi_id])
-                    if not (res and res.get('code') == 200):
-                        raise UserError('Failed to Reject Order Tokopedia.')
+                    if server.no_action_marketplace:
+                        continue
+                    if order.order_status not in ('cancel', 'done'):
+                        res = server.action_orders('reject_order', [order.izi_id])
+                        if not (res and res.get('code') == 200):
+                            raise UserError('Failed to Reject Order Tokopedia. %s' % str(res))
+                if order.mp_shopee_id:
+                    server = order.get_webhook_server()
+                    if server.no_action_marketplace:
+                        continue
+                    if order.order_status not in ('cancel', 'done'):
+                        super(SaleOrder, self).action_cancel()
+                        form_view = self.env.ref('juragan_product.sale_cancel_form')
+                        return {
+                            'name': 'Cancel Order',
+                            'view_mode': 'form',
+                            'res_model': 'sale.cancel.wizard',
+                            'view_id' : form_view.id,
+                            'type': 'ir.actions.act_window',
+                            'target': 'new',
+                            'context' : {'mp_type':'shp'},
+                        }
+                        
         
         return super(SaleOrder, self).action_cancel()
 
@@ -436,17 +493,20 @@ class SaleOrder(models.Model):
         for order in self:
             if order.mp_tokopedia_id:
                 order.mp_channel = 'tp'
-            if order.mp_shopee_id:
+            elif order.mp_shopee_id:
                 order.mp_channel = 'sp'
-            if order.mp_lazada_id:
+            elif order.mp_lazada_id:
                 order.mp_channel = 'lz'
+            else:
+                order.mp_channel = False
 
     def action_by_order_status(self):
         for order in self:
             try:
                 if order.order_status == 'return':
-                    order.action_done()
+                    order.action_cancel()
                 elif order.order_status == 'done':
+                    order.action_confirm()
                     order.action_done()
                 elif order.order_status == 'ship':
                     order.action_confirm()
@@ -500,14 +560,36 @@ class SaleOrder(models.Model):
                     #     move_line.quantity_done = move_line.product_uom_qty
                 picking.action_done()
 
+    # Not Used. To Be Deleted.
     def action_pay_invoice(self):
         for order in self:
-            order.action_invoice_create(final=True)
+            order._create_invoices(final=True)
             for invoice in order.invoice_ids:
-                invoice.action_invoice_open()
+                # invoice.action_invoice_open()
+                invoice.action_post()
                 journal = self.env['account.journal'].search([('type', '=', 'bank')], limit=1)
                 if journal:
-                    invoice.pay_and_reconcile(pay_journal=journal)
+                    #create payment
+                    payment = self.env['account.payment'].create({
+                        'payment_type': 'inbound',
+                        'partner_type': 'customer',
+                        'partner_id': invoice.partner_id.id,
+                        'payment_date': invoice.invoice_date,
+                        'amount': invoice.amount_residual,
+                        'journal_id':journal.id,
+                        'payment_method_id': self.env.ref('account.account_payment_method_manual_in').id
+                    })
+                    if payment:
+                        # post payment
+                        payment.post()
+
+                        for aml in payment.move_line_ids:
+                            # reconcile payment
+                            if aml.account_id.user_type_id == self.env.ref('account.data_account_type_receivable'):
+                                invoice.js_assign_outstanding_line(aml.id)
+                    
+
+                    # invoice.pay_and_reconcile(pay_journal=journal)
 
     def action_orders_accept(self):
         server = self.get_webhook_server()
@@ -516,37 +598,23 @@ class SaleOrder(models.Model):
             if res and res.get('code') == 200:
                 pass
                 # order.action_confirm()
-                # order.action_pay_invoice()
 
     def action_orders_reject(self):
         server = self.get_webhook_server()
         for order in self:
             res = server.action_orders('reject_order', [order.izi_id])
+        
+    def action_orders_packing(self):
+        server = self.get_webhook_server()
+        for order in self:
+            res = server.action_orders('packing', [order.izi_id])
     
     def action_orders_confirm_shipping(self):
         server = self.get_webhook_server()
         form_view = self.env.ref('juragan_product.confirm_shipping_form')
         for order in self:
             if order.mp_lazada_id:
-                res = server.shipping([self.izi_id])
-                # pickup_obj = self.env['sale.order.pickup.info']
-                # shop_obj = self.env['mp.shop.address']
-                if res['code'] == 200:
-                    # form_view = self.env.ref('juragan_product.request_pickup_form')
-                    # server.get_records('mp.shop.address')
-                    data = res['data']
-                    return {
-                        'name': 'Confirm Shipping',
-                        'view_mode': 'form',
-                        'res_model': 'confirm.shipping.wizard',
-                        'view_id': form_view.id,
-                        'type': 'ir.actions.act_window',
-                        'target': 'new',
-                        'context': {
-                            'order_id': order.id,
-                            'default_mp_awb_number': order.mp_awb_number
-                        }
-                    }
+                res = server.action_orders('ready_to_ship', [order.izi_id])
             else:
                 return {
                 'name': 'Confirm Shipping',
@@ -651,6 +719,9 @@ class SaleOrder(models.Model):
                 self.action_validate_picking()
 
     def action_orders_get_label(self):
+        for rec in self:
+            if rec.state in ('draft', 'cancel'):
+                raise UserError('Can not get label from quotation or cancelled order. Confirm order first!')
         server = self.get_webhook_server()
         if self.mapped('mp_tokopedia_id'):
             res = server.action_orders('get_label', self.mapped('izi_id'))
@@ -693,42 +764,42 @@ class SaleOrder(models.Model):
                             'url': res['data']['url']+'&session_id='+server.session_id,
                         }
         if self.mapped('mp_shopee_id'):
-            if self.mp_awb_url:
-                return {
-                    'name': 'Label',
-                    'res_model': 'ir.actions.act_url',
-                    'type': 'ir.actions.act_url',
-                    'target': 'new',
-                    'url': self.mp_awb_url+'&session_id='+server.session_id,
-                }
-            elif self.mp_delivery_type == 'pickup' and not self.mp_awb_number:
-                raise UserError('Please Request Pickup before Get Label for Shopee Order with Pickup Delivery type ')
-            else:
-                res = server.action_orders('get_label', [self.izi_id])
-                if res['code'] == 200:
-                    domain_url = "[('id', '=', %i)]" % int(self.izi_id)
-                    server.get_records('sale.order',domain_url=domain_url)
-                    self.action_pay_invoice()
-                    if res.get('data') and res.get('data').get('url') and server.session_id:
-                        if isinstance(res['data']['url'], list):
-                            for url in res['data']['url']:
-                                return {
-                                    'name': 'Label',
-                                    'res_model': 'ir.actions.act_url',
-                                    'type': 'ir.actions.act_url',
-                                    'target': 'new',
-                                    'url': url+'&session_id='+server.session_id,
-                                }
-                        elif isinstance(res['data']['url'], str):
-                            return {
-                                    'name': 'Label',
-                                    'res_model': 'ir.actions.act_url',
-                                    'type': 'ir.actions.act_url',
-                                    'target': 'new',
-                                    'url': res['data']['url']+'&session_id='+server.session_id,
-                                }
+            for order in self:
+                if order.mp_awb_url:
+                    return {
+                        'name': 'Label',
+                        'res_model': 'ir.actions.act_url',
+                        'type': 'ir.actions.act_url',
+                        'target': 'new',
+                        'url': order.mp_awb_url+'&session_id='+server.session_id,
+                    }
+                elif order.mp_delivery_type == 'pickup' and not order.mp_awb_number:
+                    raise UserError('Please Request Pickup before Get Label for Shopee Order with Pickup Delivery type ')
                 else:
-                    raise UserError('Get Label Failed..')
+                    res = server.action_orders('get_label', [order.izi_id])
+                    if res['code'] == 200:
+                        domain_url = "[('id', '=', %i)]" % int(order.izi_id)
+                        server.get_records('sale.order',domain_url=domain_url)
+                        if res.get('data') and res.get('data').get('url') and server.session_id:
+                            if isinstance(res['data']['url'], list):
+                                for url in res['data']['url']:
+                                    return {
+                                        'name': 'Label',
+                                        'res_model': 'ir.actions.act_url',
+                                        'type': 'ir.actions.act_url',
+                                        'target': 'new',
+                                        'url': url+'&session_id='+server.session_id,
+                                    }
+                            elif isinstance(res['data']['url'], str):
+                                return {
+                                        'name': 'Label',
+                                        'res_model': 'ir.actions.act_url',
+                                        'type': 'ir.actions.act_url',
+                                        'target': 'new',
+                                        'url': res['data']['url']+'&session_id='+server.session_id,
+                                    }
+                    else:
+                        raise UserError('Get Label Failed %s' % str(res))
     
 class WebhookServer(models.Model):
     _inherit = 'webhook.server'
@@ -741,7 +812,7 @@ class WebhookServer(models.Model):
     # API Get Specific
     #
     def action_orders(self, action_code, order_ids=[], cancel_reason_id=False, picking_time_id=False, address_id=False,
-                      refresh=True, mp_awb_number=False, **kwargs):
+                      refresh=False, mp_awb_number=False, **kwargs):
         body = {
             'request_by': 'odoo',
             'action_code': action_code,
@@ -765,6 +836,8 @@ class WebhookServer(models.Model):
             body.update({
                 'mp_awb_number': mp_awb_number
             })
+        elif action_code == 'ready_to_ship':
+            pass
         r = requests.post(self.name + '/ui/v2/orders/action/', json=body, headers={
             'X-Openerp-Session-Id': self.session_id,
         })
@@ -784,18 +857,6 @@ class WebhookServer(models.Model):
         }, headers={
             'X-Openerp-Session-Id': self.session_id,
         })
-        res = json.loads(r.text) if r.status_code == 200 else {}
-        if res:
-            res = res['result']
-        return res
-
-    def shipping(self, order_ids=[]):
-        r = requests.post(self.name + '/ui/v2/orders/shipped', json={
-            'order_ids': order_ids
-        }, headers={
-            'X-Openerp-Session-Id': self.session_id,
-        })
-        self.sync_order()
         res = json.loads(r.text) if r.status_code == 200 else {}
         if res:
             res = res['result']

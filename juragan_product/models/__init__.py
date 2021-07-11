@@ -8,3 +8,8 @@ from . import mp_lazada
 from . import product
 from . import mp_shopee
 from . import order
+from . import stock_distribution
+from . import warehouse_config_wizard
+from . import order_component_config
+from . import campaign
+from . import product_discount

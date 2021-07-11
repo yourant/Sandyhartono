@@ -115,21 +115,25 @@
 				<form string="Webhook Server">
 					<header>
 						<button class="btn-izi" name="remote" string="Access IZI App" type="object" />
-						<button type="object" name="initialize" string="Initialize" />
+						<!-- NO MORE ONE CLICK INIT -->
+						<!-- <button type="object" name="initialize" string="Initialize" /> -->
 						<button type="object" name="sync_order" string="Sync Recent Orders" />
 
-						<button confirm="Are you sure you want to do delete all data related to IZI? This action cannot be undone!" groups="base.group_no_one" type="object" name="delete_data" string="Delete All Data" />
 						<button groups="base.group_no_one" name="upsert_menu" string="Create Menu" type="object" />
 						<button groups="base.group_no_one" name="delete_menu" string="Delete Menu" type="object" />
+						<button invisible="1" class="btn-izi-danger" confirm="Are you sure you want to do delete all data related to IZI? This action cannot be undone!" groups="base.group_no_one" type="object" name="delete_data" string="Delete All Data" />
+						<button invisible="1" class="btn-izi-danger" confirm="Are you sure you want to do delete staging and attribute related to IZI? This action cannot be undone!" groups="base.group_no_one" type="object" name="delete_staging_and_attribute" string="Delete Staging and Attribute" />
 					</header>
 					<header>
-						<button groups="base.group_no_one" type="object" name="get_accounts" string="Sync Account" />
-						<button groups="base.group_no_one" type="object" name="get_product_category" string="Sync Product Category" />
-						<button groups="base.group_no_one" type="object" name="get_dependency" string="Sync Dependency" />
+						<button confirm="Make sure the warehouse mapping is correct. Click OK to continue!"  groups="base.group_no_one" type="object" name="get_accounts" string="1. Get Accounts" />
+						<button groups="base.group_no_one" type="object" name="get_product_brand" string="2. Get Product Brand" />
+						<button groups="base.group_no_one" type="object" name="get_product_category" string="3. Get Product Category" />
+						<button groups="base.group_no_one" type="object" name="get_dependency" string="4. Get Dependency" />
 
-						<button groups="base.group_no_one" type="object" name="get_products" string="Sync All Products" />
-						<button groups="base.group_no_one" type="object" name="get_orders" string="Sync All Orders" />
-						<button groups="base.group_no_one" type="object" name="import_stock" string="Sync All Stocks" />
+						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_products" string="5. Get All Products" />
+						<button confirm="Are you sure to import ALL ORDERS from marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="get_orders" string="6. Get All Orders" />
+						<button confirm="Are you sure to import ALL STOCK DATA from marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="import_stock" string="7. Import Stock" />
+						<button confirm="Are you sure to export ALL STOCK DATA to marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="export_stock" string="Export Stock" />
 					</header>
 					<sheet>
 						<group>
@@ -138,13 +142,12 @@
 								<field name="username" />
 								<field name="password" password="1" />
 								<field name="session_id" readonly="1" />
-								<field name="cron_id" />
 							</group>
 							<group>
 								<field name="active" />
-								<field name="compress" />
-								<field name="is_sync" widget='boolean_toggle'/>
-								<field name="is_skip_check" widget='boolean_toggle'/>
+								<field name="cron_id" />
+								<field name="get_records_time_limit" />
+								<!-- <field name="compress" /> -->
 							</group>
 						</group>
 						<group invisible='1'>
@@ -153,6 +156,43 @@
 						</group>
 						
 						<notebook>
+							<page string="Sync Configuration">
+								<group>
+									<field name="is_skip_error" widget='boolean_toggle'/>
+									<p class="sub-label">Skip error when getting records then write logs.</p>
+									<field name="is_skip_product_not_mapping" widget='boolean_toggle'/>
+									<p class="sub-label">Do not create or update product in Odoo if not mapped in product mapping.</p>
+									<field name="is_skip_image" widget='boolean_toggle'/>
+									<p class="sub-label">Do not save product image from marketplace to Odoo database.</p>
+									<field name="is_quotation_only" widget='boolean_toggle'/>
+									<p class="sub-label">Always get new order as quotation regardless its state from marketplace.</p>
+									<field name="skip_cancel_order" widget='boolean_toggle'/>
+									<p class="sub-label">Do not import cancelled order from marketplace.</p>
+									<field name="skip_waiting_order" widget='boolean_toggle'/>
+									<p class="sub-label">Do not import unpaid order from marketplace.</p>
+									<field name="check_invoice_number" widget='boolean_toggle'/>
+									<p class="sub-label">Always check existing marketplace invoice number before saving order.</p>
+									<field name="no_action_marketplace" widget='boolean_toggle'/>
+									<p class="sub-label">Prevent all action to marketplace when triggerred in Odoo.</p>
+									<field name="no_action_picking_marketplace" widget='boolean_toggle'/>
+									<p class="sub-label">Prevent delivery action to marketplace when triggerred in Odoo.</p>
+								</group>
+							</page>
+							<page string="Records Logs">
+								<button class="btn-izi" type="object" name="retry_get_records" string="Retry" icon="fa-refresh"/>
+								<field name="log_ids">
+									<tree>
+										<button type="object" name="retry_get_record" icon="fa-refresh" />
+										<field name="last_retry_time" readonly="1"/>
+										<field name="model_name" readonly="1"/>
+										<field name="izi_id" readonly="1"/>
+										<field name="res_id" invisible="1"/>
+										<field name="error_message" readonly="1"/>
+										<field name="status" readonly="1"/>
+										<field name="notes" readonly="1"/>
+									</tree>
+								</field>
+							</page>
 							<page string="Model" invisible="1">
 								<field name="model_ids" options="{'reload_on_button': true}">
 									<tree decoration-muted="(not webhook_field_ids)">
@@ -240,7 +280,7 @@
 
 		<menuitem name="Configuration"
 			id="menu_webhook" sequence="300"
-            web_icon="juragan_webhook,static/img/izi_config.png" />
+            web_icon="juragan_webhook,static/img/izi_config.png" groups="juragan_webhook.group_izi_webhook_configuration_manager"/>
             <menuitem name="Server Configuration"
             	id="menu_webhook_server"
 				parent="menu_webhook"

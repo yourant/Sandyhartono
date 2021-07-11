@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record model="ir.module.category" id="juragan_webhook.module_category_izi">
+            <field name="name">IZI Management</field>
+            <field name="description">Category for IZI</field>
+        </record>
+
+        <record id="juragan_webhook.group_izi_webhook_configuration_manager" model="res.groups">
+            <field name="name">IZI Webhook Configuration Manager</field>
+            <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+            <field name="category_id" ref="juragan_webhook.module_category_izi"/>
+        </record>
+    </data>
+</odoo>

@@ -4,3 +4,6 @@ access_webhook_server_mq_status,access_webhook_server_mq_status,model_webhook_se
 access_webhook_server_mq,access_webhook_server_mq,model_webhook_server_mq,base.group_system,1,1,1,1
 access_webhook_server_token,access_webhook_server_token,model_webhook_server_token,base.group_system,1,1,1,1
 access_oauth_access_token,access_oauth_access_token,model_oauth_access_token,base.group_system,1,1,1,1
+access_webhook_server_log,access_webhook_server_log,model_webhook_server_log,base.group_system,1,1,1,1
+
+access_webhook_server_global,access_webhook_server_global,juragan_webhook.model_webhook_server,,1,1,0,0

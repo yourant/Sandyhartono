@@ -1,0 +1,103 @@
+<odoo>
+    <record id="mapping_master_fields_form" model="ir.ui.view">
+        <field name="name">mapping.master.fields.form.wizard</field>
+        <field name="model">mapping.master.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Mapping Master Fields">
+                <group>
+                    <group style="width:90%">
+                        <field name="name" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_name" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="default_code" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_default_code" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="description_sale" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_description_sale" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="list_price" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_list_price" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="qty_available" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_qty_available" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="min_order" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_min_order" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="weight" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_weight" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="length" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_length" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="width" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_width" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <group>
+                    <group style="width:90%">
+                        <field name="height" />
+                    </group>
+                    <group style="width:10%">
+                        <field name="is_height" widget="boolean_toggle" nolabel="1" />
+                    </group>
+                </group>
+                <footer>
+                    <button name="do_mapping_fields" confirm="Are you sure? Please make sure your field values" string="Mapping Fields" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="mapping_master_wizard" model="ir.actions.act_window">
+        <field name="name">Mapping Master Fields Wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">mapping.master.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="mapping_master_fields_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

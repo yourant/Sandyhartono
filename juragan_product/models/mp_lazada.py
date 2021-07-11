@@ -35,6 +35,13 @@ class MPLazada(models.Model):
     wh_id = fields.Many2one('stock.warehouse', string='Warehouse')
     izi_id = fields.Integer()
     izi_md5 = fields.Char()
+    wh_shop_id = fields.Many2one('stock.warehouse', string='Shop Warehouse')
+    wh_main_id = fields.Many2one('stock.warehouse', string='Main Warehouse')
+    wh_config = fields.Selection([
+        ('main','Main Warehouse'),
+        ('shop','Shop Warehouse'),], string='Take Stock From', default='main')
+    sync_stock_active = fields.Boolean('Realtime Stock Update')
+    partner_id = fields.Many2one(comodel_name="res.partner", string="Default Customer", required=False)
 
     def name_get(self):
         result = []
@@ -47,8 +54,6 @@ class MPLazada(models.Model):
             else:
                 names.append(
                     this.name or str('mp.lazada.' + str(this.id)))
-            if this.wh_id:
-                names.append('( ' + this.wh_id.name + ' )')
             result.append((this.id, ' '.join(names)))
         return result
 
@@ -170,9 +175,9 @@ class MPLazadaProductAttr(models.Model):
     izi_id = fields.Integer()
     izi_md5 = fields.Char()
     
-    _sql_constraints = [
-        ('name_unique', 'unique(item_id_staging,name)', 'Name Already Exist.')
-    ]
+    # _sql_constraints = [
+    #     ('name_unique', 'unique(item_id_staging,name)', 'Name Already Exist.')
+    # ]
 
     @api.depends('attribute_id')
     def _compute_attribute(self):
@@ -180,6 +185,9 @@ class MPLazadaProductAttr(models.Model):
             if rec.attribute_id:
                 rec.is_mandatory = rec.attribute_id.is_mandatory
                 rec.values = rec.attribute_id.options.ids
+            else:
+                rec.is_mandatory = False
+                rec.values = []
 
     def write(self, vals):
         if not self.env.context.get('create_product_attr'):
@@ -211,7 +219,10 @@ class MPLazadaAttributeLine(models.Model):
     def _compute_attribute(self):
         for rec in self:
             if rec.attribute_id:
-                rec.attr_values = self.env['mp.lazada.variant.value'].search([('lz_value_id','in',rec.attribute_id.options.ids)])
+                rec.attr_values = self.env['mp.lazada.variant.value'].search(
+                    [('lz_value_id','in',rec.attribute_id.options.ids)])
+            else:
+                rec.attr_values = []
 class MPLazadaVariantValue(models.Model):
 
     _name = 'mp.lazada.variant.value'
