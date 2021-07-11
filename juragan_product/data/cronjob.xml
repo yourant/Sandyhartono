@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="ir_cron_reverse_entry" model="ir.cron">
-        <field name="name">Model; Syncronize Data</field>
+        <field name="name">Unused</field><!-- Model; Syncronize Data -->
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
+        <field name="numbercall">0</field>
         <field name="doall" eval="False"/>
         <field name="nextcall" eval="DateTime.now().strftime('%Y-%m-%d 17:00:00')" />
         <field name="model_id" ref="juragan_webhook.model_webhook_server"/>
-        <field name="code">model._sync_data()</field>
+        <field name="code"></field><!-- model._sync_data() -->
         <field name="state">code</field>
         <field name="active" eval="False"/>
     </record>

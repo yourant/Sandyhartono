@@ -30,7 +30,6 @@ class RequestPickupWizard(models.TransientModel):
 
             # sale.action_validate_picking()
             sale.action_confirm()
-            sale.action_pay_invoice()
         
             # return {
             #     'name': 'Label',

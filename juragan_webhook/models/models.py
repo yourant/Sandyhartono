@@ -42,6 +42,7 @@ code_by_model_name = {
     'mp.shopee': 'izi-shopee',
     'mp.shopee.item.category': 'izi-shopee-item-category',
     'mp.shopee.item.attribute': 'izi-shopee-item-attribute',
+    'mp.shopee.item.brand': 'izi-shopee-item-brand',
     'mp.shopee.item.attribute.option': 'izi-shopee-item-attribute-option',
     'mp.shopee.item.attribute.val': 'izi-shopee-item-attribute-val',
     'mp.shopee.logistic': 'izi-shopee-logistic',
@@ -77,6 +78,9 @@ code_by_model_name = {
     'product.staging.wholesale': 'izi-product-staging-wholesales',
     'product.brand': 'izi-brands',
     'product.image': 'izi-product-image',
+
+    'mp.product.discount': 'izi-product-discounts',
+    'mp.product.discount.line': 'izi-product-discount-lines'
 }
 
 existing_fields_by_model_name = {
@@ -85,6 +89,8 @@ existing_fields_by_model_name = {
     'res.users': ['name'],
     'mp.shopee.item.attribute.option': ['name'],
     'mp.lazada.category.attr.opt': ['name'],
+    'product.template': ['name'],
+    'product.product': ['name'],
 }
 
 removed_fields = {
@@ -242,15 +248,15 @@ class Base(models.AbstractModel):
                     continue
                 vals2[k] = v
                 if self._fields[k].type == 'selection':
-                    if not isinstance(v, str):
+                    if not isinstance(v, str) and not isinstance(v, bool):
                         vals2[k] = '%s' % (v)
         else:
             vals2 = vals
         res = super(Base, self).create(vals2)
-        if vals2 and self._context.get('webhook', True):
-            res.create_webhook(fields=list(vals2.keys()))
+        # if vals2 and self._context.get('webhook', True):
+        #     res.create_webhook(fields=list(vals2.keys()))
         return res
-    
+
     def write(self, vals):
         vals2 = {}
         if self._name in code_by_model_name.keys():
@@ -274,11 +280,11 @@ class Base(models.AbstractModel):
     #         self.create_webhook(fields=list(vals.keys()))
     #     return res
 
-    def unlink(self):
-        if self._context.get('webhook', True):
-            self.create_webhook(method='unlink')
-        res = super(Base, self).unlink()
-        return res
+    # def unlink(self):
+    #     if self._context.get('webhook', True):
+    #         self.create_webhook(method='unlink')
+    #     res = super(Base, self).unlink()
+    #     return res
 
     def create_webhook(self, **kw):
         method = kw.get('method', 'export')
@@ -459,9 +465,23 @@ class WebhookServer(models.Model):
     session_id = fields.Char('Session', readonly=True, compute='_get_session')
 
     active = fields.Boolean(default=False)
-    is_sync = fields.Boolean(default=True)
-    is_skip_check = fields.Boolean(default=False)
+    is_skip_error = fields.Boolean('Skip Error', default=False)
+    is_skip_image = fields.Boolean('Skip Product Image', default=False)
+    is_skip_product_not_mapping = fields.Boolean('Skip Not Mapped', default=False)
+    is_quotation_only = fields.Boolean('Always Quotation', default=True)
+    skip_cancel_order = fields.Boolean('Skip Cancelled Order', default=False)
+    skip_waiting_order = fields.Boolean('Skip Unpaid Order', default=True)
+    no_action_marketplace = fields.Boolean('Unsync All Action', default=False)
+    no_action_picking_marketplace = fields.Boolean('Unsync Delivery Action', default=False)
+    check_invoice_number = fields.Boolean('Check Invoice Number', default=False)
 
+    get_records_time_limit = fields.Selection([
+        ('last_hour', 'Last Hour'),
+        ('last_3_days', 'Last 3 Days'),
+        ('last_7_days', 'Last 7 Days'),
+    ], default='last_hour', required=True, string='Time Limit')
+
+    log_ids = fields.One2many('webhook.server.log', 'server_id', string='Records Logs')
     cron_id = fields.Many2one('ir.cron', 'Scheduler')
 
     #
@@ -475,9 +495,13 @@ class WebhookServer(models.Model):
         if not self.password:
             raise UserError('Password not set.')
 
-    def auth_login(self):
+    def _get_session(self):
         try:
             self.check_auth()
+            if self.name[-1] == '/':
+                self.write({
+                    'name': self.name[:-1]
+                })
             r = requests.post(self.name + '/api/ui/login', json={
                 'login': self.username,
                 'password': self.password,
@@ -491,34 +515,60 @@ class WebhookServer(models.Model):
                     raise ValidationError(error + ' for Webhook server : '+ str(self))
                 self.session_id = session_id
                 return self.session_id
+            self.session_id = ''
             return False
         except Exception as e:
             _logger.error(str(e))
+            self.session_id = ''
             return False
 
-    def retry_login(self, count_retry):
+    def retry_login(self, count_retry=1):
+        session_id = False
         for i in range(count_retry):
-            session_id = self.auth_login()
+            session_id = self._get_session()
             if session_id:
                 return session_id
             else:
                 time.sleep(1)
-        raise UserError('Please Login Manually.')
+        if not session_id:
+            raise UserError('Failed when trying to login to IZI server, please make sure you enter the correct server url, username, and password')
         return False
     
-    def _get_session(self):
-        for server in self:
-            session_id = False
-            for i in range(10):
-                session_id = server.auth_login()
-                if session_id:
-                    break
-                else:
-                    time.sleep(1)
-            if not session_id:
-                raise UserError(
-                    'Cannot access IZI server, please try again later')
+    def delete_staging_and_attribute(self):
+        self.env.cr.execute('''
+            UPDATE product_template SET izi_id = NULL;
+            UPDATE product_product SET izi_id = NULL;
+            DELETE FROM product_staging_variant;
+            DELETE FROM product_staging_wholesale;
+            DELETE FROM product_image_staging;
+            DELETE FROM product_staging;
+            
+            DELETE FROM mp_tokopedia_attribute_line;
+            DELETE FROM mp_tokopedia_variant_value;
+            DELETE FROM mp_tokopedia_category_value;
+            DELETE FROM mp_tokopedia_category_unit;
+            DELETE FROM mp_tokopedia_category_variant;
+            DELETE FROM mp_tokopedia_category;
 
+            DELETE FROM mp_shopee_attribute_line;
+            DELETE FROM mp_shopee_item_attribute_option;
+            DELETE FROM mp_shopee_item_attribute_val;
+            DELETE FROM mp_shopee_item_attribute;
+            DELETE FROM mp_shopee_item_var_attribute_value;
+            DELETE FROM mp_shopee_item_var_attribute;
+            DELETE FROM mp_shopee_item_logistic;
+            DELETE FROM mp_shopee_item_category;
+            DELETE FROM mp_shopee_shop_logistic;
+            DELETE FROM mp_shopee_logistic;
+            DELETE FROM mp_shopee_logistic_size;
+
+            DELETE FROM mp_lazada_attribute_line;
+            DELETE FROM mp_lazada_variant_value;
+            DELETE FROM mp_lazada_category_attr_opt;
+            DELETE FROM mp_lazada_category_attr;
+            DELETE FROM mp_lazada_category;
+            DELETE FROM mp_lazada_brand;
+        ''')
     
     def delete_data(self):
         pp_ids = self.env['product.product'].sudo().search([('izi_id', '!=', False), '|', ('active', '=', True), ('active', '=', False)]).ids
@@ -664,7 +714,7 @@ class WebhookServer(models.Model):
         apr_ids = self.env['account.partial.reconcile'].sudo().search(['|', ('credit_move_id', 'in', am_ids), ('debit_move_id', 'in', am_ids)])
 
         # Change to String
-        self.env.cr.execute('DELETE FROM mp_tokopedia;DELETE FROM mp_shopee;DELETE FROM product_mapping;DELETE FROM stock_change_product_qty;')
+        self.env.cr.execute('DELETE FROM mp_tokopedia;DELETE FROM mp_shopee;DELETE FROM product_mapping;DELETE FROM warehouse_mapping;DELETE FROM stock_change_product_qty;DELETE FROM stock_distribution;')
         if ail_ids:
             self.env.cr.execute('DELETE FROM account_invoice_line WHERE id IN (%s);' % (','.join(list(map(str, ail_ids)))))
         if ai_ids:
@@ -717,6 +767,8 @@ class WebhookServer(models.Model):
         if sl_ids:
             self.env.cr.execute('DELETE FROM stock_location WHERE id IN (%s);' % (','.join(list(map(str, sl_ids)))))
         self.env.cr.execute('DELETE FROM mp_tokopedia_variant_value;')
+        self.env.cr.execute('DELETE FROM mp_shopee_item_attribute_option;')
+        self.env.cr.execute('DELETE FROM mp_shopee_item_var_attribute_value;')
     #
     # API Get Specific
     #
@@ -733,10 +785,10 @@ class WebhookServer(models.Model):
 
     def get_accounts(self):
         self.get_warehouses()
-        self.get_records('res.partner')
-        self.get_records('mp.tokopedia', domain_code='all_active')
-        self.get_records('mp.shopee', domain_code='all_active')
-        self.get_records('mp.lazada', domain_code='all_active')
+        self.get_records('res.partner', loop_commit=False)
+        self.get_records('mp.tokopedia', domain_code='all_active', loop_commit=False)
+        self.get_records('mp.shopee', domain_code='all_active', loop_commit=False)
+        self.get_records('mp.lazada', domain_code='all_active', loop_commit=False)
 
     def get_dependency(self):
         self.get_product_dependency()
@@ -882,7 +934,8 @@ class WebhookServer(models.Model):
         }
 
     def sync_order(self):
-        self.get_orders(domain_code='last_hour')
+        if self.get_records_time_limit:
+            self.get_orders(domain_code=self.get_records_time_limit)
 
     @api.model
     def sync_order_model(self):
@@ -902,8 +955,8 @@ class WebhookServer(models.Model):
         #     self.cron_id = cron.id
 
     def get_orders_dependency(self):
-        self.get_records('mp.shop.address')
-        self.get_records('sale.order.cancel.reason')
+        self.get_records('mp.shop.address', loop_commit=False)
+        self.get_records('sale.order.cancel.reason', loop_commit=False)
     
     def trigger_import_stock_izi(self):
         mp_list = []
@@ -937,7 +990,6 @@ class WebhookServer(models.Model):
     def import_stock(self):
         if not self.session_id:
             self.retry_login(3)
-        self.trigger_import_stock_izi()
         r = requests.get(self.name + '/ui/stock', headers={
             'X-Openerp-Session-Id': self.session_id,
         })
@@ -945,9 +997,11 @@ class WebhookServer(models.Model):
         if res:
             # Preparing
             warehouses_by_code = {}
+            warehouses_by_izi_id = {}
             warehouses = self.env['stock.warehouse'].sudo().search([])
             for wh in warehouses:
                 warehouses_by_code[wh.code] = wh
+                warehouses_by_izi_id[wh.izi_id] = wh
 
             products_by_izi_id = {}
             products = self.env['product.product'].sudo().search([('izi_id', '!=', False)])
@@ -957,20 +1011,30 @@ class WebhookServer(models.Model):
             # Adjust Stock
             line_vals = []
             data = res['data']
-            for prod in data['res_products']:
+            for prod in data['res_products_by_wh_id']:
                 prod_id = prod['id']
                 if prod_id not in products_by_izi_id:
                     raise UserError('Product with izi_id %s not found.' % str(prod_id))
                 if products_by_izi_id[prod_id].type != 'product':
                     continue
-                for prod_wh_code in data['res_warehouse_codes']:
-                    if prod_wh_code not in warehouses_by_code:
-                        raise UserError('Warehouse with code %s not found.' % str(prod_wh_code))
+                for index, rw in enumerate(data['res_warehouse_ids']):
+                    wh_id = data['res_warehouse_ids'][index]
+                    wh_code = data['res_warehouse_codes'][index]
+                    found_warehouse = False
+
+                    if wh_id in warehouses_by_izi_id:
+                        found_warehouse = warehouses_by_izi_id[wh_id]
+                    elif wh_code in warehouses_by_code:
+                        found_warehouse = warehouses_by_code[wh_code]
+                        
+                    if not found_warehouse:
+                        raise UserError('Warehouse not found.')
+                    
                     line_vals.append(
                         (0, 0, {
                             'product_id': products_by_izi_id[prod_id].id,
-                            'location_id': warehouses_by_code[prod_wh_code].lot_stock_id.id,
-                            'product_qty': prod[prod_wh_code]['qty_total'] + prod[prod_wh_code]['qty_draft'],
+                            'location_id': found_warehouse.lot_stock_id.id,
+                            'product_qty': prod[str(wh_id)]['qty_total'],
                         })
                     )
             res = self.env['stock.inventory'].sudo().create({
@@ -1023,20 +1087,54 @@ class WebhookServer(models.Model):
         if res:
             pass
 
+    def retry_get_records(self):
+        for log in self.log_ids:
+            if log.status == 'failed':
+                domain_url = "[('id', '=', %i)]" % int(log.izi_id)
+                self.get_records(log.model_name, domain_url=domain_url)
+
     #
     # Method Generic for API
     #
-    def get_records(self, model_name, force_update=False, offset=0, limit=100, order_field='id', sort='asc', retry_login=True, retry_login_count=3, domain_code=False, domain_url=False):
+    def get_records(self, model_name, force_update=False, offset=0, limit=100, order_field='id', sort='asc',
+                    retry_login=True, retry_login_count=3, domain_code=False, domain_url=False, loop_commit=True,
+                    commit_every=False, commit_on_finish=True):
+        """
+        Get any records from IZI to store in Odoo.
+        :param model_name: model name or code/alias
+        :param force_update: record with MD5 hash will not be updated except the hash is different or
+                             forced to update with this paramater
+        :param offset: index number where to start to paginate
+        :param limit: number of record
+        :param order_field: order by this field
+        :param sort: sort method asc/desc
+        :param retry_login:
+        :param retry_login_count:
+        :param domain_code: custom domain code
+        :param domain_url:
+        :param loop_commit:
+        :param commit_every:
+        :param commit_on_finish:
+        :return:
+        """
         i = 0
+        commit_counter = 0
+        # Set Default Context
+        self = self.set_default_context(model_name)
         while True:
+            # check for model code (alias) or model name
             code = code_by_model_name[model_name] if model_name in code_by_model_name else model_name
+            # prepare URL to request
             url = self.name + '/api/ui/read/list-detail/%s?offset=%s&limit=%s&order=%s&sort=%s&domain_code=%s' % (
                 code, str(offset), str(limit), order_field, sort, domain_code)
             if domain_url:
                 url = self.name + '/api/ui/read/list-detail/%s/%s?offset=%s&limit=%s&order=%s&sort=%s&domain_code=%s' % (
                     code, domain_url, str(offset), str(limit), order_field, sort, domain_code)
+            # do request
             r = requests.get(url, headers={'X-Openerp-Session-Id': self.session_id})
+            # getting response data
             res = r.json() if r.status_code == 200 else {}
+            # do process response data
             if res.get('code') == 200:
                 get_number = offset if res['meta']['total_item'] > offset else res['meta']['total_item']
                 if get_number:
@@ -1046,45 +1144,113 @@ class WebhookServer(models.Model):
                     break
                 else:
                     offset += limit
+                # Prepare Server Log
+                ServerLog = self.env['webhook.server.log'].sudo()
+                server_logs = ServerLog.search([('model_name', '=', model_name), ('status', '=', 'failed')])
+                server_logs_by_izi_id = {}
+                for sl in server_logs:
+                    server_logs_by_izi_id[sl.izi_id] = sl
+                # Start Read Record
                 for res_values in res.get('data'):
                     i += 1
-                    _logger.info('(%s) Get record %s ID %s' % (i, model_name, res_values.get('id')))
+                    commit_counter += 1
+                    error_message = False
+                    izi_id = res_values.get('id')
+                    _logger.info('(%s) Get record %s IZI ID %s' % (i, model_name, izi_id))
+                    # Detail Log
+                    self.log_record(model_name, res_values)
+                    # Check Existing Record
                     record = self.get_existing_record(
                         model_name, res_values)
-                    if record:
-                        if 'izi_md5' in self.env[model_name]._fields:
-                            is_update = False
-                            izi_md5 = hashlib.md5(json.dumps(
-                                res_values).encode('utf-8')).hexdigest()
-                            if force_update:
-                                is_update = True
-                            else:
-                                if record.izi_md5 != izi_md5:
+                    if self.check_skip(model_name, record, res_values):
+                        continue
+                    # Start Save Record
+                    try:
+                        # do update if record is already exists
+                        if record:
+                            # store MD5 hash of data if the field is available in the current model
+                            if 'izi_md5' in self.env[model_name]._fields:
+                                is_update = False
+                                izi_md5 = hashlib.md5(json.dumps(
+                                    res_values).encode('utf-8')).hexdigest()
+                                if force_update:
+                                    # need update if forced by parameter
                                     is_update = True
-                            if is_update:
+                                else:
+                                    # need update if current hash is different
+                                    if record.izi_md5 != izi_md5:
+                                        is_update = True
+                                if is_update:
+                                    # do update
+                                    values = self.mapping_field(
+                                        model_name, res_values, update=True)
+                                    values.update({
+                                        'izi_md5': izi_md5
+                                    })
+                                    values = self.custom_before_write(
+                                        model_name, values)
+                                    record.write(values)
+                                    self.custom_after_write(model_name, record, values)
+                            else:
+                                # always update the data if there's no MD5 hash field in the current model
                                 values = self.mapping_field(
                                     model_name, res_values, update=True)
-                                values.update({
-                                    'izi_md5': izi_md5
-                                })
                                 values = self.custom_before_write(
                                     model_name, values)
                                 record.write(values)
                                 self.custom_after_write(model_name, record, values)
                         else:
+                            # do create if there's no existing record
                             values = self.mapping_field(
-                                model_name, res_values, update=True)
-                            values = self.custom_before_write(
-                                model_name, values)
-                            record.write(values)
-                            self.custom_after_write(model_name, record, values)
+                                model_name, res_values, update=False)
+                            if 'izi_md5' in self.env[model_name]._fields:
+                                values.update({
+                                    'izi_md5': hashlib.md5(json.dumps(res_values).encode('utf-8')).hexdigest()
+                                })
+                            values = self.custom_before_create(model_name, values)
+                            if self.check_skip_before_create(model_name, values):
+                                continue
+                            record = self.env[model_name].create(values)
+                            self.custom_after_create(model_name, record, values)
+                        if commit_every:
+                            if isinstance(commit_every, int):
+                                if commit_every == commit_counter:
+                                    # self.env.cr.commit()
+                                    commit_counter = 0
+                        elif loop_commit:
+                            # self.env.cr.commit()
+                            pass
+                    except Exception as e:
+                        _logger.info('Failed Create / Update %s. Cause %s' % (model_name, str(e)))
+                        if not self.is_skip_error:
+                            raise UserError(str(e))
+                        else:
+                            error_message = str(e)
+                    # Check Log
+                    if not error_message:
+                        if izi_id in server_logs_by_izi_id:
+                            server_logs_by_izi_id[izi_id].write({
+                                'res_id': record.id,
+                                'status': 'success',
+                                'last_retry_time': fields.Datetime.now(),
+                            })
                     else:
-                        values = self.mapping_field(
-                            model_name, res_values, update=False)
-                        values = self.custom_before_create(model_name, values)
-                        record = self.env[model_name].create(values)
-                        self.custom_after_create(model_name, record, values)
-                    self.env.cr.commit()
+                        log_values = {
+                            'name': '%s %s' % (str(model_name), str(izi_id)),
+                            'server_id': self.id,
+                            'model_name': model_name,
+                            'izi_id': izi_id,
+                            'status': 'failed',
+                            'res_id': False,
+                            'notes': self.get_notes(model_name, res_values),
+                            'error_message': error_message,
+                            'last_retry_time': fields.Datetime.now(),
+                        }
+                        if izi_id in server_logs_by_izi_id:
+                            server_logs_by_izi_id[izi_id].write(log_values)
+                        else:
+                            ServerLog.create(log_values)
+
             elif res.get('code') == 401:
                 if retry_login:
                     self.retry_login(retry_login_count)
@@ -1094,11 +1260,43 @@ class WebhookServer(models.Model):
                     break
             else:
                 break
+        if commit_on_finish:
+            #### self.env.cr.commit()
+            pass ####
+    
+    def set_default_context(self, model_name):
+        if model_name == 'sale.order':
+            self = self.with_context(get_orders=True)
+        return self
+
+    def get_notes(self, model_name, values):
+        notes = False
+        if model_name == 'sale.order':
+            if values.get('mp_invoice_number', False):
+                notes = values.get('mp_invoice_number')
+        return str(notes)
+
+    def check_skip(self, model_name, record, values):
+        if self.env.context.get('get_products') and self.is_skip_product_not_mapping \
+            and model_name in ('product.product', 'product.template') and not record:
+            return True
+        return False
+
+    def check_skip_before_create(self, model_name, values):
+        # Skip create order that is not draft or cancel if quotation only.
+        if model_name == 'sale.order':
+            if self.skip_cancel_order and values.get('order_status', False) == 'cancel':
+                return True
+            if self.skip_waiting_order and values.get('order_status', False) == 'waiting':
+                return True
+        return False
 
     def custom_after_write(self, model_name, record, values):
         if model_name == 'sale.order':
-            # Action
-            record.with_context(no_push=True).action_by_order_status()
+            # Action. Only allow action_cancel if quotation only.
+            if not self.is_quotation_only or record.order_status == 'cancel':
+                _logger.info('Action By Order Status')
+                record.with_context(no_push=True).action_by_order_status()
         if model_name == 'product.staging':
             if record.sp_attributes:
                 for attribute in record.sp_attributes:
@@ -1110,6 +1308,9 @@ class WebhookServer(models.Model):
                 if record.product_image_staging_ids:
                     for image in record.product_image_staging_ids:
                         image.sudo().unlink()
+            if record.lz_attributes:
+                for attr in record.lz_attributes:
+                    attr.sudo().unlink()
 
     def custom_before_write(self, model_name, values):
         res = values.copy()
@@ -1120,7 +1321,10 @@ class WebhookServer(models.Model):
                 'order_status_notes': res['order_status_notes'],
                 'mp_awb_number': res['mp_awb_number'],
                 'mp_delivery_carrier_name': res['mp_delivery_carrier_name'],               
-                'mp_awb_url': res['mp_awb_url'],               
+                'mp_awb_url': res['mp_awb_url'],
+                'tp_cancel_request_create_time': res['tp_cancel_request_create_time'],
+                'tp_cancel_request_reason': res['tp_cancel_request_reason'],
+                'tp_cancel_request_status': res['tp_cancel_request_status'],
             }
             # for shopee
             if values['sp_order_status']:
@@ -1138,16 +1342,44 @@ class WebhookServer(models.Model):
                 del res['name']
             if 'default_code' in res:
                 del res['default_code']
-            res['invoice_policy'] = 'order'
+            if 'list_price' in res:
+                del res['list_price']
         return res
         
+    def log_record(self, model_name, values):
+        if model_name == 'sale.order':
+            _logger.info('Start Create Sale Order %s' % str(values.get('mp_invoice_number')))
+
     def custom_before_create(self, model_name, values):
         res = values.copy()
 
         if model_name == 'sale.order':
-            # Search Partner With Same Phone / Mobile Or Email For Tokopedia
+            # Don't include SO number from IZI
+            res.pop('name')
+
+            mp_tokopedia_id = values.get('mp_tokopedia_id', False)
+            mp_shopee_id = values.get('mp_shopee_id', False)
+            mp_lazada_id = values.get('mp_lazada_id', False)
+            mp_account = False
+            if mp_tokopedia_id:
+                mp_account = self.env['mp.tokopedia'].sudo().browse(mp_tokopedia_id)
+            elif mp_shopee_id:
+                mp_account = self.env['mp.shopee'].sudo().browse(mp_shopee_id)
+            elif mp_lazada_id:
+                mp_account = self.env['mp.lazada'].sudo().browse(mp_lazada_id)
+            if not mp_account:
+                raise UserError('Marketplace Account not found!')
+            
+            # Get Warehouse
+            if mp_account.wh_id:
+                res['warehouse_id'] = mp_account.wh_id.id
+
+            # Get Partner From Account or Search Partner With Same Phone / Mobile Or Email For Tokopedia
+            _logger.info('Create Customer')
             partner = False
-            if values.get('mp_buyer_id'):
+            if mp_account.partner_id:
+                partner = mp_account.partner_id
+            if not partner and values.get('mp_buyer_id'):
                 partner = self.env['res.partner'].sudo().search([('buyer_id', '=', values.get('mp_buyer_id'))], limit=1)
             if not partner and values.get('mp_buyer_username'):
                 partner = self.env['res.partner'].sudo().search([('buyer_username', '=', values.get('mp_buyer_username'))], limit=1)
@@ -1166,8 +1398,15 @@ class WebhookServer(models.Model):
                     'email': values.get('mp_buyer_email'),
                 })
             # Create Shipping Address Under That Partner
+            _logger.info('Create Shipping Address')
+            _logger.info('Data Shipping Address %s %s - %s' % (values.get('mp_recipient_address_phone'), values.get('mp_recipient_address_name'), partner.name))
             shipping_address = False
             shipping_address = self.env['res.partner'].sudo().search([('parent_id', '=', partner.id), ('name', '=', values.get('mp_recipient_address_name'))], limit=1)
+            
+            if not shipping_address:
+                shipping_address = self.env['res.partner'].sudo().search(
+                    [('phone', '=', values.get('mp_recipient_address_phone')), ('parent_id', '=', partner.id)], limit=1)
+
             if not shipping_address:
                 shipping_address = self.env['res.partner'].sudo().create({
                     'type': 'delivery',
@@ -1179,20 +1418,152 @@ class WebhookServer(models.Model):
                     'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
                     'zip': values.get('mp_recipient_address_zipcode'),
                 })
+            else:
+                shipping_address.write({
+                    # 'phone': values.get('mp_recipient_address_phone'),
+                    'name': values.get('mp_recipient_address_name'),
+                    'street': values.get('mp_recipient_address_full'),
+                    'city': values.get('mp_recipient_address_city'),
+                    'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
+                    'zip': values.get('mp_recipient_address_zipcode'),
+                })
             # Replace Values
             res['partner_id'] = partner.id
             res['partner_shipping_id'] = shipping_address.id
-        elif model_name == 'product.template':
-            res['invoice_policy'] = 'order'
+            res['partner_invoice_id'] = partner.id
+
+            # Add Order Component
+            _logger.info('Add Order Component')
+            component_configs = self.env['order.component.config'].sudo().search([('active','=',True),
+                '|', '|', ('mp_tokopedia_ids','in', values.get('mp_tokopedia_id')),
+                ('mp_shopee_ids','in', values.get('mp_shopee_id')),
+                ('mp_lazada_ids','in', values.get('mp_lazada_id'))])
+            for component_config in component_configs:
+                if values.get('date_order', False):
+                    if component_config.date_start and values['date_order'] < component_config.date_start.strftime('%Y-%m-%d %H:%M:%S'):
+                        continue    
+                    if component_config.date_end and values['date_order'] > component_config.date_end.strftime('%Y-%m-%d %H:%M:%S'):
+                        continue
+                # Process to Remove Product First
+                for line in component_config.line_ids:
+                    if line.component_type == 'remove_product':
+                        new_order_line = []
+                        for index, val in enumerate(values['order_line']):
+                            if val[2].get('is_discount') and line.remove_discount:
+                                continue
+                            if val[2].get('is_delivery') and line.remove_delivery:
+                                continue
+                            if val[2].get('is_insurance') and line.remove_insurance:
+                                continue
+                            if val[2].get('is_adjustment') and line.remove_adjustment:
+                                continue
+                            if val[2].get('product_id') in line.remove_product_ids.ids:
+                                continue
+                            new_order_line.append(val)
+                        values['order_line'] = new_order_line.copy()
+                # Then Discount
+                for line in component_config.line_ids:
+                    if line.component_type == 'discount_line':
+                        for index, val in enumerate(values['order_line']):
+                            if val[2].get('is_discount', False) or val[2].get('is_delivery', False) or val[2].get('is_insurance', False):
+                                continue
+                            if line.discount_line_method == 'input':
+                                if line.discount_line_product_type == 'all' or (val[2].get('product_id', False) and val[2].get('product_id') in line.discount_line_product_ids.ids):
+                                    price_unit = val[2]['price_unit']
+                                    if 100 - line.percentage_value > 0:
+                                        new_price_unit = round(100*price_unit/(100 - line.percentage_value))
+                                    values['order_line'][index][2].update({
+                                        'price_unit': new_price_unit,
+                                        'discount': line.percentage_value,
+                                    })
+                            elif line.discount_line_method == 'calculated':
+                                if line.discount_line_product_type == 'all' or (val[2].get('product_id', False) and val[2].get('product_id') in line.discount_line_product_ids.ids):
+                                    price_unit = val[2]['price_unit']
+                                    product_id = val[2]['product_id']
+                                    product = self.env['product.product'].sudo().browse(product_id)
+                                    if product:
+                                        normal_price = 0
+                                        if product.product_variant_stg_ids:
+                                            normal_price = product.product_variant_stg_ids[0].price_custom
+                                        if normal_price == 0 and product.product_tmpl_id.product_staging_ids:
+                                            for staging in product.product_tmpl_id.product_staging_ids:
+                                                if (values['mp_tokopedia_id'] and values['mp_tokopedia_id'] == staging.mp_tokopedia_id.id) \
+                                                    or (values['mp_shopee_id'] and values['mp_shopee_id'] == staging.mp_shopee_id.id) \
+                                                    or (values['mp_lazada_id'] and values['mp_lazada_id'] == staging.mp_lazada_id.id):    
+                                                    normal_price = staging.list_price
+                                                    break
+                                        if normal_price == 0:
+                                            normal_price = product.product_tmpl_id.list_price
+                                            for tax in product.product_tmpl_id.taxes_id:
+                                                if tax.price_include:
+                                                    continue
+                                                elif tax.amount_type == 'percent' and tax.amount > 0:
+                                                    normal_price = int(round(normal_price * (100 + tax.amount) / 100))
+                                        # Calculate Discount %
+                                        discount_percentage = 0
+                                        if normal_price > 0 and price_unit > 0:
+                                            discount_percentage = int(round((normal_price-price_unit)*100/normal_price))
+                                            if discount_percentage > 0:
+                                                values['order_line'][index][2].update({
+                                                    'price_unit': normal_price,
+                                                    'discount': discount_percentage,
+                                                })
+                # Then Add Tax
+                for line in component_config.line_ids:
+                    if line.component_type == 'tax_line':
+                        for index, val in enumerate(values['order_line']):
+                            if val[2].get('is_discount', False) or val[2].get('is_delivery', False) or val[2].get('is_insurance', False):
+                                continue
+                            if line.account_tax_id and line.account_tax_id.amount_type == 'percent':
+                                percentage = line.account_tax_id.amount
+                                if percentage > 0:
+                                    price_unit = val[2]['price_unit']
+                                    new_price = (price_unit*100)/(100+percentage)
+                                    values['order_line'][index][2].update({
+                                        'price_unit': new_price,
+                                        'tax_id': [(6, 0, [line.account_tax_id.id])],
+                                    })
+                # Then Add Product
+                for line in component_config.line_ids:
+                    if line.component_type == 'add_product':
+                        # Calculate Total Price
+                        amount_total = 0
+                        for index, val in enumerate(values['order_line']):
+                            amount_total += val[2].get('price_total')
+
+                        if line.additional_product_id:
+                            price_unit = 0
+                            if line.fixed_value:
+                                price_unit = line.fixed_value
+                            elif line.percentage_value:
+                                price_unit = round(line.percentage_value*amount_total/100)
+                            values['order_line'].append((0, 0, {
+                                'name': line.name,
+                                'product_id': line.additional_product_id.id,
+                                'product_uom_qty': 1.0,
+                                'price_subtotal': price_unit,
+                                'price_total': price_unit,
+                                'price_unit': price_unit,
+                                'discount': 0.0,
+                                'is_discount': True,
+                            }))
+
+            res['order_line'] = values['order_line']
+            _logger.info('Preparation Done')
+
         return res
 
     def custom_after_create(self, model_name, record, values):
         if model_name == 'sale.order':
-            # Action
-            record.with_context(no_push=True).action_by_order_status()
+            # Action. Only allow action_cancel if quotation only.
+            if not self.is_quotation_only or record.order_status == 'cancel':
+                _logger.info('Action By Order Status')
+                record.with_context(no_push=True).action_by_order_status()
             # Notify
+            _logger.info('Notify')
             if self.env.user:
                 self.env.user.notify_info('New Order from Marketplace %s, with total amount %s. Delivery to %s.' % (record.mp_invoice_number, record.amount_total, record.mp_recipient_address_city))
+            _logger.info('Create Sales Order Done')
 
     def get_existing_record_from_mapping(self, record, model_name, values):
         res = record
@@ -1204,22 +1575,35 @@ class WebhookServer(models.Model):
                 print('Product Template Mapping %s' % mapping.product_id.product_tmpl_id.name)
         if model_name == 'product.product':
             mapping = self.env['product.mapping'].sudo().search([('product_product_izi_id', '=', values['id'])], limit=1)
-            if mapping and mapping.product_id:
-                res = mapping.product_id
-                res.izi_id = values['id']
-                print('Product Variant Mapping %s' % mapping.product_id.name)
+            if mapping:
+                # Check Product Mapping for Order When Has Context get_orders. BUT Do Not Set izi_id!
+                if self.env.context.get('get_orders') and mapping.order_product_id:
+                    res = mapping.order_product_id
+                    print('Product in Order Mapping %s' % mapping.order_product_id.name)
+                elif mapping.product_id:
+                    res = mapping.product_id
+                    res.izi_id = values['id']
+                    print('Product Variant Mapping %s' % mapping.product_id.name)
         if model_name == 'stock.warehouse':
             mapping = self.env['warehouse.mapping'].sudo().search([('warehouse_izi_id', '=', values['id'])], limit=1)
             if mapping and mapping.warehouse_id:
                 res = mapping.warehouse_id
                 res.izi_id = values['id']
                 print('Warehouse Mapping %s' % mapping.warehouse_id.name)
-        if model_name == 'stock.location':
-            mapping = self.env['location.mapping'].sudo().search([('location_izi_id', '=', values['id'])], limit=1)
-            if mapping and mapping.location_id:
-                res = mapping.location_id
-                res.izi_id = values['id']
-                print('Location Mapping %s' % mapping.location_id.display_name)
+        if model_name == 'mp.lazada.product.attr':
+            if 'id' in values['item_id_staging']:
+                prod_staging_by_izi_id = values['item_id_staging']['id']
+                prod_staging = self.env['product.staging'].search([('izi_id','=',prod_staging_by_izi_id)])
+                for attr in prod_staging.lz_attributes:
+                    if attr.attribute_id.izi_id == values['attribute_id']['id'] and attr.attribute_id.name == values['attribute_id']['name']:
+                        res = attr
+                        res.izi_id = values['id']
+                        break
+        if model_name == 'sale.order':
+            if self.check_invoice_number and 'mp_invoice_number' in values and values.get('mp_invoice_number'):
+                order = self.env['sale.order'].search([('mp_invoice_number', '=', values.get('mp_invoice_number'))], limit=1)
+                if order:
+                    res = order[0]
         return res
 
     def get_existing_record(self, model_name, values, mandatory=False):
@@ -1228,33 +1612,55 @@ class WebhookServer(models.Model):
         Model = self.env[model_name].sudo()
 
         if 'active' in Model._fields:
-            domain = [('izi_id', '=', values['id']), '|', ('active', '=', True), ('active', '=', False)]
+            domain = ['&', ('izi_id', '=', values['id']), '|', ('active', '=', True), ('active', '=', False)]
         else:
             domain = [('izi_id', '=', values['id'])]
-        if model_name in existing_fields_by_model_name and existing_fields_by_model_name[model_name]:
-            for field_name in existing_fields_by_model_name[model_name]:
-                if field_name in values and values[field_name]:
-                    domain = ['|'] + domain + [(field_name, '=', values[field_name])]
-
         record = Model.search(domain, limit=1)
-        # Mapping
-        record = self.get_existing_record_from_mapping(record, model_name, values)
-
+        
+        # Mapping. Only use mapping, if the record with izi_id is not exist yet
         if not record:
-            if mandatory and not self.is_skip_check:
-                raise UserError('Record not found model_name: %s, izi_id: %s. Import First.' % (model_name, values['id']))
+            record = self.get_existing_record_from_mapping(record, model_name, values)
+        
+        if not record:
+            if model_name in existing_fields_by_model_name and existing_fields_by_model_name[model_name]:
+                for field_name in existing_fields_by_model_name[model_name]:
+                    if field_name in values and values[field_name]:
+                        domain = ['|'] + domain + [(field_name, '=', values[field_name])]
+                record = Model.search(domain, limit=1)
+
+        if not record and mandatory:
+            # Except,
+            # If Get Products and Skip Product Mapping. Do not Raise Error.
+            if self.env.context.get('get_products') and self.is_skip_product_not_mapping:
+                return record
+            
+            raise UserError('Record not found model_name: %s, izi_id: %s. Import First.' % (model_name, values['id']))
         return record
 
     def mapping_field(self, model_name, values, update=False):
+        """
+        Prepare values to store into Odoo
+        :param model_name: model name
+        :param values: record values from IZI or external resources
+        :param update: If is is True then prepare the values for updating the existing records
+        :return: dict
+        """
         Model = self.env[model_name].sudo()
         res_values = {}
+
+        if model_name in ['product.template']:
+            values['image_1920'] = values.pop('image')
+
         for key in values:
+            # skip the field-value if it's declared in removed fields
             if model_name in removed_fields and key in removed_fields[model_name]:
                 continue
             if key in Model._fields:
                 if key == 'id':
                     res_values[key] = values[key]
                     res_values['izi_id'] = values[key]
+                elif isinstance(Model._fields[key], fields.Selection) and isinstance(values[key], int):
+                    values[key] = str(values[key])  # Since Odoo 13.0 all selection should be string.
                 elif isinstance(Model._fields[key], fields.Many2one) and values[key] and 'id' in values[key]:
                     comodel_name = Model._fields[key].comodel_name
                     if comodel_name == model_name:
@@ -1266,27 +1672,26 @@ class WebhookServer(models.Model):
                         res_values[key] = record.id
                 elif isinstance(Model._fields[key], fields.Binary):
                     img = False
-                    if values[key] and isinstance(values[key], str) and ('http://' in values[key] or 'https://' in values[key]):
-                        try:
-                            img = b64encode(requests.get(values[key]).content)
-                        except Exception as e:
+                    if not self.is_skip_image:
+                        if values[key] and isinstance(values[key], str) and ('http://' in values[key] or 'https://' in values[key]):
                             try:
+                                img = b64encode(requests.get(values[key]).content)
+                            except Exception as e:
+                                try:
+                                    img = values[key].encode('utf-8')
+                                except Exception as ex:
+                                    _logger.error(str(ex))
+                        else:
+                            if values[key] != None and values[key] != False:
                                 img = values[key].encode('utf-8')
-                            except Exception as ex:
-                                _logger.error(str(ex))
-                    else:
-                        if values[key] != None and values[key] != False:
-                            img = values[key].encode('utf-8')
-                    if not img:
-                        if key == 'image':
-                            if model_name in ['product.template', 'product.staging', 'product.product', 'product.staging.variant']:
-                                if values.get('image_url_external') and isinstance(values.get('image_url_external'), str) and ('http://' in values.get('image_url_external') or 'https://' in values.get('image_url_external')) and values.get('image_url_external') != None and values.get('image_url_external') != False:
-                                    img = b64encode(requests.get(
-                                        values.get('image_url_external')).content)
-                            elif model_name in ['product.image', 'product.image.staging']:
-                                if values.get('url_external') and isinstance(values.get('url_external'), str) and ('http://' in values.get('url_external') or 'https://' in values.get('url_external')) and values.get('url_external') != None and values.get('url_external') != False:
-                                    img = b64encode(requests.get(
-                                        values.get('url_external')).content)
+                        if not img:
+                            if key in ['image', 'image_1920']:
+                                if model_name in ['product.template', 'product.staging', 'product.product', 'product.staging.variant']:
+                                    if values.get('image_url_external') and isinstance(values.get('image_url_external'), str) and ('http://' in values.get('image_url_external') or 'https://' in values.get('image_url_external')) and values.get('image_url_external') != None and values.get('image_url_external') != False:
+                                        img = b64encode(requests.get(values.get('image_url_external')).content)
+                                elif model_name in ['product.image', 'product.image.staging']:
+                                    if values.get('url_external') and isinstance(values.get('url_external'), str) and ('http://' in values.get('url_external') or 'https://' in values.get('url_external')) and values.get('url_external') != None and values.get('url_external') != False:
+                                        img = b64encode(requests.get(values.get('url_external')).content)
                     res_values[key] = img
 
                 elif isinstance(Model._fields[key], fields.Selection) and values[key] and 'value' in values[key]:
@@ -1699,7 +2104,8 @@ class WebhookServer(models.Model):
         jsondata.update(res_values)
         is_success = self.post_records(model_name, jsondata, True)
         if is_success[0]:
-            self._cr.commit()
+            #### self._cr.commit()
+            pass ####
         return is_success
 
     def get_limit(self, day=1):
@@ -1729,7 +2135,8 @@ class WebhookServer(models.Model):
             data = self.mapping_field_post_one(model_name, obj_id)
             is_success = self.post_records(model_name, data, True)
             if is_success[0]:
-                self._cr.commit()
+                #### self._cr.commit()
+                pass ####
         return True
 
     def get_updated_izi_id(self, Model_id, data):
@@ -1776,7 +2183,7 @@ class WebhookServer(models.Model):
                 if izi_id and not error:
                     Model_id.izi_id = izi_id
                     is_success = (True, "Uploaded successfully.")
-                    self._cr.commit()
+                    #### self._cr.commit()
                 elif error:
                     is_success = (False, "Pesan dari IZI : " + error)
         except Exception as e:
@@ -1816,7 +2223,7 @@ class WebhookServer(models.Model):
                 if izi_id and not error:
                     Model_id.izi_id = izi_id
                     is_success = (True, "Uploaded successfully.")
-                    self._cr.commit()
+                    #### self._cr.commit()
                 elif error:
                     is_success = (False, "Pesan dari IZI : " + error)
         except Exception as e:
@@ -1828,10 +2235,7 @@ class WebhookServer(models.Model):
     def _sync_data(self, bulk=False):
         start_time = time.time()
         _logger.info('----- Upload started -----')
-        records = self.search([
-            ('is_sync', '=', True),
-            ('active', 'in', [False, True]), ],
-            limit=1)
+        records = self.search([],limit=1)
         if bulk:
             records[0].upload_to_izi()
         else:
@@ -1845,7 +2249,7 @@ class WebhookServer(models.Model):
             records[0].upload_to_izi_one('product.staging.wholesale')
             records[0].upload_to_izi_one('product.image.staging')
         _logger.info(
-            '----- Upload successfull in %0.2f seconds -----' % 
+            '----- Upload successfull in %0.2f seconds -----' %
             (time.time() - start_time))
     
     def execute_action(self, model_name, model_id, method, push_self=True):
@@ -1854,7 +2258,7 @@ class WebhookServer(models.Model):
         if push_self:
             data = self.mapping_field_post_one(model_name, model_id)
             self.post_records(model_name, data, True)
-            self._cr.commit()
+            #### self._cr.commit()
         Model_id = Model.browse(model_id)
         izi_id = Model_id.izi_id
         if izi_id != 0:
@@ -2101,7 +2505,7 @@ class WebhookServerMQ(models.Model):
                                 'status_code': req.status_code
                             })]
                         })
-                        self._cr.commit()
+                        #### self._cr.commit()
                     except Exception as e:
                         _logger.warn(e)
                 else:
@@ -2172,7 +2576,7 @@ class WebhookServerMQ(models.Model):
                             'status_code': r.status_code
                         })]
                     })
-                    self._cr.commit()
+                    #### self._cr.commit()
                 except Exception as e:
                     _logger.warn(e)
         ahad_wingi = fields.Datetime.to_string(
@@ -2189,3 +2593,26 @@ class WebhookServerMQStatus(models.Model):
     mq_id = fields.Many2one('webhook.server.mq', 'MQ', ondelete='cascade')
     status_code = fields.Integer(required=True, default=0)
     response = fields.Text()
+
+class WebhookServerLog(models.Model):
+    _name = 'webhook.server.log'
+    _order = 'id desc'
+
+    name = fields.Char('Name')
+    server_id = fields.Many2one('webhook.server', string='Server')
+    model_name = fields.Char('Model Name')
+    izi_id = fields.Integer('IZI ID')
+    status = fields.Selection([
+        ('failed', 'Failed'),
+        ('success', 'Success'),
+    ], default='failed')
+    res_id = fields.Integer('Record ID')
+    notes = fields.Char('Notes')
+    error_message = fields.Text('Error Message')
+    last_retry_time = fields.Datetime('Last Retry')
+
+    def retry_get_record(self):
+        for log in self:
+            if log.status == 'failed':
+                domain_url = "[('id', '=', %i)]" % int(log.izi_id)
+                log.server_id.get_records(log.model_name, domain_url=domain_url)

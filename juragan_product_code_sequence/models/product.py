@@ -8,7 +8,7 @@ class ProductTemplate(models.Model):
 
     @api.model
     def create(self, values):
-        company = self.env.user._get_company()
+        company = self.env.user.company_id
         if not values.get('default_code'):
             if company.sequence_product_default_code:
                 sequence_code = company.sequence_product_default_code.code
@@ -16,7 +16,7 @@ class ProductTemplate(models.Model):
         return super(ProductTemplate, self).create(values)
 
     def write(self, values):
-        company = self.env.user._get_company()
+        company = self.env.user.company_id
         for product_tmpl in self:
             if not values.get('default_code'):
                 if not product_tmpl.default_code:

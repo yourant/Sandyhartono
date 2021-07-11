@@ -49,7 +49,7 @@ class OauthAccessToken(models.Model):
             access_token = self.env['oauth.access_token'].sudo().create(vals)
             # we have to commit now, because /oauth2/tokeninfo could
             # be called before we finish current transaction.
-            self._cr.commit()
+            #### self._cr.commit()
         if not access_token:
             return None
         return access_token.token

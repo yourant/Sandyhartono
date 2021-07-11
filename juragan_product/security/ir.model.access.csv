@@ -24,6 +24,7 @@ access_product_image_staging,access_product_image_staging,model_product_image_st
 
 access_mp_shopee_item_category,access_mp_shopee_item_category,model_mp_shopee_item_category,,1,1,1,1
 access_mp_shopee_item_attribute,access_mp_shopee_item_attribute,model_mp_shopee_item_attribute,,1,1,1,1
+access_mp_shopee_item_brand,access_mp_shopee_item_brand,model_mp_shopee_item_brand,,1,1,1,1
 access_mp_shopee_item_attribute_option,access_mp_shopee_item_attribute_option,model_mp_shopee_item_attribute_option,,1,1,1,1
 access_mp_shopee_item_attribute_val,access_mp_shopee_item_attribute_val,model_mp_shopee_item_attribute_val,,1,1,1,1
 access_mp_shopee_logistic,access_mp_shopee_logistic,model_mp_shopee_logistic,,1,1,1,1
@@ -52,3 +53,22 @@ access_location_mapping,access_location_mapping,model_location_mapping,,1,1,1,1
 access_warehouse_mapping,access_warehouse_mapping,model_warehouse_mapping,,1,1,1,1
 
 access_mp_lazada,access_mp_lazada,model_mp_lazada,,1,1,1,1
+
+access_stock_distribution,access_stock_distribution,model_stock_distribution,,1,1,1,1
+access_stock_distribution_line,access_stock_distribution_line,model_stock_distribution_line,,1,1,1,1
+
+access_warehouse_config_wizard,access_warehouse_config_wizard,model_warehouse_config_wizard,,1,1,1,1
+access_warehouse_config_line,access_warehouse_config_line,model_warehouse_config_line,,1,1,1,1
+access_product_template_izi,access_product_template_izi,product.model_product_template,juragan_product.group_izi_marketplace_product,1,1,1,1
+
+access_order_component_config,access_order_component_config,model_order_component_config,,1,1,1,1
+access_order_component_config_line,access_order_component_config_line,model_order_component_config_line,,1,1,1,1
+
+access_mp_product_discount_crud_global,MP Product Discount for Global: CRUD,juragan_product.model_mp_product_discount,,1,1,1,1
+access_mp_product_discount_line_crud_global,MP Product Discount Line for Global: CRUD,juragan_product.model_mp_product_discount_line,,1,1,1,1
+
+access_juragan_campaign_r_global,Juragan Campaign Access for Global: R,juragan_product.model_juragan_campaign,,1,0,0,0
+access_juragan_campaign_job_r_global,Juragan Campaign Job Access for Global: R,juragan_product.model_juragan_campaign_job,,1,0,0,0
+access_juragan_campaign_crud_campaign_manager,Juragan Campaign Access for Campaign Manager: CRUD,juragan_product.model_juragan_campaign,juragan_product.group_manage_campaign,1,1,1,1
+access_juragan_campaign_job_crud_campaign_manager,Juragan Campaign Job Access for Campaign Manager: CRUD,juragan_product.model_juragan_campaign_job,juragan_product.group_manage_campaign,1,1,1,1
+access_product_staging_price_crud_global,Product Staging Price Access for Global: CRUD,juragan_product.model_product_staging_price,,1,1,1,1

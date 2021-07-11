@@ -45,17 +45,18 @@ class ProductVariantStaging(models.Model):
     izi_md5 = fields.Char()
 
     def _get_image_url(self):
-        base_url = self.env['ir.config_parameter'].get_param('web.base.url')
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         for rec in self:
             if rec.image:
                 rec.image_url = '%s/jpg/product.staging.variant/image/%s.jpg' % (
                     base_url, str(rec.id))
             elif rec.image_url_external:
                 rec.image_url = rec.image_url_external
+            else:
+                rec.image_url = False
     
     def _get_qty_available(self):
         for rec in self:
-            rec.qty_available = 0
             lot_stock_id = False
             product_id = False
             if rec.product_stg_id.mp_tokopedia_id:
@@ -71,7 +72,35 @@ class ProductVariantStaging(models.Model):
                     [('product_id', '=', product_id), ('location_id', '=', lot_stock_id)])
                 rec.qty_available = sum(
                     q['quantity'] - q['reserved_quantity'] for q in quants)
-    
+
+            # # check last stock quantity for tokopedia product
+            # if rec.product_stg_id.mp_tokopedia_id:
+            #     if rec.qty_available <= 0:
+            #         rec.write({
+            #             'is_active': False,
+            #         })
+            #     elif rec.qty_available > 0:
+            #         rec.write({
+            #             'is_active': True,
+            #         })
+                
+            #     inactive_staging_variants = 0
+            #     for staging_variant in rec.product_stg_id.product_variant_stg_ids:
+            #         if not staging_variant.is_active:
+            #             inactive_staging_variants += 1
+            #     if inactive_staging_variants >= len(rec.product_stg_id.product_variant_stg_ids):
+            #         rec.product_stg_id.write({
+            #             'is_active': False,
+            #             'tp_available_status': 1,
+            #             'tp_active_status': 3,
+            #         })
+            #     elif inactive_staging_variants < len(rec.product_stg_id.product_variant_stg_ids):
+            #         rec.product_stg_id.write({
+            #             'is_active': True,
+            #             'tp_available_status': 2,
+            #             'tp_active_status': 1,
+            #         })
+
     def update_staging_variant_stock(self):
         form_view = self.env.ref('juragan_product.update_staging_variant_stock_form')
         return {
@@ -88,25 +117,27 @@ class ProductVariantStaging(models.Model):
         }
     
     @api.onchange('is_active')
-    def _change_is_active(self):      
-        if self.izi_id != 0 and self.izi_id != False and self.izi_id != None:
-            server = self.env['webhook.server'].search(
-                [('active', 'in', [False, True])],
-                limit=1, order='write_date desc')
-            if not server:
-                raise UserError('Buatkan minimal 1 webhook server!')
-            url = '{}/ui/products/set_active'.format(
-                server.name)
-            req = requests.post(
-                url,
-                headers={'X-Openerp-Session-Id': server.session_id},
-                json={'product_staging_variant_id': self.izi_id, 'product_staging_id': self.product_stg_id.izi_id, 'set_active': self.is_active})
-            if req.status_code == 200:
-                response = req.json().get('result')
-                if response.get('code') == 200:
-                    domain_url = "[('id', 'in', [%s])]" % str(self.izi_id)
-                    server.get_records(
-                        'product.staging.variant', domain_url=domain_url, force_update=True)
+    def _change_is_active(self):
+        for rec in self:      
+            if rec.izi_id != 0 and rec.izi_id != False and rec.izi_id != None:
+                server = self.env['webhook.server'].search(
+                    [('active', 'in', [False, True])],
+                    limit=1, order='write_date desc')
+                if not server:
+                    raise UserError('Buatkan minimal 1 webhook server!')
+                url = '{}/ui/products/set_active'.format(
+                    server.name)
+                req = requests.post(
+                    url,
+                    headers={'X-Openerp-Session-Id': server.session_id},
+                    json={'product_staging_variant_id': rec.izi_id, 'product_staging_id': rec.product_stg_id.izi_id, 'set_active': rec.is_active})
+                if req.status_code == 200:
+                    response = req.json().get('result')
+                    if response.get('code') == 200:
+                        domain_url = "[('id', 'in', [%s])]" % str(rec.izi_id)
+                        server.get_records(
+                            'product.staging.variant', domain_url=domain_url, force_update=True, loop_commit=False)
+                        #### self.env.cr.commit()
 
 class MPTokopediaAttributeLine(models.Model):
     _name = 'mp.tokopedia.attribute.line'

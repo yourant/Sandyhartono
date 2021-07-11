@@ -27,6 +27,13 @@ class MPShopee(models.Model):
     wh_id = fields.Many2one('stock.warehouse', string='Warehouse')
     izi_id = fields.Integer()
     izi_md5 = fields.Char()
+    wh_shop_id = fields.Many2one('stock.warehouse', string='Shop Warehouse')
+    wh_main_id = fields.Many2one('stock.warehouse', string='Main Warehouse')
+    wh_config = fields.Selection([
+        ('main','Main Warehouse'),
+        ('shop','Shop Warehouse'),], string='Take Stock From', default='main')
+    sync_stock_active = fields.Boolean('Realtime Stock Update')
+    partner_id = fields.Many2one(comodel_name="res.partner", string="Default Customer", required=False)
 
     def name_get(self):
         result = []
@@ -39,8 +46,6 @@ class MPShopee(models.Model):
             else:
                 names.append(
                     this.name or str('mp.shopee.' + str(this.id)))
-            if this.wh_id:
-                names.append('( ' + this.wh_id.name + ' )')
             result.append((this.id, ' '.join(names)))
         return result
 
@@ -66,11 +71,13 @@ class MPShopeeItemCategory(models.Model):
     days_to_ship_limits_min_limit = fields.Integer()
 
     attributes = BigMany2many('mp.shopee.item.attribute')
+    brands = fields.Many2many('mp.shopee.item.brand', 'mp_shopee_item_brand_mp_shopee_item_category_rel')
 #     parent_attributes = BigMany2many('mp.shopee.item.attribute', compute='_get_parent_attribute')
 
     active = fields.Boolean(default=True)
 
     izi_id = fields.Integer('Izi ID')
+    izi_md5 = fields.Char()
 #     def _get_parent_attribute(self):
 #         for rec in self:
 #             rec.parent_attributes = (rec.attributes.ids or []) + (rec.parent_id and rec.parent_id.parent_attributes.ids or [])
@@ -102,9 +109,14 @@ class MPShopeeItemAttribute(models.Model):
 
     attribute_id = BigMany2one(_name)
     attribute_name = fields.Char()
+    original_attribute_name = fields.Char()
     is_mandatory = fields.Boolean()
     attribute_type = fields.Char()
+    format_type = fields.Char()
     input_type = fields.Char()
+    date_format_type = fields.Char()
+
+
     options = BigMany2many('mp.shopee.item.attribute.option')
 
     # attribute_wizard = fields.One2many('mp.shopee.item.wizard.item.attr','attributes_id')
@@ -112,7 +124,7 @@ class MPShopeeItemAttribute(models.Model):
     active = fields.Boolean(default=True)
 
     izi_id = fields.Integer('Izi ID')
-
+    izi_md5 = fields.Char()
 
 class MPShopeeItemAttributeOption(models.Model):
     _name = 'mp.shopee.item.attribute.option'
@@ -120,8 +132,12 @@ class MPShopeeItemAttributeOption(models.Model):
     _description = 'Shopee Item Attribute Option'
 
     name = fields.Char(required=True)
+    original_value_name = fields.Char()
+    value_unit = fields.Char()
+    value_id = BigInteger()
     izi_id = fields.Integer('Izi ID')
-
+    izi_md5 = fields.Char()
+    
     _sql_constraints = [
         ('name_unique', 'unique(name)', 'Name must be unique.')
     ]
@@ -150,13 +166,16 @@ class MPShopeeItemAttributeVal(models.Model):
     value = fields.Many2one('mp.shopee.item.attribute.option', domain="[('id','in',values)]")
 
     izi_id = fields.Integer('Izi ID')
-
+    izi_md5 = fields.Char()
     @api.depends('attribute_id')
     def _compute_attribute(self):
         for rec in self:
             if rec.attribute_id:
                 rec.is_mandatory = rec.attribute_id.is_mandatory
                 rec.values = rec.attribute_id.options.ids
+            else:
+                rec.is_mandatory = False
+                rec.values = []
 
     def _get_attribute_id(self):
         for rec in self:
@@ -239,7 +258,7 @@ class MPShopeeLogistic(models.Model):
     item_max_dimension_unit = fields.Char()
 
     izi_id = fields.Integer('Izi ID')
-
+    izi_md5 = fields.Char()
     # active = fields.Boolean(default=True)
 
 
@@ -253,7 +272,7 @@ class MPShopeeLogisticSize(models.Model):
     default_price = fields.Float()
 
     izi_id = fields.Integer('Izi ID')
-
+    izi_md5 = fields.Char()
 
 class MPShopeeShopLogistic(models.Model):
     _name = 'mp.shopee.shop.logistic'
@@ -267,7 +286,7 @@ class MPShopeeShopLogistic(models.Model):
 
     active = fields.Boolean(default=True)
     izi_id = fields.Integer('Izi ID')
-
+    izi_md5 = fields.Char()
     # @api.constrains('enabled')
     # def _check_enabled(self):
     #     for rec in self:
@@ -295,7 +314,7 @@ class MPShopeeItemLogistic(models.Model):
     # value_log = fields.Many2one('mp.shopee.shop.logistic', domain="[('id','in',shop_logistic)]")
     
     izi_id = fields.Integer('Izi ID')
-
+    izi_md5 = fields.Char()
     _sql_constraints = [
         ('logistic_unique', 'unique(item_id_staging, logistic_id)', 'Logistic Already Exist.')
     ]
@@ -408,3 +427,23 @@ class MPShopeeAttributeLine(models.Model):
 #             if rec.attributes_id:
 #                 rec.is_mandatory = rec.attributes_id.is_mandatory
 #                 rec.values = rec.attributes_id.options.ids
+
+
+class MPShopeeItemAttribute(models.Model):
+    _name = 'mp.shopee.item.brand'
+    _description = 'Shopee Item Brand'
+    
+    brand_id = BigInteger()
+    name = fields.Char()
+    original_brand_name = fields.Char()
+    is_mandatory = fields.Boolean()
+    input_type = fields.Char()
+
+    categories = fields.Many2many(
+        'mp.shopee.item.category',
+        'mp_shopee_item_brand_mp_shopee_item_category_rel')
+    
+    active = fields.Boolean(default=True)
+
+    izi_id = fields.Integer('Izi ID')
+    izi_md5 = fields.Char()

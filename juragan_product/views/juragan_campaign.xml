@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="action_window_wizard_juragan_campaign_reguler" model="ir.actions.act_window">
+      <field name="name">Add Price Rule: Campaign Reguler</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">wizard.juragan.campaign.reguler</field>
+      <field name="view_mode">form</field>
+      <field name="target">new</field>
+    </record>
+
+    <record id="action_window_wizard_juragan_campaign_mp_discount" model="ir.actions.act_window">
+      <field name="name">Add Price Rule: Campaign Marketplace Discount</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">wizard.juragan.campaign.mp_discount</field>
+      <field name="view_mode">form</field>
+      <field name="target">new</field>
+    </record>
+
+    <record id="action_window_wizard_juragan_campaign_wholesale" model="ir.actions.act_window">
+      <field name="name">Add Price Rule: Campaign Wholesale</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">wizard.juragan.campaign.wholesale</field>
+      <field name="view_mode">form</field>
+      <field name="target">new</field>
+    </record>
+
+    <record id="action_window_juragan_campaign_job" model="ir.actions.act_window">
+      <field name="name">Campaign Job(s)</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">juragan.campaign.job</field>
+      <field name="view_mode">tree,form</field>
+      <field name="domain">[('campaign_id', '=', active_id)]</field>
+    </record>
+
+    <record id="action_window_juragan_campaign" model="ir.actions.act_window">
+      <field name="name">Campaign</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">juragan.campaign</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_item_juragan_campaign" name="Campaign" parent="juragan_webhook.menu_webhook"
+              action="action_window_juragan_campaign" sequence="51"/>
+
+    <record id="tree_juragan_campaign" model="ir.ui.view">
+      <field name="name">Juragan Campaign Tree View</field>
+      <field name="model">juragan.campaign</field>
+      <field name="arch" type="xml">
+        <tree string="">
+          <field name="name"/>
+          <field name="state"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="form_juragan_campaign" model="ir.ui.view">
+      <field name="name">Juragan Campaign Form View</field>
+      <field name="model">juragan.campaign</field>
+      <field name="arch" type="xml">
+        <form string="Juragan Campaign">
+          <header>
+            <button name="action_run" string="Run Campaign" class="oe_highlight oe_read_only" type="object"
+                    states="draft"/>
+            <button name="action_push" string="Upload" class="oe_highlight oe_read_only" type="object"
+                    attrs="{'invisible': ['|', ('state', '!=', 'done'), ('campaign_purpose', '!=', 'mp_discount')]}"/>
+            <button name="action_draft" string="Back to Planning" class="oe_read_only" type="object" states="done"/>
+            <field name="state" widget="statusbar" statusbar_visible="draft,done"/>
+          </header>
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+              <button name="%(juragan_product.action_window_juragan_campaign_job)d"
+                      type="action"
+                      class="oe_stat_button"
+                      icon="fa-tasks"
+                      attrs="{'invisible': ['|', ('state', '!=', 'done'), ('campaign_job_count', '=', 0)]}">
+                <field string="Jobs" name="campaign_job_count" widget="statinfo"/>
+              </button>
+            </div>
+            <div class="oe_title">
+              <label for="name" class="oe_edit_only"/>
+              <h1>
+                <field name="name" placeholder="e.g. Black Friday Promo"/>
+              </h1>
+            </div>
+            <group>
+              <field name="campaign_purpose"/>
+              <field name="mp_id"
+                     attrs="{'invisible': [('campaign_purpose', '!=', 'mp_discount')],
+                            'required': [('campaign_purpose', '=', 'mp_discount')]}"/>
+              <field name="currency_id" groups="base.group_multi_currency"/>
+              <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+              <label for="pricelist_id"/>
+              <div>
+                <div class="o_row" name="pricelist_id">
+                  <field name="pricelist_id"/>
+                </div>
+                <small class="text-info oe_edit_only"><i class="fa fa-info-circle"></i> Please select an existing
+                  pricelist to place this campaign or a new pricelist will be created automatically by the
+                  system once this campaign scheduled.</small>
+              </div>
+              <field name="set_mode" attrs="{'invisible': [('campaign_purpose', '=', 'mp_discount')]}"/>
+              <field name="set_datetime" invisible="1"/>
+              <field name="set_weekday" invisible="1"/>
+            </group>
+            <separator string="Datetime Range Configuration" attrs="{'invisible': [('set_datetime', '=', False)]}"/>
+            <group attrs="{'invisible': [('set_datetime', '=', False)]}">
+              <field name="date_time_start" attrs="{'required': [('set_datetime', '=', True)]}"/>
+              <field name="date_time_end" attrs="{'required': [('set_datetime', '=', True)]}"/>
+            </group>
+            <separator string="Weekday Configuration"
+                       attrs="{'invisible': ['|', ('set_weekday', '=', False), ('campaign_purpose', '=', 'mp_discount')]}"/>
+            <group attrs="{'invisible': ['|', ('set_weekday', '=', False), ('campaign_purpose', '=', 'mp_discount')]}">
+              <group>
+                <label for="" string="Start &amp; End Time"/>
+                <div>
+                  <div class="o_row" name="time_start">
+                    <field name="time_start" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                    <span>to</span>
+                    <field name="time_end" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                  </div>
+                  <small class="text-info oe_edit_only"><i class="fa fa-info-circle"></i> Use 24-hours time
+                    format.</small>
+                </div>
+                <separator></separator>
+                <field name="weekday_tz" attrs="{'required': [('set_weekday', '=', True)]}"/>
+              </group>
+              <group>
+                <div><i>Select day(s) on which you want to apply the pricelist rule. If none of the days selected, by
+                  default it will applied on all days.</i>
+                  <group>
+                    <group>
+                      <field name="day_0"/>
+                      <field name="day_1"/>
+                      <field name="day_2"/>
+                      <field name="day_3"/>
+                    </group>
+                    <group>
+                      <field name="day_4"/>
+                      <field name="day_5"/>
+                      <field name="day_6"/>
+                    </group>
+                  </group>
+                </div>
+              </group>
+            </group>
+            <separator string="Price Rules"/>
+            <button name="open_wizard_campaign_reguler" string="Add Reguler Price Rule"
+                    class="oe_highlight oe_edit_only" type="object" style="margin: 10px;"
+                    attrs="{'invisible': ['|', ('campaign_purpose', '!=', 'reguler'), ('state', '!=', 'draft')]}"/>
+            <button name="open_wizard_campaign_mp_discount" string="Add Marketplace Account Price Rule"
+                    class="oe_highlight oe_edit_only" type="object" style="margin: 10px;"
+                    attrs="{'invisible': ['|', ('campaign_purpose', '!=', 'mp_discount'), ('state', '!=', 'draft')]}"/>
+            <button name="open_wizard_campaign_wholesale" string="Add Wholesale Price Rule"
+                    class="oe_highlight oe_edit_only" type="object" style="margin: 10px;"
+                    attrs="{'invisible': ['|', ('campaign_purpose', '!=', 'wholesale'), ('state', '!=', 'draft')]}"/>
+            <field name="pricelist_item_ids">
+              <tree string="Pricelist Items" create="0">
+                <field name="campaign_id" invisible="1"/>
+                <field name="name" string="Applicable On"/>
+                <field name="min_quantity"/>
+                <field name="date_time_start"/>
+                <field name="date_time_end"/>
+                <field name="price_campaign" string="Price"/>
+                <field name="base" invisible="1"/>
+                <field name="price_discount" invisible="1"/>
+                <field name="applied_on" invisible="1"/>
+                <field name="compute_price" invisible="1"/>
+              </tree>
+            </field>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="tree_juragan_campaign_job" model="ir.ui.view">
+      <field name="name">Juragan Campaign Job Tree View</field>
+      <field name="model">juragan.campaign.job</field>
+      <field name="arch" type="xml">
+        <tree decoration-muted="state == 'done'" decoration-danger="state == 'failed'">
+          <field name="name"/>
+          <field name="campaign_purpose"/>
+          <field name="scheduled_at"/>
+          <field name="execution_type"/>
+          <field name="state"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="form_juragan_campaign_job" model="ir.ui.view">
+      <field name="name">Juragan Campaign Job Form View</field>
+      <field name="model">juragan.campaign.job</field>
+      <field name="arch" type="xml">
+        <form>
+          <header>
+            <button name="execute" string="Re-Run" type="object" states="failed"/>
+            <field name="state" widget="statusbar" statusbar_visible="waiting,done"/>
+          </header>
+          <sheet>
+            <div class="oe_title">
+              <label for="name" class="oe_edit_only"/>
+              <h1>
+                <field name="name"/>
+              </h1>
+            </div>
+            <group>
+              <group>
+                <field name="campaign_purpose"/>
+                <field name="scheduled_at"/>
+              </group>
+              <group>
+                <field name="execution_type"/>
+                <field name="total_execution"/>
+              </group>
+            </group>
+            <notebook>
+              <page string="Pricelist Items">
+                <field name="pricelist_item_ids">
+                  <tree string="Pricelist Items" create="0" delete="0">
+                    <field name="campaign_id" invisible="1"/>
+                    <field name="name" string="Applicable On"/>
+                    <field name="min_quantity"/>
+                    <field name="date_time_start"/>
+                    <field name="date_time_end"/>
+                    <field name="price_campaign" string="Price"/>
+                    <field name="base" invisible="1"/>
+                    <field name="price_discount" invisible="1"/>
+                    <field name="applied_on" invisible="1"/>
+                    <field name="compute_price" invisible="1"/>
+                  </tree>
+                </field>
+              </page>
+              <page string="Cron">
+                <field name="cron_ids"/>
+              </page>
+              <page string="Extra Context">
+                <field name="extra_context"/>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="form_wizard_juragan_campaign_reguler" model="ir.ui.view">
+      <field name="name">Wizard Juragan Campaign Reguler Form View</field>
+      <field name="model">wizard.juragan.campaign.reguler</field>
+      <field name="arch" type="xml">
+        <form>
+          <sheet>
+            <group>
+              <field name="campaign_id" invisible="1"/>
+              <field name="company_id" invisible="1"/>
+              <field name="mp_id"/>
+              <field name="applied_on" widget="radio"/>
+              <!--              <field name="product_tmpl_id" string="Product" required="1"/>-->
+              <field name="set_mode"/>
+              <field name="set_datetime" invisible="1"/>
+              <field name="set_weekday" invisible="1"/>
+            </group>
+            <separator string="Product Filter" attrs="{'invisible': [('applied_on', '!=', '4_batch_filter')]}"/>
+            <group name="product_filters" attrs="{'invisible': [('applied_on', '!=', '4_batch_filter')]}">
+              <field name="product_tmpl_domain_filter" widget="domain" options="{'model': 'product.template'}"
+                     nolabel="1"/>
+            </group>
+            <separator string="Select Multi Product(s)" attrs="{'invisible': [('applied_on', '!=', '5_products')]}"/>
+            <group name="product_multi" attrs="{'invisible': [('applied_on', '!=', '5_products')]}">
+              <field name="product_tmpl_ids" nolabel="1" attrs="{'required': [('applied_on', '=', '5_products')]}">
+                <tree>
+                  <field name="default_code"/>
+                  <field name="name"/>
+                  <field name="list_price"/>
+                  <field name="categ_id"/>
+                  <field name="type"/>
+                </tree>
+              </field>
+            </group>
+            <separator string="Select Single Product" attrs="{'invisible': [('applied_on', '!=', '1_product')]}"/>
+            <group name="product_single" attrs="{'invisible': [('applied_on', '!=', '1_product')]}">
+              <field name="product_tmpl_id" nolabel="1" attrs="{'required': [('applied_on', '=', '1_product')]}"/>
+            </group>
+            <separator string="Datetime Range Configuration" attrs="{'invisible': [('set_datetime', '=', False)]}"/>
+            <group attrs="{'invisible': [('set_datetime', '=', False)]}">
+              <field name="date_time_start" attrs="{'required': [('set_datetime', '=', True)]}"/>
+              <field name="date_time_end" attrs="{'required': [('set_datetime', '=', True)]}"/>
+            </group>
+            <separator string="Weekday Configuration" attrs="{'invisible': [('set_weekday', '=', False)]}"/>
+            <group attrs="{'invisible': [('set_weekday', '=', False)]}">
+              <group>
+                <label for="" string="Start &amp; End Time"/>
+                <div>
+                  <div class="o_row" name="time_start">
+                    <field name="time_start" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                    <span>to</span>
+                    <field name="time_end" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                  </div>
+                  <small class="text-info oe_edit_only"><i class="fa fa-info-circle"></i> Use 24-hours time
+                    format.</small>
+                </div>
+                <separator></separator>
+                <field name="weekday_tz" attrs="{'required': [('set_weekday', '=', True)]}"/>
+              </group>
+              <group>
+                <div><i>Select day(s) on which you want to apply the pricelist rule. If none of the days selected, by
+                  default it will applied on all days.</i>
+                  <group>
+                    <group>
+                      <field name="day_0"/>
+                      <field name="day_1"/>
+                      <field name="day_2"/>
+                      <field name="day_3"/>
+                    </group>
+                    <group>
+                      <field name="day_4"/>
+                      <field name="day_5"/>
+                      <field name="day_6"/>
+                    </group>
+                  </group>
+                </div>
+              </group>
+            </group>
+            <separator string="Price Computation"/>
+            <group>
+              <group>
+                <label for="compute_price" string="Compute Price"/>
+                <div>
+                  <field name="compute_price" widget="radio"/>
+                  <field name="currency_id" invisible="1"/>
+                  <div attrs="{'invisible':[('compute_price', '!=', 'fixed')]}">
+                    <field name="fixed_price" nolabel="1" widget='monetary'
+                           options="{'currency_field': 'currency_id', 'field_digits': True}"/></div>
+                  <div attrs="{'invisible':[('compute_price', '!=', 'percentage')]}">
+                    <field name="percent_price" nolabel="1" class="oe_inline"/>%%
+                  </div>
+                </div>
+              </group>
+            </group>
+            <div class="oe_grey" groups="uom.group_uom">
+              <p>The computed price is expressed in the default Unit of Measure of the product.</p>
+            </div>
+            <group col="6" attrs="{'invisible':[('compute_price', '!=', 'formula')]}">
+              <field name="base" colspan="6"/>
+
+              <label for="" string="New Price ="/>
+              <div>
+                <span attrs="{'invisible':[('base', '!=', 'list_price')]}">Public Price - </span>
+                <span attrs="{'invisible':[('base', '!=', 'standard_price')]}">Cost - </span>
+                <span attrs="{'invisible':[('base', '!=', 'pricelist')]}">Other Pricelist - </span>
+              </div>
+              <label for="price_discount"/>
+              <div class="o_row">
+                <field name="price_discount"/>
+                <span>%%</span>
+              </div>
+              <label string=" + " for="price_surcharge"/>
+              <field name="price_surcharge" nolabel="1"/>
+
+              <field name="price_round" string="Rounding Method"/>
+              <field name="price_min_margin" string="Min. Margin"/>
+              <field name="price_max_margin" string="Max. Margin"/>
+
+              <field name="base_pricelist_id"
+                     attrs="{'invisible':[('base', '!=', 'pricelist')],'required': [('base','=', 'pricelist')], 'readonly': [('base','!=', 'pricelist')]}"/>
+            </group>
+            <!--            <field name="pricelist_item_ids" context="{-->
+            <!--                'default_applied_on': '1_product',-->
+            <!--                'default_product_tmpl_id': product_tmpl_id,-->
+            <!--                'default_campaign_id': campaign_id-->
+            <!--            }" attrs="{'invisible': ['|', ('product_tmpl_id', '=', False), ('mp_id', '=', False)]}">-->
+            <!--              <tree string="Pricelist Items">-->
+            <!--                <field name="campaign_id" invisible="1"/>-->
+            <!--                <field name="name" string="Applicable On"/>-->
+            <!--                <field name="min_quantity"/>-->
+            <!--                <field name="price_campaign" string="Price"/>-->
+            <!--                <field name="base" invisible="1"/>-->
+            <!--                <field name="price_discount" invisible="1"/>-->
+            <!--                <field name="applied_on" invisible="1"/>-->
+            <!--                <field name="compute_price" invisible="1"/>-->
+            <!--              </tree>-->
+            <!--            </field>-->
+          </sheet>
+          <footer>
+            <button name="add" type="object" string="Add" class="btn-primary"/>
+            <button string="Cancel" class="btn-secondary" special="cancel"/>
+          </footer>
+        </form>
+      </field>
+    </record>
+
+    <record id="form_wizard_juragan_campaign_mp_discount" model="ir.ui.view">
+      <field name="name">Wizard Juragan Campaign Marketplace Discount Form View</field>
+      <field name="model">wizard.juragan.campaign.mp_discount</field>
+      <field name="arch" type="xml">
+        <form>
+          <sheet>
+            <group>
+              <field name="campaign_id" invisible="1"/>
+              <field name="company_id" invisible="1"/>
+              <field name="campaign_purpose" invisible="1"/>
+              <field name="mp_id" invisible="1"/>
+              <field name="applied_on" widget="radio"/>
+              <field name="set_mode" invisible="1"/>
+              <field name="set_datetime" invisible="1"/>
+              <field name="set_weekday" invisible="1"/>
+            </group>
+            <separator string="Select Multi Product(s)" attrs="{'invisible': [('applied_on', '!=', '5_products')]}"/>
+            <group name="product_multi" attrs="{'invisible': [('applied_on', '!=', '5_products')]}">
+              <field name="product_tmpl_ids" nolabel="1" attrs="{'required': [('applied_on', '=', '5_products')]}">
+                <tree>
+                  <field name="default_code"/>
+                  <field name="name"/>
+                  <field name="list_price"/>
+                  <field name="categ_id"/>
+                  <field name="type"/>
+                </tree>
+              </field>
+            </group>
+            <separator string="Select Single Product" attrs="{'invisible': [('applied_on', '!=', '1_product')]}"/>
+            <group name="product_single" attrs="{'invisible': [('applied_on', '!=', '1_product')]}">
+              <field name="product_tmpl_id" nolabel="1" attrs="{'required': [('applied_on', '=', '1_product')]}"/>
+            </group>
+            <separator string="Datetime Range Configuration" attrs="{'invisible': [('set_datetime', '=', False)]}"/>
+            <group attrs="{'invisible': [('set_datetime', '=', False)]}">
+              <field name="date_time_start" attrs="{'required': [('set_datetime', '=', True)]}"/>
+              <field name="date_time_end" attrs="{'required': [('set_datetime', '=', True)]}"/>
+            </group>
+            <separator string="Limit(s)"/>
+            <group>
+              <group>
+                <field name="reserved_stock"/>
+              </group>
+              <group>
+                <field name="max_order"/>
+              </group>
+            </group>
+            <separator string="Price Computation"/>
+            <group>
+              <group>
+                <label for="compute_price" string="Compute Price"/>
+                <div>
+                  <field name="compute_price" widget="radio"/>
+                  <field name="currency_id" invisible="1"/>
+                  <div attrs="{'invisible':[('compute_price', '!=', 'fixed')]}">
+                    <field name="fixed_price" nolabel="1" widget='monetary'
+                           options="{'currency_field': 'currency_id', 'field_digits': True}"/></div>
+                  <div attrs="{'invisible':[('compute_price', '!=', 'percentage')]}">
+                    <field name="percent_price" nolabel="1" class="oe_inline"/>%%
+                  </div>
+                </div>
+              </group>
+            </group>
+            <div class="oe_grey" groups="uom.group_uom">
+              <p>The computed price is expressed in the default Unit of Measure of the product.</p>
+            </div>
+          </sheet>
+          <footer>
+            <button name="add" type="object" string="Add" class="btn-primary"/>
+            <button string="Cancel" class="btn-secondary" special="cancel"/>
+          </footer>
+        </form>
+      </field>
+    </record>
+
+    <record id="form_wizard_juragan_campaign_wholesale" model="ir.ui.view">
+      <field name="name">Wizard Juragan Campaign Wholesale Form View</field>
+      <field name="model">wizard.juragan.campaign.wholesale</field>
+      <field name="arch" type="xml">
+        <form>
+          <sheet>
+            <group>
+              <field name="campaign_id" invisible="1"/>
+              <field name="company_id" invisible="1"/>
+              <field name="mp_id"/>
+              <field name="product_tmpl_id" string="Product" required="1"/>
+              <field name="set_mode"/>
+              <field name="set_datetime" invisible="1"/>
+              <field name="set_weekday" invisible="1"/>
+            </group>
+            <separator string="Datetime Range Configuration" attrs="{'invisible': [('set_datetime', '=', False)]}"/>
+            <group attrs="{'invisible': [('set_datetime', '=', False)]}">
+              <field name="date_time_start" attrs="{'required': [('set_datetime', '=', True)]}"/>
+              <field name="date_time_end" attrs="{'required': [('set_datetime', '=', True)]}"/>
+            </group>
+            <separator string="Weekday Configuration" attrs="{'invisible': [('set_weekday', '=', False)]}"/>
+            <group attrs="{'invisible': [('set_weekday', '=', False)]}">
+              <group>
+                <label for="" string="Start &amp; End Time"/>
+                <div>
+                  <div class="o_row" name="time_start">
+                    <field name="time_start" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                    <span>to</span>
+                    <field name="time_end" attrs="{'required': [('set_weekday', '=', True)]}"/>
+                  </div>
+                  <small class="text-info oe_edit_only"><i class="fa fa-info-circle"></i> Use 24-hours time
+                    format.</small>
+                </div>
+                <separator></separator>
+                <field name="weekday_tz" attrs="{'required': [('set_weekday', '=', True)]}"/>
+              </group>
+              <group>
+                <div><i>Select day(s) on which you want to apply the pricelist rule. If none of the days selected, by
+                  default it will applied on all days.</i>
+                  <group>
+                    <group>
+                      <field name="day_0"/>
+                      <field name="day_1"/>
+                      <field name="day_2"/>
+                      <field name="day_3"/>
+                    </group>
+                    <group>
+                      <field name="day_4"/>
+                      <field name="day_5"/>
+                      <field name="day_6"/>
+                    </group>
+                  </group>
+                </div>
+              </group>
+            </group>
+            <field name="pricelist_item_ids" context="{
+                'default_applied_on': '1_product',
+                'default_product_tmpl_id': product_tmpl_id,
+                'default_campaign_id': campaign_id
+            }" attrs="{'invisible': ['|', ('product_tmpl_id', '=', False), ('mp_id', '=', False)]}">
+              <tree string="Pricelist Items">
+                <field name="campaign_id" invisible="1"/>
+                <field name="name" string="Applicable On"/>
+                <field name="min_quantity"/>
+                <field name="price_campaign" string="Price"/>
+                <field name="base" invisible="1"/>
+                <field name="price_discount" invisible="1"/>
+                <field name="applied_on" invisible="1"/>
+                <field name="compute_price" invisible="1"/>
+              </tree>
+            </field>
+          </sheet>
+          <footer>
+            <button name="add" type="object" string="Add" class="btn-primary"/>
+            <button string="Cancel" class="btn-secondary" special="cancel"/>
+          </footer>
+        </form>
+      </field>
+    </record>
+
+    <record id="form_wizard_juragan_campaign_wholesale_item" model="ir.ui.view">
+      <field name="name">Wizard Juragan Campaign Wholesale Item Form View</field>
+      <field name="model">wizard.juragan.campaign.wholesale.item</field>
+      <field name="arch" type="xml">
+        <form>
+          <field name="wizard_id" invisible="1"/>
+          <field name="campaign_id" invisible="1"/>
+          <field name="company_id" invisible="1"/>
+          <field name="applied_on" widget="radio" invisible="1"/>
+          <h1><field name="name"/></h1>
+          <group>
+            <field name="mp_id"
+                   readonly="1" force_save="1"/>
+            <field name="product_tmpl_id"
+                   readonly="1" force_save="1"
+                   string="Product"/>
+          </group>
+          <group>
+            <field name="min_quantity"/>
+          </group>
+          <separator string="Price Computation"/>
+          <group>
+            <group>
+              <label for="compute_price" string="Compute Price"/>
+              <div>
+                <field name="compute_price" widget="radio"/>
+                <field name="currency_id" invisible="1"/>
+                <div attrs="{'invisible':[('compute_price', '!=', 'fixed')]}">
+                  <field name="fixed_price" nolabel="1" widget='monetary'
+                         options="{'currency_field': 'currency_id'}"/></div>
+                <div attrs="{'invisible':[('compute_price', '!=', 'percentage')]}">
+                  <field name="percent_price" nolabel="1" class="oe_inline"/>%%
+                </div>
+              </div>
+            </group>
+          </group>
+          <div class="oe_grey" groups="uom.group_uom">
+            <p>The computed price is expressed in the default Unit of Measure of the product.</p>
+          </div>
+          <group col="6" attrs="{'invisible':[('compute_price', '!=', 'formula')]}">
+            <field name="base" colspan="6"/>
+
+            <label for="" string="New Price ="/>
+            <div>
+              <span attrs="{'invisible':[('base', '!=', 'list_price')]}">Public Price - </span>
+              <span attrs="{'invisible':[('base', '!=', 'standard_price')]}">Cost - </span>
+              <span attrs="{'invisible':[('base', '!=', 'pricelist')]}">Other Pricelist - </span>
+            </div>
+            <label for="price_discount"/>
+            <div class="o_row">
+              <field name="price_discount"/>
+              <span>%%</span>
+            </div>
+            <label string=" + " for="price_surcharge"/>
+            <field name="price_surcharge" nolabel="1"/>
+
+            <field name="price_round" string="Rounding Method"/>
+            <field name="price_min_margin" string="Min. Margin"/>
+            <field name="price_max_margin" string="Max. Margin"/>
+
+            <field name="base_pricelist_id"
+                   attrs="{'invisible':[('base', '!=', 'pricelist')],'required': [('base','=', 'pricelist')], 'readonly': [('base','!=', 'pricelist')]}"/>
+          </group>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- <data>
+        <record model="webhook.server" id="izi_webhook_server_default">
+            <field name="name">your_izi_domain.iziapp.id</field>
+            <field name="username">your_izi_username</field>
+            <field name="password">your_izi_password</field>
+        </record>
+    </data> -->
+</odoo>

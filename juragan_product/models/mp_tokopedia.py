@@ -47,13 +47,32 @@ class MPTokopedia(models.Model):
     wh_id = fields.Many2one('stock.warehouse', string='Warehouse')
     izi_id = fields.Integer()
     izi_md5 = fields.Char()
+    shop_name = fields.Char(compute='_get_shop_name')
+    wh_shop_id = fields.Many2one('stock.warehouse', string='Shop Warehouse')
+    wh_main_id = fields.Many2one('stock.warehouse', string='Main Warehouse')
+    wh_config = fields.Selection([
+        ('main','Main Warehouse'),
+        ('shop','Shop Warehouse'),], string='Take Stock From', default='main')
+    sync_stock_active = fields.Boolean('Realtime Stock Update')
+    partner_id = fields.Many2one(comodel_name="res.partner", string="Default Customer", required=False)
+
+    def _get_shop_name(self):
+        for rec in self:
+            if rec.shop_ids:
+                rec.shop_name = rec.shop_ids[0].shop_name
+            else:
+                rec.shop_name = rec.name
 
     def name_get(self):
         result = []
         for this in self:
-            name = (not this.active and '[ Inactive ] ' or '') + str(this.tp_user or '')
-            if this.name:
-                name = '{} [{}]'.format(name, this.name)
+            name = ''
+            if not this.active:
+                name = '[ Inactive ]'
+            if this.shop_name:
+                name = '{}{}'.format(name, this.shop_name)
+            elif this.name:
+                name = '{}{}'.format(name, this.name)
             result.append((this.id, name))
         return result
 

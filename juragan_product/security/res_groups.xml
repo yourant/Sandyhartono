@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="juragan_product.group_izi_marketplace_product" model="res.groups">
+      <field name="name">IZI Marketplace Product</field>
+      <field name="category_id" ref="juragan_webhook.module_category_izi"/>
+    </record>
+
+    <record id="juragan_product.group_manage_campaign" model="res.groups">
+      <field name="name">Manage Campaign</field>
+      <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+  </data>
+</odoo>

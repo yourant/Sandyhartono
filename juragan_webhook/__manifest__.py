@@ -21,14 +21,46 @@
 
     # always loaded
     'data': [
-        'security/ir.model.access.csv',
+        # group
+        'security/res_groups.xml',
+
+        # data
         'data/ir_cron.xml',
         'data/ir_config.xml',
+        'data/webhook_server.xml',
+
+        # global action
         'views/action.xml',
+
+        # view
         'views/views.xml',
-        'views/menu.xml',
         'views/templates.xml',
+
+        # wizard
+
+        # report paperformat
+
+        # report template
+
+        # report action
+
+        # assets
+
+        # onboarding action
+
+        # action menu
+
+        # action onboarding
+
+        # menu
+        'views/menu.xml',
+
+        # security
+        'security/ir.model.access.csv',
+
+        # data
     ],
+    
     # only loaded in demonstration mode
     'demo': [
         'demo/demo.xml',

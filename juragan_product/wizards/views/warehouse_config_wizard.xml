@@ -1,0 +1,21 @@
+<odoo>
+    <record id="warehouse_config_wizard" model="ir.ui.view">
+        <field name="name">warehouse.config.wizard</field>
+        <field name="model">warehouse.config.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Warehouse Configuration">
+                <field name="line_ids">
+                    <tree editable="bottom" delete="0" create="0">
+                        <field name="name" readonly="1"/>
+                        <field name="wh_config" required="1"/>
+                        <field name="sync_stock_active" required="1"/>
+                    </tree>
+                </field>
+                <footer>
+                    <button name="process_wizard" string="Submit" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field> 
+    </record>
+</odoo>
