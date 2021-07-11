@@ -1325,6 +1325,16 @@ class WebhookServer(models.Model):
                 'tp_cancel_request_create_time': res['tp_cancel_request_create_time'],
                 'tp_cancel_request_reason': res['tp_cancel_request_reason'],
                 'tp_cancel_request_status': res['tp_cancel_request_status'],
+                'mp_delivery_type': res['mp_delivery_type'],
+                'mp_recipient_address_city': res['mp_recipient_address_city'],
+                'mp_recipient_address_name': res['mp_recipient_address_name'],
+                'mp_recipient_address_district': res['mp_recipient_address_district'],
+                'mp_recipient_address_country': res['mp_recipient_address_country'],
+                'mp_recipient_address_zipcode': res['mp_recipient_address_zipcode'],
+                'mp_recipient_address_phone': res['mp_recipient_address_phone'],
+                'mp_recipient_address_state': res['mp_recipient_address_state'],
+                'mp_recipient_address_full': res['mp_recipient_address_full'],
+                'shipping_date': res['shipping_date']
             }
             # for shopee
             if values['sp_order_status']:
@@ -1336,6 +1346,17 @@ class WebhookServer(models.Model):
             # for lazada
             if values['lz_order_status']:
                 res['lz_order_status'] = values['lz_order_status']
+
+            # update delivery info
+            order_obj = self.env['sale.order'].search([('izi_id','=',values['id'])], limit=1)
+            if order_obj and order_obj.mp_delivery_carrier_name != values['mp_delivery_carrier_name']:
+                product_delivery = self.env['product.product'].search([('name','=ilike',values['mp_delivery_carrier_name'])], limit=1)
+                for order_line in order_obj.order_line:
+                    if order_line.is_delivery:
+                        order_line.name = values['mp_delivery_carrier_name']
+                        if product_delivery:
+                            order_line.product_id = product_delivery.id
+                            order_line.product_template_id = product_delivery.product_tmpl_id
 
         elif model_name == 'product.template':
             if 'name' in res:

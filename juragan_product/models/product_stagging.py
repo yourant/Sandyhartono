@@ -798,6 +798,8 @@ class ProductStaging(models.Model):
                                 domain_url = "[('id', 'in', %s)]" % str(
                                     response_data.get(response_key))
                                 if response_key == 'lz_attributes':
+                                    for lz_attr in product_stg_id.lz_attributes:
+                                        lz_attr.unlink()
                                     server.with_context(create_product_attr=True).get_records(
                                         product_stg_id[response_key]._name, domain_url=domain_url, force_update=True)
                                 else:
