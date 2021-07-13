@@ -42,6 +42,7 @@ class MPLazada(models.Model):
         ('shop','Shop Warehouse'),], string='Take Stock From', default='main')
     sync_stock_active = fields.Boolean('Realtime Stock Update')
     partner_id = fields.Many2one(comodel_name="res.partner", string="Default Customer", required=False)
+    company_id = fields.Many2one(comodel_name="res.company", string="Company")
 
     def name_get(self):
         result = []

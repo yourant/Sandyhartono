@@ -474,6 +474,7 @@ class WebhookServer(models.Model):
     no_action_marketplace = fields.Boolean('Unsync All Action', default=False)
     no_action_picking_marketplace = fields.Boolean('Unsync Delivery Action', default=False)
     check_invoice_number = fields.Boolean('Check Invoice Number', default=False)
+    is_shipping_address = fields.Boolean('Use Shipping Address', default=False)
 
     get_records_time_limit = fields.Selection([
         ('last_hour', 'Last Hour'),
@@ -1394,6 +1395,10 @@ class WebhookServer(models.Model):
             # Get Warehouse
             if mp_account.wh_id:
                 res['warehouse_id'] = mp_account.wh_id.id
+            
+            # Get Company
+            if mp_account.company_id:
+                res['company_id'] = mp_account.company_id.id
 
             # Get Partner From Account or Search Partner With Same Phone / Mobile Or Email For Tokopedia
             _logger.info('Create Customer')
@@ -1428,7 +1433,7 @@ class WebhookServer(models.Model):
                 shipping_address = self.env['res.partner'].sudo().search(
                     [('phone', '=', values.get('mp_recipient_address_phone')), ('parent_id', '=', partner.id)], limit=1)
 
-            if not shipping_address:
+            if not shipping_address and self.is_shipping_address:
                 shipping_address = self.env['res.partner'].sudo().create({
                     'type': 'delivery',
                     'parent_id': partner.id,
@@ -1450,7 +1455,7 @@ class WebhookServer(models.Model):
                 })
             # Replace Values
             res['partner_id'] = partner.id
-            res['partner_shipping_id'] = shipping_address.id
+            res['partner_shipping_id'] = shipping_address.id if shipping_address else partner.id
             res['partner_invoice_id'] = partner.id
 
             # Add Order Component

@@ -18,6 +18,7 @@
                                 <field name="shop_name" readonly="1"/>
                                 <field name="name" readonly="1"/>
                                 <field name="partner_id"/>
+                                <field name="company_id"/>
                                 <field name="wh_config" readonly="1"/>
                                 <field name="sync_stock_active" readonly="1"/>
                                 <field name="wh_id" readonly="1" groups="base.group_no_one"/>
@@ -34,6 +35,7 @@
                                 <field name="shop_name" readonly="1"/>
                                 <field name="name" readonly="1"/>
                                 <field name="partner_id"/>
+                                <field name="company_id"/>
                                 <field name="wh_config" readonly="1"/>
                                 <field name="sync_stock_active" readonly="1"/>
                                 <field name="wh_id" readonly="1" groups="base.group_no_one"/>
@@ -50,6 +52,7 @@
                                 <field name="seller_name_company" readonly="1"/>
                                 <field name="name" readonly="1"/>
                                 <field name="partner_id"/>
+                                <field name="company_id"/>
                                 <field name="wh_config" readonly="1"/>
                                 <field name="sync_stock_active" readonly="1"/>
                                 <field name="wh_id" readonly="1" groups="base.group_no_one"/>

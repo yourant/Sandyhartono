@@ -172,6 +172,8 @@
 									<p class="sub-label">Do not import unpaid order from marketplace.</p>
 									<field name="check_invoice_number" widget='boolean_toggle'/>
 									<p class="sub-label">Always check existing marketplace invoice number before saving order.</p>
+									<field name="is_shipping_address" widget='boolean_toggle'/>
+									<p class="sub-label">Use shipping address instead of customer field in order.</p>
 									<field name="no_action_marketplace" widget='boolean_toggle'/>
 									<p class="sub-label">Prevent all action to marketplace when triggerred in Odoo.</p>
 									<field name="no_action_picking_marketplace" widget='boolean_toggle'/>
