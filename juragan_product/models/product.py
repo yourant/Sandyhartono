@@ -363,6 +363,9 @@ class ProductProduct(models.Model):
 
     product_staging_ids = fields.Many2many('product.staging')
 
+    def init(self):     
+        self.env.cr.execute("DROP INDEX IF EXISTS product_product_combination_unique")
+
     def _get_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         for rec in self:
@@ -912,63 +915,74 @@ class WebhookServer(models.Model):
         loop = True
         offset = 0
         limit = 1000
-        while loop:
-            r = requests.get(self.name + '/api/ui/read/list-detail/izi-product-mapping?offset=%s&limit=%s' % (
-                str(offset), str(limit)),
-                headers={'X-Openerp-Session-Id': self.session_id}
-            )
-            res = r.json() if r.status_code == 200 else {}
-            if res.get('code') == 200:
-                if len(res.get('data')) == 0:
-                    loop = False
-                else:
-                    offset += limit
-                # Create Product Mapping
-                for pd in res.get('data'):
-                    # Skip Service
-                    # if pd.get('type') and pd['type']['value'] == 'service':
-                    #     continue
-                    
-                    # Search for product template that has same name or default code
-                    product_product = False
-                    if pd['id'] in pp_by_izi_id:
-                        product_product = pp_by_izi_id[pd['id']]
-                    if not product_product and pd['name'] in pp_by_name:
-                        product_product = pp_by_name[pd['name']]
-                    if not product_product and pd['default_code'] in pp_by_default_code:
-                        product_product = pp_by_default_code[pd['default_code']]
-                    # Create or Update
-                    if pd['id'] not in pm_by_izi_id:
-                        values = {
-                            'product_product_izi_id': pd['id'],
-                            'product_template_izi_id': pd['product_tmpl_id']['id'],
-                            'reference': pd['display_name'],
-                            'name': pd['name'],
-                            'default_code': pd['default_code'],
-                            'server_id': self.id,
-                        }
-                        # Check product_product
-                        if product_product:
-                            if product_product.id not in mapped_product_ids:
-                                mapped_product_ids.append(product_product.id)
-                                values['product_id'] = product_product.id
-                        self.env['product.mapping'].sudo().create(values)
+        try:
+            while loop:
+                r = requests.get(self.name + '/api/ui/read/list-detail/izi-product-mapping?offset=%s&limit=%s' % (
+                    str(offset), str(limit)),
+                    headers={'X-Openerp-Session-Id': self.session_id}
+                )
+                res = r.json() if r.status_code == 200 else {}
+                if res.get('code') == 200:
+                    if len(res.get('data')) == 0:
+                        loop = False
                     else:
-                        values = {
-                            'product_product_izi_id': pd['id'],
-                            'product_template_izi_id': pd['product_tmpl_id']['id'],
-                            'reference': pd['display_name'],
-                            'name': pd['name'],
-                            'default_code': pd['default_code'],
-                            'server_id': self.id,
-                        }
-                        if not pm_by_izi_id[pd['id']].product_id and product_product:
-                            if product_product.id not in mapped_product_ids:
-                                mapped_product_ids.append(product_product.id)
-                                values['product_id'] = product_product.id
-                        pm_by_izi_id[pd['id']].write(values)
-            else:
-                loop = False
+                        offset += limit
+                    # Create Product Mapping
+                    for pd in res.get('data'):
+                        # Skip Service
+                        # if pd.get('type') and pd['type']['value'] == 'service':
+                        #     continue
+                        
+                        # Search for product template that has same name or default code
+                        product_product = False
+                        if pd['id'] in pp_by_izi_id:
+                            product_product = pp_by_izi_id[pd['id']]
+                        if not product_product and pd['name'] in pp_by_name:
+                            product_product = pp_by_name[pd['name']]
+                        if not product_product and pd['default_code'] in pp_by_default_code:
+                            product_product = pp_by_default_code[pd['default_code']]
+                        # Create or Update
+                        if pd['id'] not in pm_by_izi_id:
+                            values = {
+                                'product_product_izi_id': pd['id'],
+                                'product_template_izi_id': pd['product_tmpl_id']['id'],
+                                'reference': pd['display_name'],
+                                'name': pd['name'],
+                                'default_code': pd['default_code'],
+                                'server_id': self.id,
+                            }
+                            # Check product_product
+                            if product_product:
+                                if product_product.id not in mapped_product_ids:
+                                    mapped_product_ids.append(product_product.id)
+                                    values['product_id'] = product_product.id
+                            self.env['product.mapping'].sudo().create(values)
+                        else:
+                            values = {
+                                'product_product_izi_id': pd['id'],
+                                'product_template_izi_id': pd['product_tmpl_id']['id'],
+                                'reference': pd['display_name'],
+                                'name': pd['name'],
+                                'default_code': pd['default_code'],
+                                'server_id': self.id,
+                            }
+                            if not pm_by_izi_id[pd['id']].product_id and product_product:
+                                if product_product.id not in mapped_product_ids:
+                                    mapped_product_ids.append(product_product.id)
+                                    values['product_id'] = product_product.id
+                            pm_by_izi_id[pd['id']].write(values)
+
+                            # pop product mapping, for checking data later
+                            pm_by_izi_id.pop(pd['id'])
+                else:
+                    loop = False
+
+            # after get data from izi, unlink product mapping that not match
+            for product_mapping in pm_by_izi_id:
+                pm_by_izi_id[product_mapping].unlink()
+
+        except Exception as e:
+            _logger.error(str(e))
     
     def start_warehouse_mapping(self):
         # GET existing
