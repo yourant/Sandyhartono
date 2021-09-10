@@ -6,7 +6,7 @@
     "name": """IZI Marketplace: Lazada""",
     "summary": """Integrating Odoo with Marketplace: Lazada""",
     "category": "Sales",
-    "version": "11.0.0.1.0",
+    "version": "12.0.0.1.0",
     "development_status": "Alpha",  # Options: Alpha|Beta|Production/Stable|Mature
     "auto_install": False,
     "installable": True,
