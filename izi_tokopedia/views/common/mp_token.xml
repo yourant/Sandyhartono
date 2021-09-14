@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_mp_token" model="ir.ui.view">
+      <field name="name">Marketplace Token Form View</field>
+      <field name="model">mp.token</field>
+      <field name="inherit_id" ref="izi_marketplace.form_mp_token"/>
+      <field name="arch" type="xml">
+        <group name="summary" position="after">
+          <group name="tp_token" string="Tokopedia Attributes"
+                 attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
+            <field name="tp_token_type" string="Token Type"/>
+          </group>
+        </group>
+      </field>
+    </record>
+  </data>
+</odoo>
