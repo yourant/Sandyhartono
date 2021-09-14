@@ -18,6 +18,7 @@ class MarketplaceToken(models.Model):
     expired_date = fields.Datetime(string="Expired Date", readonly=True, required=True)
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account",
                                     readonly=True, required=True)
+    marketplace = fields.Selection(related="mp_account_id.marketplace", readonly=True)
     state = fields.Selection(string="Status", selection=TOKEN_STATES, compute="_compute_state")
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
 
