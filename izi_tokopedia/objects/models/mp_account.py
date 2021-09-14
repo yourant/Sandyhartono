@@ -3,7 +3,6 @@
 
 from odoo import api, fields, models
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
-from odoo.addons.izi_tokopedia.objects.utils.tokopedia.shop import TokopediaShop
 
 
 class MarketplaceAccount(models.Model):
