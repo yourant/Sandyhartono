@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.form_mp_account" model="ir.ui.view">
+      <field name="name">Marketplace Account Form View</field>
+      <field name="model">mp.account</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Account">
+          <header>
+            <button name="authenticate" string="Authenticate" class="oe_highlight" type="object" states="new"/>
+            <field name="state" widget="statusbar" statusbar_visible="new,authenticated"/>
+          </header>
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+              <button name="toggle_active"
+                      type="object"
+                      class="oe_stat_button"
+                      icon="fa-archive">
+                <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+              </button>
+            </div>
+            <div class="oe_title">
+              <label for="name" class="oe_edit_only"/>
+              <h1>
+                <field name="name"/>
+              </h1>
+            </div>
+            <group>
+              <group>
+                <field name="marketplace"/>
+              </group>
+              <group>
+                <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+              </group>
+            </group>
+            <notebook>
+              <page name="mp_credential" string="Credential">
+                <group name="mp_credential" string="Marketplace Account"></group>
+                <group name="mp_token" string="Marketplace Token" states="authenticated">
+                  <field name="access_token"/>
+                  <field name="access_token_expired_date"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

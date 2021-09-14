@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <data noupdate="0">
+    <record id="izi_marketplace.action_window_mp_account" model="ir.actions.act_window">
+      <field name="name">Marketplace Accounts</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.account</field>
+      <field name="view_mode">tree,form</field>
+    </record>
 
-
+    <record id="izi_marketplace.action_window_mp_token" model="ir.actions.act_window">
+      <field name="name">Marketplace Access Tokens</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.token</field>
+      <field name="view_mode">tree,form</field>
+    </record>
   </data>
 </odoo>
