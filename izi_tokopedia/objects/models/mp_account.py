@@ -8,9 +8,14 @@ from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaA
 class MarketplaceAccount(models.Model):
     _inherit = 'mp.account'
 
+    READONLY_STATES = {
+        'authenticated': [('readonly', True)],
+        'authenticating': [('readonly', False)],
+    }
+
     marketplace = fields.Selection(selection_add=[('tokopedia', 'Tokopedia')])
-    tp_client_id = fields.Char(string="Client ID", required_if_marketplace="tokopedia")
-    tp_client_secret = fields.Char(string="Client Secret", required_if_marketplace="tokopedia")
+    tp_client_id = fields.Char(string="Client ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
+    tp_client_secret = fields.Char(string="Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
 
     @api.multi
     def tokopedia_authenticate(self):
