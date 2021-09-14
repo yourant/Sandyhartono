@@ -33,7 +33,7 @@ class MarketplaceAccount(models.Model):
     ]
 
     name = fields.Char(string="Name", required=True)
-    marketplace = fields.Selection(string="Type", selection=[], required=True)
+    marketplace = fields.Selection(string="Marketplace", selection=[], required=True)
     active = fields.Boolean(default=True)
     company_id = fields.Many2one(comodel_name="res.company", string="Company", index=1, readonly=False, required=True,
                                  default=lambda self: self.env['res.company']._company_default_get())
@@ -42,7 +42,8 @@ class MarketplaceAccount(models.Model):
                                    required=False)
     mp_token_id = fields.Many2one(comodel_name="mp.token", string="Marketplace Token", compute="_compute_mp_token")
     access_token = fields.Char(string="Access Token", related="mp_token_id.name", readonly=True)
-    access_token_expired_date = fields.Datetime(string="Expired Date", related="mp_token_id.expired_date", readonly=True)
+    access_token_expired_date = fields.Datetime(string="Expired Date", related="mp_token_id.expired_date",
+                                                readonly=True)
 
     @api.multi
     def _compute_mp_token(self):
