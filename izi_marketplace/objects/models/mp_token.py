@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+from datetime import datetime
 
 from odoo import api, fields, models
 
@@ -8,10 +9,25 @@ class MarketplaceToken(models.Model):
     _name = 'mp.token'
     _description = 'Marketplace Access Token'
 
-    name = fields.Char(string="Token", required=True)
-    expired_date = fields.Datetime(string="Expired Date", required=True)
-    mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
-    raw = fields.Text(string="Raw Data", required=True, default="{}")
+    TOKEN_STATES = [
+        ('valid', 'Valid'),
+        ('expired', 'Expired')
+    ]
+
+    name = fields.Char(string="Token", readonly=True, required=True)
+    expired_date = fields.Datetime(string="Expired Date", readonly=True, required=True)
+    mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account",
+                                    readonly=True, required=True)
+    state = fields.Selection(string="Status", selection=TOKEN_STATES, compute="_compute_state")
+    raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
+
+    @api.multi
+    def _compute_state(self):
+        for token in self:
+            if datetime.now() > fields.Datetime.from_string(token.expired_date):
+                token.state = 'expired'
+            else:
+                token.state = 'valid'
 
     @api.model
     def create_token(self, mp_account, raw_token):
