@@ -22,5 +22,5 @@ class TokopediaAccount(object):
             'Content-Length': '0',
             'User-Agent': 'PostmanRuntime/7.17.1'
         }
-        resp = requests.post(ENDPOINTS.get('auth'), headers=headers)
-        return resp.json()
+        response = requests.post(ENDPOINTS.get('auth'), headers=headers)
+        return response.json()
