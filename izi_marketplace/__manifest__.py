@@ -26,6 +26,7 @@
     "depends": [
         # odoo addons
         'base',
+        'sale_management',
         # third party addons
 
         # developed addons
@@ -40,6 +41,7 @@
         # 'views/action/action.xml',
 
         # view
+        'views/common/mp_account.xml',
 
         # wizard
 
@@ -53,19 +55,19 @@
         # 'views/action/action_report.xml',
 
         # assets
-        # 'views/assets.xml',
+        'views/assets.xml',
 
         # onboarding action
         # 'views/action/action_onboarding.xml',
 
         # action menu
-        # 'views/action/action_menu.xml',
+        'views/action/action_menu.xml',
 
         # action onboarding
         # 'views/action/action_onboarding.xml',
 
         # menu
-        # 'views/menu.xml',
+        'views/menu.xml',
 
         # security
         # 'security/ir.model.access.csv',
