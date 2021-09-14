@@ -10,7 +10,7 @@
         </search>
       </field>
     </record>
-    
+
     <record id="izi_marketplace.tree_mp_account" model="ir.ui.view">
       <field name="name">Marketplace Account Tree View</field>
       <field name="model">mp.account</field>
@@ -30,7 +30,9 @@
       <field name="arch" type="xml">
         <form string="Marketplace Account">
           <header>
-            <button name="authenticate" string="Authenticate" class="oe_highlight" type="object" states="new"/>
+            <button name="action_authenticate" string="Authenticate" class="oe_highlight" type="object"
+                    states="new,authenticating"/>
+            <button name="action_reauth" string="Re-Authenticate" type="object" states="authenticated"/>
             <field name="state" widget="statusbar" statusbar_visible="new,authenticated"/>
           </header>
           <sheet>
