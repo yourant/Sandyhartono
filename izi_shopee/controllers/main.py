@@ -13,7 +13,7 @@ class IZIShopee(http.Controller):
     
     @http.route('/api/user/auth/shopee/<model("mp.account"):mp_id>/', auth='public')
     def object(self, mp_id, **kw):
-        mp_id.sudo().get_token(**kw)
+        mp_id.sudo().get_token_shopee(**kw)
         return '''
         <!DOCTYPE html>
         <html>
