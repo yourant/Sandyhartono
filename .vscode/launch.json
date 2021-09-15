@@ -12,7 +12,7 @@
             "args": [
                 "--database=IZI_MARKETPLACE",
                 "--config=D:\\Odoo\\odoo-conf\\odoo11_izimarketplace.conf",
-                // "--update=web_dynamic_dashboard,izi_crawling"
+                "--update=izi_marketplace,izi_shopee"
                 // "--update=juragan_ui,juragan_chat"
             ]
         }

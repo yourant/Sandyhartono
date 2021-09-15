@@ -71,7 +71,7 @@ class MarketplaceAccount(models.Model):
     def action_authenticate(self):
         self.ensure_one()
         if hasattr(self, '%s_authenticate' % self.marketplace):
-            getattr(self, '%s_authenticate' % self.marketplace)()
+            return getattr(self, '%s_authenticate' % self.marketplace)()
 
     @api.multi
     def action_get_dependencies(self):
