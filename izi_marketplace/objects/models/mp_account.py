@@ -72,3 +72,15 @@ class MarketplaceAccount(models.Model):
         self.ensure_one()
         if hasattr(self, '%s_authenticate' % self.marketplace):
             getattr(self, '%s_authenticate' % self.marketplace)()
+
+    @api.multi
+    def action_get_dependencies(self):
+        self.ensure_one()
+        if hasattr(self, '%s_get_dependencies' % self.marketplace):
+            getattr(self, '%s_get_dependencies' % self.marketplace)()
+
+    @api.multi
+    def action_get_products(self):
+        self.ensure_one()
+        if hasattr(self, '%s_get_products' % self.marketplace):
+            getattr(self, '%s_get_products' % self.marketplace)()

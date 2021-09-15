@@ -14,6 +14,7 @@
           <group attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
             <field name="tp_client_id" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
             <field name="tp_client_secret" password="True" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_fs_id" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
           </group>
         </xpath>
       </field>
