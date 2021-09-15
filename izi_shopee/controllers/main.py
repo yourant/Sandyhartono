@@ -2,21 +2,26 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import http
+from odoo.http import local_redirect, request
 
-# class Default(http.Controller):
-#     @http.route('/default/default/', auth='public')
-#     def index(self, **kw):
-#         return "Hello, world"
-
-#     @http.route('/default/default/objects/', auth='public')
-#     def list(self, **kw):
-#         return http.request.render('default.listing', {
-#             'root': '/default/default',
-#             'objects': http.request.env['default.default'].search([]),
-#         })
-
-#     @http.route('/default/default/objects/<model("default.default"):obj>/', auth='public')
-#     def object(self, obj, **kw):
-#         return http.request.render('default.object', {
-#             'object': obj
-#         })
+class IZIShopee(http.Controller):
+    
+    @http.route('/shopee-push/<model("mp.shopee"):mp_id>/', type='json', csrf=False, auth='public')
+    def push(self, mp_id, **kw):
+        print(request.jsonrequest)
+        return ''
+    
+    @http.route('/api/user/auth/shopee/<model("mp.account"):mp_id>/', auth='public')
+    def object(self, mp_id, **kw):
+        mp_id.sudo().get_token(**kw)
+        return '''
+        <!DOCTYPE html>
+        <html>
+            <body>
+                <script type="text/javascript">
+                    /* alert('Auth Success.'); */
+                    window.close();
+                </script>
+            </body>
+        </html>
+        '''

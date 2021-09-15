@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
-from odoo import api, fields, models
+from . import endpoint
+from . import account
