@@ -23,7 +23,8 @@ class SaleCancelWizard(models.TransientModel):
         cancel_reason = self.cancel_reason_id
         pickup_obj = self.env['sale.order.pickup.info']
         sales.write({
-            'cancel_reason_id': cancel_reason.id
+            'cancel_reason_id': cancel_reason.id,
+            'mp_cancel_reason': cancel_reason.display_name
         })
         server = sales[0].get_webhook_server()
         responses = []

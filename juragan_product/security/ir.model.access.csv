@@ -51,8 +51,17 @@ access_mp_tokopedia_attribute_line,access_mp_tokopedia_attribute_line,model_mp_t
 access_product_mapping,access_product_mapping,model_product_mapping,,1,1,1,1
 access_location_mapping,access_location_mapping,model_location_mapping,,1,1,1,1
 access_warehouse_mapping,access_warehouse_mapping,model_warehouse_mapping,,1,1,1,1
+access_company_mapping,access_company_mapping,model_company_mapping,,1,1,1,1
 
-access_mp_lazada,access_mp_lazada,model_mp_lazada,,1,1,1,1
+access_mp_blibli,access_mp_blibli,model_mp_blibli,,1,1,1,1
+access_mp_blibli_item_category,access_mp_blibli_item_category,model_mp_blibli_item_category,,1,1,1,1
+access_mp_blibli_item_category_attr,access_mp_blibli_item_category_attr,model_mp_blibli_item_category_attr,,1,1,1,1
+access_mp_blibli_item_attr_option,access_mp_blibli_item_attr_option,model_mp_blibli_item_attr_option,,1,1,1,1
+access_mp_blibli_brand,access_mp_blibli_brand,model_mp_blibli_brand,,1,1,1,1
+access_mp_blibli_item_attribute_val,access_mp_blibli_item_attribute_val,model_mp_blibli_item_attribute_val,,1,1,1,1
+access_mp_blibli_logistic,access_mp_blibli_logistic,model_mp_blibli_logistic,,1,1,1,1
+access_mp_blibli_attribute_line,access_mp_blibli_attribute_line,model_mp_blibli_attribute_line,,1,1,1,1
+access_mp_blibli_variant_value,access_mp_blibli_variant_value,model_mp_blibli_variant_value,,1,1,1,1
 
 access_stock_distribution,access_stock_distribution,model_stock_distribution,,1,1,1,1
 access_stock_distribution_line,access_stock_distribution_line,model_stock_distribution_line,,1,1,1,1

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?><odoo>
+    <record id="ir_cron_renew_rsa_key" model="ir.cron">
+        <field name="name">Renew RSA Key</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field eval="(DateTime.now() + timedelta(days=10)).strftime('%Y-%m-%d %H:%M:%S')" name="nextcall"/>
+        <field eval="False" name="doall"/>
+        <field name="model_id" ref="model_rsa"/>
+        <field name="code">model.generate()</field>
+        <field name="state">code</field>
+        <field name="active">True</field>
+        <!-- <field name="activity_user_type">specific</field> -->
+    </record>
+</odoo>

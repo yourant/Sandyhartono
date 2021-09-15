@@ -4,27 +4,22 @@
 
     'summary': "Encrypt and login Odoo using RSA Token",
 
-    'description': """
-        Encrypt and login Odoo using RSA
-        1. [SERVER_URL]/rsa/pem/public : to get public_key.pem
-        2. [SERVER_URL]/rsa/encrypt/<string:data> : to encrypt data
-        3. [SERVER_URL]/web/login/rsa/<string:rsa_token> : to login using rsa token
-    """,
+    'description': "Encrypt and login Odoo using RSA Token",
 
-    'author': "okkype@sihipo.net",
-    'website': "https://sihipo.net/",
+    'author': "okkype@gmail.com",
+    'website': "https://www.linkedin.com/in/okky-permana-sihipo/",
     'license': 'OPL-1',
     'currency': 'USD',
-    'price': 50.0,
+    'price': 100.0,
 
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/13.0/odoo/addons/base/data/ir_module_category_data.xml
     # for the full list
-    'category': 'Uncategorized',
-    'version': '0.1',
+    'category': 'API',
+    'version': '12.0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base'],
+    'depends': ['base', 'mail'],
 
     # always loaded
     'data': [
@@ -32,6 +27,7 @@
         'views/function.xml',
         'views/views.xml',
         'views/templates.xml',
+        'data/ir_cron.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
@@ -44,4 +40,6 @@
         ],
         "bin": [],
     },
+    
+    'images': ['static/description/banner.png'],
 }

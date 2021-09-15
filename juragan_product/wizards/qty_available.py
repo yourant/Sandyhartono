@@ -7,7 +7,7 @@ class StagingStockWizard(models.TransientModel):
     qty_available = fields.Integer('Qty Available')
 
     def do_update_stock(self):
-        product_staging_id = self.env['product.staging'].search(
+        product_staging_id = self.env['product.staging'].sudo().search(
             [('id', '=', self._context.get('product_staging_id', []))])
         stock_location = self.env['stock.location']
         if product_staging_id.mp_tokopedia_id:
@@ -24,6 +24,10 @@ class StagingStockWizard(models.TransientModel):
             stock_location = product_staging_id.mp_lazada_id.wh_id.lot_stock_id
             if not stock_location:
                 stock_location = product_staging_id.product_template_id.mp_lazada_ids.wh_id.lot_stock_id
+        elif product_staging_id.mp_blibli_id:
+            stock_location = product_staging_id.mp_blibli_id.wh_id.lot_stock_id
+            if not stock_location:
+                stock_location = product_staging_id.product_template_id.mp_blibli_ids.wh_id.lot_stock_id
         if not stock_location:
             raise UserError("Source location is not defined, please set the default source location for each "
                             "marketplace account!")
@@ -70,6 +74,10 @@ class StagingVariantStockWizard(models.TransientModel):
             stock_location = product_staging_variant_id.product_stg_id.mp_lazada_id.wh_id.lot_stock_id
             if not stock_location:
                 stock_location = product_staging_variant_id.product_stg_id.product_template_id.mp_lazada_ids.wh_id.lot_stock_id
+        elif product_staging_variant_id.product_stg_id.mp_blibli_id:
+            stock_location = product_staging_variant_id.product_stg_id.mp_blibli_id.wh_id.lot_stock_id
+            if not stock_location:
+                stock_location = product_staging_variant_id.product_stg_id.product_template_id.mp_blibli_ids.wh_id.lot_stock_id
         if not stock_location:
             raise UserError("Source location is not defined, please set the default source location for each "
                             "marketplace account!")

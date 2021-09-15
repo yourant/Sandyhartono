@@ -37,12 +37,34 @@ class ProductVariantStaging(models.Model):
     sp_attribute_value_ids = fields.Many2many('mp.shopee.item.var.attribute.value', string='Shopee Variation Attributes', ondelete='restrict')
     tp_variant_value_ids = fields.Many2many('mp.tokopedia.variant.value')
     lz_variant_value_ids = fields.Many2many('mp.lazada.variant.value')
-
+    bli_variant_value_ids = fields.Many2many('mp.blibli.variant.value')
+    bli_itemsku = fields.Char()
+    
     image_url = fields.Char('Image URL', compute='_get_image_url')
     image_url_external = fields.Char('Image URL External')
 
     izi_id = fields.Integer('Izi ID')
     izi_md5 = fields.Char()
+
+
+
+    @api.onchange('price_custom')
+    def validasi_form(self):
+        if self.price_custom < 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Price must higher than 0',
+                }
+            }
+        elif self.price_custom < 99 and self.price_custom != 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Price must higher than 99',
+                }
+            }
+    
 
     def _get_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -65,6 +87,8 @@ class ProductVariantStaging(models.Model):
                 lot_stock_id = rec.product_stg_id.mp_shopee_id.wh_id.lot_stock_id.id
             elif rec.product_stg_id.mp_lazada_id:
                 lot_stock_id = rec.product_stg_id.mp_lazada_id.wh_id.lot_stock_id.id
+            elif rec.product_stg_id.mp_blibli_id:
+                lot_stock_id = rec.product_stg_id.mp_blibli_id.wh_id.lot_stock_id.id
             if rec.product_id.id:
                 product_id = rec.product_id.id
             if lot_stock_id and product_id:

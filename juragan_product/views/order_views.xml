@@ -11,6 +11,8 @@
                     <field name="mp_delivery_type" string="Delivery Type"/>
                     <field name="order_status" string="Marketplace Status"/>
                     <field name="mp_channel" string="Marketplace"/>
+                    <field name="mp_accept_deadline" string="Confirmation Deadline"/>
+                    <field name="shipping_date" string="Delivery Deadline"/>
                 </field>
             </field>
         </record>
@@ -37,18 +39,20 @@
                 <page name="order_lines" position="after">
                     <page string="Marketplace" name="izi_info">
                         <div>
-                            <button class="btn-izi" attrs="{'invisible':['|',('mp_lazada_id','not in',False),('order_status', 'not in', ('ready-process'))]}" style="margin-right:5px;" name="action_orders_accept" string="Accept" type="object" confirm="Are you sure to Accept Order?"/>
-                            <button class="btn-izi" attrs="{'invisible':['|',('mp_lazada_id','not in',False),('order_status', 'not in', ('ready-process'))]}" style="margin-right:5px;" name="action_orders_reject" string="Reject" type="object" confirm="Are you sure to Reject Order?"/>
-                            <button class="btn-izi" attrs="{'invisible':['|','|','|',('mp_shopee_id','not in',False),('mp_lazada_id','not in',False),('order_status', 'not in', ['process', 'ready-ship']), ('mp_delivery_type','=','pickup')]}" style="margin-right:5px;" name="action_orders_confirm_shipping" string="Confirm Shipping" type="object"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|',('mp_lazada_id','not in',False),('mp_blibli_id','not in',False),('order_status', 'not in', ('ready-process'))]}" style="margin-right:5px;" name="action_orders_accept" string="Accept" type="object" confirm="Are you sure to Accept Order?"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|',('mp_lazada_id','not in',False),('mp_blibli_id','not in',False),('order_status', 'not in', ('ready-process'))]}" style="margin-right:5px;" name="action_orders_reject" string="Reject" type="object" confirm="Are you sure to Reject Order?"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|','|','|',('mp_blibli_id','not in',False),('mp_shopee_id','not in',False),('mp_lazada_id','not in',False),('order_status', 'not in', ['process', 'ready-ship']), ('mp_delivery_type','=','pickup')]}" style="margin-right:5px;" name="action_orders_confirm_shipping" string="Confirm Shipping" type="object"/>
                             <button class="btn-izi" attrs="{'invisible':['|','|',('order_status', 'not in', ('process', 'ready-ship')),('order_status_notes', 'in', ('In Cancel')),('mp_delivery_type','not in',('pickup','both')),('mp_awb_number', 'not in', False),('mp_awb_url', 'not in', False)]}" style="margin-right:5px;" name="action_orders_request_pickup" string="Request Pickup" type="object" confirm="Are you sure to Request Pickup?"/>
                             <button class="btn-izi" attrs="{'invisible':[('order_status', 'not in', ['ready-process', 'process', 'ready-ship', 'ship'])]}" style="margin-right:5px;" name="action_orders_get_label" string="Get Label" type="object" confirm="Are you sure to Get Label?"/>
                             <button class="btn-izi" attrs="{'invisible':[('order_status_notes', 'not in', ('In Cancel'))]}" style="margin-right:5px;" name="action_orders_accept_cancel" string="Accept Cancel Request" type="object" confirm="Are you sure to Accept Cancel Request by Buyer?"/>
                             <button class="btn-izi" attrs="{'invisible':[('order_status_notes', 'not in', ('In Cancel'))]}" style="margin-right:5px;" name="action_orders_reject_cancel" string="Reject Cancel Request" type="object" confirm="Are you sure to Reject Cancel Request by Buyer?"/>
-                            <button class="btn-izi" attrs="{'invisible': ['|', '|', ('order_status', 'not in', ('ready-process', 'process', 'ready-ship')), ('order_status_notes', 'in', ('In Cancel')), ]}" style="margin-right:5px;" name="action_orders_cancel" string="Cancel" type="object" confirm="Are you sure to Cancel Order?"/>
-                            <button class="btn-izi" attrs="{'invisible':['|','|',('mp_shopee_id','not in',False),('order_status_notes', 'not in', ('packed', 'repacked')),('mp_tokopedia_id','not in',False)]}" style="margin-right:5px;" name="action_orders_confirm_shipping" string="Ready to Ship" type="object" confirm="Are you sure to set this order to ready to ship?"/>
-                            <button class="btn-izi" attrs="{'invisible':['|','|',('mp_shopee_id','not in',False),('order_status_notes', 'not in', ('pending')),('mp_tokopedia_id','not in',False)]}" style="margin-right:5px;" name="action_orders_packing" string="Packing" type="object" confirm="Are you sure to set this order to packing?"/>
+                            <button class="btn-izi" attrs="{'invisible':['|', '|','|', ('mp_blibli_id','not in',False), ('order_status', 'not in', ('ready-process', 'process', 'ready-ship')), ('order_status_notes', 'in', ('In Cancel')), ]}" style="margin-right:5px;" name="action_orders_cancel" string="Cancel" type="object" confirm="Are you sure to Cancel Order?"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|',('mp_shopee_id','not in',False),('order_status_notes', 'not in', ('packed')),('mp_tokopedia_id','not in',False)]}" style="margin-right:5px;" name="action_orders_confirm_shipping" string="Ready to Ship" type="object" confirm="Are you sure to set this order to ready to ship?"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|','|',('mp_blibli_id','not in',False),('mp_shopee_id','not in',False),('order_status_notes', 'not in', ('pending', 'repacked')),('mp_tokopedia_id','not in',False)]}" style="margin-right:5px;" name="action_orders_packing" string="Packing" type="object" confirm="Are you sure to set this order to packing?"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|','|','|',('mp_awb_number', 'not in', False),('mp_lazada_id','not in',False),('mp_shopee_id','not in',False),('order_status', 'in', ('Siap Diproses')),('mp_tokopedia_id','not in',False)]}" style="margin-right:5px;" name="action_orders_packing" string="Create Package" type="object" confirm="Are you sure to set this order to Create Package?"/>
+                            <button class="btn-izi" attrs="{'invisible':['|','|','|',('mp_lazada_id','not in',False),('mp_shopee_id','not in',False),('order_status', 'in', ('Dalam Proses')),('mp_tokopedia_id','not in',False)]}" style="margin-right:5px;" name="action_orders_status" string="Update status" type="object" confirm="Are you sure to set this order to update status?"/>
                         </div>
-                        <group string="Buyer Cancel Request" attrs="{'invisible':['|', ('tp_cancel_request_status', '!=', 1), ('tp_order_status', 'not in', [10, 15, 220, 400]), ]}">
+                        <group string="Buyer Cancel Request" attrs="{'invisible':['|', ('tp_cancel_request_status', '!=', 1), ('tp_order_status', 'not in', ['10', '15', '220', '400']), ]}">
                             <group>
                                 <field name="tp_cancel_request_create_time" string="Request Time" readonly="1"/>
                                 <field name="tp_cancel_request_reason" string="Reason" readonly="1"/>
@@ -63,6 +67,7 @@
                                 <field name="mp_tokopedia_id" readonly="1"/>
                                 <field name="mp_lazada_id" readonly="1"/>
                                 <field name="mp_shopee_id" readonly="1"/>
+                                <field name="mp_blibli_id" readonly="1"/>
                                 <field name="mp_buyer_username" readonly="1"/>
                                 <field name="mp_buyer_name" readonly="1"/>
                                 <field name="mp_buyer_email" readonly="1"/>
@@ -70,11 +75,13 @@
                                 <field name="mp_update_order_time" invisible="1"/>
                             </group>
                             <group string="Order Status">
+                                <field name="no_action_marketplace" />
                                 <field name="order_status" readonly="1"/>
                                 <field name="order_status_notes" readonly="1"/>
                                 <field name="tp_order_status" invisible="1"/>
                                 <field name="sp_order_status" invisible="1"/>
                                 <field name="lz_order_status" invisible="1"/>
+                                <field name="bli_order_status" invisible="1"/>
                                 <field name="tp_order_id" invisible="1"/>
                                 <field name="sp_cancel_by" readonly="1"/>
                                 <field name="cancel_by_customer" readonly="1"/>
@@ -92,11 +99,13 @@
                                 <field name="mp_recipient_address_state" readonly="1"/>
                                 <field name="mp_recipient_address_full" readonly="1"/>
                             </group>
-                            <group string="AWB Information">
+                            <group string="Delivery Information">
                                 <field name="mp_delivery_carrier_name" readonly="1"/>
+                                <field name="mp_delivery_carrier_type" readonly="1" string="Delivery Carrier Type"/>
                                 <field name="mp_awb_number" readonly="1"/>
                                 <field name="mp_awb_url" widget="url" readonly="1"/>
                                 <field name="mp_delivery_type" readonly="1" string="Delivery Type"/>
+                                <field name="mp_accept_deadline" readonly="1"/>
                                 <field name="shipping_date" readonly="1"/>
                                 <field name="pickup_ids" readonly="1" string="Informasi Pickup">
                                     <tree>    

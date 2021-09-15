@@ -45,10 +45,7 @@ class MappingMasterWizard(models.TransientModel):
                 if self.is_min_order:
                     values['min_order'] = self.min_order
                 if self.is_weight:
-                    weight = self.weight
-                    if product_staging_id.mp_shopee_id:
-                        weight = weight / 1000
-                    values['weight'] = weight
+                    values['weight'] = self.weight
                 if self.is_length:
                     values['length'] = self.length
                 if self.is_width:
@@ -73,6 +70,10 @@ class MappingMasterWizard(models.TransientModel):
                             stock_location = product_staging_id.product_template_id.mp_shopee_ids.wh_id.lot_stock_id
                     elif product_staging_id.mp_lazada_id:
                         stock_location = product_staging_id.mp_lazada_id.wh_id.lot_stock_id
+                        if not stock_location:
+                            stock_location = product_staging_id.product_template_id.mp_lazada_ids.wh_id.lot_stock_id
+                    elif product_staging_id.mp_blibli_id:
+                        stock_location = product_staging_id.mp_blibli_id.wh_id.lot_stock_id
                         if not stock_location:
                             stock_location = product_staging_id.product_template_id.mp_lazada_ids.wh_id.lot_stock_id
                     if not stock_location:

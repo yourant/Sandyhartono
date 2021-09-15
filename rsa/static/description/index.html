@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        <h1>
+            Encrypt and login Odoo using RSA
+        </h1>
+        <ol>
+            <li><code>[GET][SERVER_URL]/rsa/pem/public</code> : to get public_key.pem</li>
+            <li><code>[GET][SERVER_URL]/rsa/encrypt/[string:data]</code> : to encrypt data</li>
+            <li><code>[GET][SERVER_URL]/web/login/rsa/[string:rsa_token]</code> : to login using rsa token</li>
+        </ol>
+        <p>
+            To get <code>rsa_token</code>, get public key (point number 1 above), do <code>data = '%s:%s' % (username,password)</code>
+            then encrypt <code>data</code> with RSA method, or do point number 2 (less secure).
+        </p>
+    </body>
+</html>

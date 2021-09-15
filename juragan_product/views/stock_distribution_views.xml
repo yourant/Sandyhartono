@@ -50,6 +50,7 @@
                                 <field name="mp_tokopedia_id" attrs="{'invisible': [('mp_account_type', '!=', 'tokopedia')]}"/>
                                 <field name="mp_shopee_id" attrs="{'invisible': [('mp_account_type', '!=', 'shopee')]}"/>
                                 <field name="mp_lazada_id" attrs="{'invisible': [('mp_account_type', '!=', 'lazada')]}"/>
+                                <field name="mp_blibli_id" attrs="{'invisible': [('mp_account_type', '!=', 'blibli')]}"/>
                             </group>
                             <group>
                                 <field name="location_id" domain="[('usage','=','internal')]"/>

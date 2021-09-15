@@ -17,7 +17,6 @@
         'stock',
         'juragan_webhook',
         'sale_management',
-        'purchase',
         'sale_stock',
         'juragan_fcm_notify',
         'juragan_product_code_sequence',
@@ -71,6 +70,7 @@
 
         # security
         'security/ir.model.access.csv',
+        'security/ir.rule.csv',
 
         # data
     ],

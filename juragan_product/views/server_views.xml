@@ -20,10 +20,12 @@
                                 <field name="partner_id"/>
                                 <field name="company_id"/>
                                 <field name="wh_config" readonly="1"/>
-                                <field name="sync_stock_active" readonly="1"/>
+                                <!-- <field name="sync_stock_active" readonly="1"/> -->
                                 <field name="wh_id" readonly="1" groups="base.group_no_one"/>
                                 <field name="wh_shop_id" readonly="1" groups="base.group_no_one"/>
                                 <field name="wh_main_id" readonly="1" groups="base.group_no_one"/>
+                                <field name="company_id" groups="base.group_multi_company"
+                                       options="{'no_create': True}"/>
                             </tree>
                         </field>
                         <br/>
@@ -37,10 +39,12 @@
                                 <field name="partner_id"/>
                                 <field name="company_id"/>
                                 <field name="wh_config" readonly="1"/>
-                                <field name="sync_stock_active" readonly="1"/>
+                                <!-- <field name="sync_stock_active" readonly="1"/> -->
                                 <field name="wh_id" readonly="1" groups="base.group_no_one"/>
                                 <field name="wh_shop_id" readonly="1" groups="base.group_no_one"/>
                                 <field name="wh_main_id" readonly="1" groups="base.group_no_one"/>
+                                <field name="company_id" groups="base.group_multi_company"
+                                       options="{'no_create': True}"/>
                             </tree>
                         </field>
                         <br/>
@@ -49,7 +53,25 @@
                         <h4 class="mp-account-label">Lazada</h4>
                         <field name="mp_lazada_ids">
                             <tree editable="bottom">
-                                <field name="seller_name_company" readonly="1"/>
+                                <field name="seller_name" readonly="1"/>
+                                <field name="name" readonly="1"/>
+                                <field name="partner_id"/>
+                                <field name="wh_config" readonly="1"/>
+                                <!-- <field name="sync_stock_active" readonly="1"/> -->
+                                <field name="wh_id" readonly="1" groups="base.group_no_one"/>
+                                <field name="wh_shop_id" readonly="1" groups="base.group_no_one"/>
+                                <field name="wh_main_id" readonly="1" groups="base.group_no_one"/>
+                                <field name="company_id" groups="base.group_multi_company"
+                                       options="{'no_create': True}"/>
+                            </tree>
+                        </field>
+                        <br/>
+                        <br/>
+                        <img class="mp-account-img" src="/juragan_product/static/src/img/bli.png" alt="" />
+                        <h4 class="mp-account-label">Blibli</h4>
+                        <field name="mp_blibli_ids">
+                            <tree editable="bottom">
+                                <field name="shop_name" readonly="1"/>
                                 <field name="name" readonly="1"/>
                                 <field name="partner_id"/>
                                 <field name="company_id"/>
@@ -58,10 +80,20 @@
                                 <field name="wh_id" readonly="1" groups="base.group_no_one"/>
                                 <field name="wh_shop_id" readonly="1" groups="base.group_no_one"/>
                                 <field name="wh_main_id" readonly="1" groups="base.group_no_one"/>
+                                <field name="company_id" groups="base.group_multi_company"
+                                       options="{'no_create': True}"/>
                             </tree>
                         </field>
                     </page>
                     <page string="Data Mapping">
+						<button class="btn-izi" type="object" name="start_company_mapping" string="Map Company" />
+                        <field name="company_mapping_ids">
+                            <tree editable="bottom" delete="0" create="0">
+                                <field name="company_id" string="Company" domain="[('izi_id', '=', False)]"/>
+                                <field name="reference" string="Reference" readonly="1"/>
+                            </tree>
+                        </field>
+                        <br/>
 						<button class="btn-izi" type="object" name="start_warehouse_mapping" string="Map Warehouse" />
                         <field name="warehouse_mapping_ids">
                             <tree editable="bottom" delete="0" create="0">

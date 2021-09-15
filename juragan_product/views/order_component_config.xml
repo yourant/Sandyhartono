@@ -43,6 +43,7 @@
                                 <field name="mp_tokopedia_ids" widget="many2many_tags"/>
                                 <field name="mp_shopee_ids" widget="many2many_tags"/>
                                 <field name="mp_lazada_ids" widget="many2many_tags"/>
+                                <field name="mp_blibli_ids" widget="many2many_tags"/>
                             </group>
                         </group>
                         <notebook>

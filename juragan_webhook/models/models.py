@@ -52,7 +52,7 @@ code_by_model_name = {
 
     'mp.shopee.item.var.attribute': 'izi-shopee-item-var-attribute',
     'mp.shopee.item.var.attribute.value': 'izi-shopee-item-var-attribute-value',
-    'mp.shopee.attribute.line' : 'izi-shopee-item-attribute-line',
+    'mp.shopee.attribute.line': 'izi-shopee-item-attribute-line',
 
     'mp.lazada': 'izi-lazada',
     'mp.lazada.brand': 'izi-lazada-brand',
@@ -63,6 +63,16 @@ code_by_model_name = {
 
     'mp.lazada.variant.value': 'izi-lazada-variant-value',
     'mp.lazada.attribute.line': 'izi-lazada-attribute-line',
+
+    'mp.blibli': 'izi-blibli',
+    'mp.blibli.item.category': 'izi-blibli-item-category',
+    'mp.blibli.item.category.attr': 'izi-blibli-item-category-attribute',
+    'mp.blibli.item.attr.option': 'izi-blibli-item-attribute-option',
+    'mp.blibli.brand': 'izi-blibli-item-brand',
+    'mp.blibli.item.attribute.val': 'izi-blibli-item-attribute-val',
+    'mp.blibli.logistic': 'izi-blibli-logistic',
+    'mp.blibli.attribute.line': 'izi-blibli-attribute-line',
+    'mp.blibli.variant.value': 'izi-blibli-variant-value',
 
     'product.category': 'izi-product-categories',
     'product.attribute': 'izi-product-attributes',
@@ -87,14 +97,14 @@ existing_fields_by_model_name = {
     'stock.warehouse': ['code'],
     'res.company': ['name'],
     'res.users': ['name'],
-    'mp.shopee.item.attribute.option': ['name'],
     'mp.lazada.category.attr.opt': ['name'],
+    'mp.blibli.item.attr.option': ['name'],
     'product.template': ['name'],
     'product.product': ['name'],
 }
 
 removed_fields = {
-    'product.product': ['uom_id', 'company_id', 'barcode'],
+    'product.product': ['uom_id', 'barcode'],
     'product.template': ['image_small', 'image_medium', 'barcode'],
     'product.staging': ['izi_md5'],
     'mp.lazada.product.attr': ['option_id'],
@@ -128,6 +138,9 @@ upload_fields = {
     'Shopee': [
         'mp_shopee_id', 'sp_is_pre_order', 'sp_category_int',
         'sp_days_to_ship', 'sp_condition'
+    ],
+    'Blibli': [
+        'mp_blibli_id'
     ],
     'product.template.wholesale': [
         'min_qty', 'max_qty', 'price_wholesale', 'product_tmpl_id',
@@ -165,7 +178,7 @@ upload_fields = {
         'is_free', 'estimated_shipping_fee'
     ],
     'mp.shopee.item.attribute.val': [
-        'id','attribute_int','attribute_id','attribute_value','item_id_staging'
+        'id', 'attribute_int', 'attribute_id', 'attribute_value', 'item_id_staging'
     ],
 }
 restricted_fields = [
@@ -437,7 +450,6 @@ class WebhookGetCustomModelRecordsWizard(models.TransientModel):
     custom_model_name = fields.Char('Custom Model Name')
     webhook_server_id = fields.Many2one('webhook.server', 'Webhook Server')
 
-
     def process_wizard(self):
         self.webhook_server_id.get_records(
             self.custom_model_name, force_update=True)
@@ -513,7 +525,7 @@ class WebhookServer(models.Model):
                 session_id = data.get('session_id', False)
                 error = data.get('error_descrip')
                 if error:
-                    raise ValidationError(error + ' for Webhook server : '+ str(self))
+                    raise ValidationError(error + ' for Webhook server : ' + str(self))
                 self.session_id = session_id
                 return self.session_id
             self.session_id = ''
@@ -770,6 +782,7 @@ class WebhookServer(models.Model):
         self.env.cr.execute('DELETE FROM mp_tokopedia_variant_value;')
         self.env.cr.execute('DELETE FROM mp_shopee_item_attribute_option;')
         self.env.cr.execute('DELETE FROM mp_shopee_item_var_attribute_value;')
+
     #
     # API Get Specific
     #
@@ -785,11 +798,13 @@ class WebhookServer(models.Model):
         self.import_stock()
 
     def get_accounts(self):
+        self.get_companies()
         self.get_warehouses()
         self.get_records('res.partner', loop_commit=False)
-        self.get_records('mp.tokopedia', domain_code='all_active', loop_commit=False)
-        self.get_records('mp.shopee', domain_code='all_active', loop_commit=False)
-        self.get_records('mp.lazada', domain_code='all_active', loop_commit=False)
+        self.get_records('mp.tokopedia', force_update=True, domain_code='all_active', loop_commit=False)
+        self.get_records('mp.shopee', force_update=True, domain_code='all_active', loop_commit=False)
+        self.get_records('mp.lazada', force_update=True, domain_code='all_active', loop_commit=False)
+        self.get_records('mp.blibli', force_update=True, domain_code='all_active', loop_commit=False)
 
     def get_dependency(self):
         self.get_product_dependency()
@@ -827,31 +842,6 @@ class WebhookServer(models.Model):
             }
         else:
             raise UserError('Invalid token.')
-        
-    def remote_rsa(self):
-        if self.ensure_one():
-            try:
-                from Cryptodome.Cipher import PKCS1_OAEP
-                from Cryptodome.PublicKey import RSA as rsa_key
-                from base64 import urlsafe_b64encode
-                
-                r = requests.get('%s/rsa/pem/public' % (self.name))
-                if r.status_code == 200:
-                    message = '%s:%s' % (self.username, self.password)
-                    rsa_public_key = rsa_key.import_key(r.text)
-                    cipher = PKCS1_OAEP.new(key=rsa_public_key)
-                    access_token = urlsafe_b64encode(cipher.encrypt(message.encode())).decode('utf-8')
-                    return {                   
-                        'name': 'Go to website',
-                        'res_model': 'ir.actions.act_url',
-                        'type': 'ir.actions.act_url',
-                        'target': 'new',
-                        'url': '%s/web/login/rsa/%s?db=%s' % (self.name, access_token, self.name.split('//')[1]),
-                    }
-                else:
-                    raise UserError('Cannot get public key.')
-            except ImportError:
-                raise UserError('Cannot import Cryptodome.')
         
     @api.model
     def remote_action(self, obj_id):
@@ -979,6 +969,12 @@ class WebhookServer(models.Model):
                 'channel': 'lazada',
                 'mp_id': mp_lazada_id.izi_id
             })
+        mp_blibli_ids = self.env['mp.blibli'].search([])
+        for mp_blibli_id in mp_blibli_ids:
+            mp_list.append({
+                'channel': 'blibli',
+                'mp_id': mp_blibli_id.izi_id
+            })
         r = requests.post(self.name + '/api/ui/stock/import', headers={
             'X-Openerp-Session-Id': self.session_id, 'Content-type': 'application/json'}, json={'data': mp_list})
         res = r.json()
@@ -1010,7 +1006,7 @@ class WebhookServer(models.Model):
                 products_by_izi_id[pd.izi_id] = pd
 
             # Adjust Stock
-            line_vals = []
+            line_vals_by_company_id = {}
             data = res['data']
             for prod in data['res_products_by_wh_id']:
                 prod_id = prod['id']
@@ -1030,22 +1026,34 @@ class WebhookServer(models.Model):
                         
                     if not found_warehouse:
                         raise UserError('Warehouse not found.')
-                    
-                    line_vals.append(
-                        (0, 0, {
+
+                    company = found_warehouse.company_id
+
+                    if company.id in line_vals_by_company_id:
+                        line_vals_by_company_id[company.id].append((0, 0, {
                             'product_id': products_by_izi_id[prod_id].id,
                             'location_id': found_warehouse.lot_stock_id.id,
+                            'company_id': company.id,
                             'product_qty': prod[str(wh_id)]['qty_total'],
-                        })
-                    )
-            res = self.env['stock.inventory'].sudo().create({
-                'name': 'Import Stock Data From IZI',
-                # 'location_id': lot_stock_id,
-                # 'filter': 'none',
-                'line_ids': line_vals,
-            })
-            res.action_start()
-            res.with_context(no_push=True).action_validate()
+                        }))
+                    else:
+                        line_vals_by_company_id[company.id] = [(0, 0, {
+                            'product_id': products_by_izi_id[prod_id].id,
+                            'location_id': found_warehouse.lot_stock_id.id,
+                            'company_id': company.id,
+                            'product_qty': prod[str(wh_id)]['qty_total'],
+                        })]
+
+            for company_id in line_vals_by_company_id.keys():
+                res = self.env['stock.inventory'].sudo().create({
+                    'name': 'Import Stock Data From IZI',
+                    # 'location_id': lot_stock_id,
+                    # 'filter': 'none',
+                    'line_ids': line_vals_by_company_id[company_id],
+                    'company_id': company_id
+                })
+                res.action_start()
+                res.with_context(no_push=True).action_validate()
 
     def export_stock(self):
         res = []
@@ -1190,7 +1198,7 @@ class WebhookServer(models.Model):
                                     })
                                     values = self.custom_before_write(
                                         model_name, values)
-                                    record.write(values)
+                                    record.sudo().write(values)
                                     self.custom_after_write(model_name, record, values)
                             else:
                                 # always update the data if there's no MD5 hash field in the current model
@@ -1198,7 +1206,7 @@ class WebhookServer(models.Model):
                                     model_name, res_values, update=True)
                                 values = self.custom_before_write(
                                     model_name, values)
-                                record.write(values)
+                                record.sudo().write(values)
                                 self.custom_after_write(model_name, record, values)
                         else:
                             # do create if there's no existing record
@@ -1211,7 +1219,7 @@ class WebhookServer(models.Model):
                             values = self.custom_before_create(model_name, values)
                             if self.check_skip_before_create(model_name, values):
                                 continue
-                            record = self.env[model_name].create(values)
+                            record = self.env[model_name].sudo().create(values)
                             self.custom_after_create(model_name, record, values)
                         if commit_every:
                             if isinstance(commit_every, int):
@@ -1263,7 +1271,7 @@ class WebhookServer(models.Model):
                 break
         if commit_on_finish:
             #### self.env.cr.commit()
-            pass ####
+            pass  ####
     
     def set_default_context(self, model_name):
         if model_name == 'sale.order':
@@ -1315,17 +1323,90 @@ class WebhookServer(models.Model):
 
     def custom_before_write(self, model_name, values):
         res = values.copy()
+            
         if model_name == 'sale.order':
+            # Get Account
+            mp_tokopedia_id = values.get('mp_tokopedia_id', False)
+            mp_shopee_id = values.get('mp_shopee_id', False)
+            mp_lazada_id = values.get('mp_lazada_id', False)
+            mp_blibli_id = values.get('mp_blibli_id', False)
+            mp_account = False
+            if mp_tokopedia_id:
+                mp_account = self.env['mp.tokopedia'].sudo().browse(mp_tokopedia_id)
+            elif mp_shopee_id:
+                mp_account = self.env['mp.shopee'].sudo().browse(mp_shopee_id)
+            elif mp_lazada_id:
+                mp_account = self.env['mp.lazada'].sudo().browse(mp_lazada_id)
+            elif mp_blibli_id:
+                mp_account = self.env['mp.blibli'].sudo().browse(mp_blibli_id)
+            if not mp_account:
+                raise UserError('Marketplace Account not found!')
+
+            # Get Partner From Account or Search Partner With Same Phone / Mobile Or Email
+            partner = False
+            if mp_account.partner_id:
+                partner = mp_account.partner_id
+            if not partner and values.get('mp_buyer_id'):
+                partner = self.env['res.partner'].sudo().search([('buyer_id', '=', values.get('mp_buyer_id'))], limit=1)
+            if not partner and values.get('mp_buyer_username'):
+                partner = self.env['res.partner'].sudo().search([('buyer_username', '=', values.get('mp_buyer_username'))], limit=1)
+            if not partner and values.get('mp_buyer_phone'):
+                partner = self.env['res.partner'].sudo().search([('phone', '=', values.get('mp_buyer_phone'))], limit=1)
+            if not partner and values.get('mp_buyer_email'):
+                partner = self.env['res.partner'].sudo().search([('email', '=', values.get('mp_buyer_email'))], limit=1)
+
+            # Create Partner From Buyer Information
+            if not partner:
+                partner = self.env['res.partner'].sudo().create({
+                    'name': values.get('mp_buyer_name'),
+                    'buyer_id': values.get('mp_buyer_id'),
+                    'buyer_username': values.get('mp_buyer_username'),
+                    'phone': values.get('mp_buyer_phone'),
+                    'email': values.get('mp_buyer_email'),
+                })
+                
+            # Create Shipping Address Under That Partner
+            shipping_address = False
+            if values.get('mp_recipient_address_phone'):
+                shipping_address = self.env['res.partner'].sudo().search([('parent_id', '=', partner.id), ('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
+            
+            # if not shipping_address:
+            #     shipping_address = self.env['res.partner'].sudo().search(
+            #         [('name', '=', values.get('mp_recipient_address_name')), ('parent_id', '=', partner.id)], limit=1)
+
+            if not shipping_address:
+                shipping_address = self.env['res.partner'].sudo().create({
+                    'type': 'delivery',
+                    'parent_id': partner.id,
+                    'phone': values.get('mp_recipient_address_phone'),
+                    'name': values.get('mp_recipient_address_name'),
+                    'street': values.get('mp_recipient_address_full'),
+                    'city': values.get('mp_recipient_address_city'),
+                    'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
+                    'zip': values.get('mp_recipient_address_zipcode'),
+                })
+            else:
+                shipping_address.sudo().write({
+                    'name': values.get('mp_recipient_address_name'),
+                    'street': values.get('mp_recipient_address_full'),
+                    'city': values.get('mp_recipient_address_city'),
+                    'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
+                    'zip': values.get('mp_recipient_address_zipcode'),
+                    'type': 'delivery',
+                })
+
             # Sale Order only update order_status and resi
             res = {
                 'order_status': res['order_status'],
                 'order_status_notes': res['order_status_notes'],
                 'mp_awb_number': res['mp_awb_number'],
-                'mp_delivery_carrier_name': res['mp_delivery_carrier_name'],               
+                'mp_delivery_carrier_name': res['mp_delivery_carrier_name'],
+                'mp_delivery_carrier_type': res['mp_delivery_carrier_type'],
                 'mp_awb_url': res['mp_awb_url'],
                 'tp_cancel_request_create_time': res['tp_cancel_request_create_time'],
                 'tp_cancel_request_reason': res['tp_cancel_request_reason'],
                 'tp_cancel_request_status': res['tp_cancel_request_status'],
+                'tp_comment': res['tp_comment'],
                 'mp_delivery_type': res['mp_delivery_type'],
                 'mp_recipient_address_city': res['mp_recipient_address_city'],
                 'mp_recipient_address_name': res['mp_recipient_address_name'],
@@ -1335,7 +1416,12 @@ class WebhookServer(models.Model):
                 'mp_recipient_address_phone': res['mp_recipient_address_phone'],
                 'mp_recipient_address_state': res['mp_recipient_address_state'],
                 'mp_recipient_address_full': res['mp_recipient_address_full'],
-                'shipping_date': res['shipping_date']
+                'shipping_date': res['shipping_date'],
+                'mp_accept_deadline': res['mp_accept_deadline'],
+                'partner_id': partner.id,
+                'partner_shipping_id': shipping_address.id,
+                'partner_invoice_id': partner.id,
+                'company_id': res['company_id'],
             }
             # for shopee
             if values['sp_order_status']:
@@ -1347,6 +1433,9 @@ class WebhookServer(models.Model):
             # for lazada
             if values['lz_order_status']:
                 res['lz_order_status'] = values['lz_order_status']
+            # for blibli
+            if values['bli_order_status']:
+                res['bli_order_status'] = values['bli_order_status']
 
             # update delivery info
             order_obj = self.env['sale.order'].search([('izi_id','=',values['id'])], limit=1)
@@ -1360,6 +1449,14 @@ class WebhookServer(models.Model):
                             order_line.product_template_id = product_delivery.product_tmpl_id
 
         elif model_name == 'product.template':
+            if 'name' in res:
+                del res['name']
+            if 'default_code' in res:
+                del res['default_code']
+            if 'list_price' in res:
+                del res['list_price']
+
+        elif model_name == 'product.product':
             if 'name' in res:
                 del res['name']
             if 'default_code' in res:
@@ -1382,6 +1479,7 @@ class WebhookServer(models.Model):
             mp_tokopedia_id = values.get('mp_tokopedia_id', False)
             mp_shopee_id = values.get('mp_shopee_id', False)
             mp_lazada_id = values.get('mp_lazada_id', False)
+            mp_blibli_id = values.get('mp_blibli_id', False)
             mp_account = False
             if mp_tokopedia_id:
                 mp_account = self.env['mp.tokopedia'].sudo().browse(mp_tokopedia_id)
@@ -1389,6 +1487,8 @@ class WebhookServer(models.Model):
                 mp_account = self.env['mp.shopee'].sudo().browse(mp_shopee_id)
             elif mp_lazada_id:
                 mp_account = self.env['mp.lazada'].sudo().browse(mp_lazada_id)
+            elif mp_blibli_id:
+                mp_account = self.env['mp.blibli'].sudo().browse(mp_blibli_id)
             if not mp_account:
                 raise UserError('Marketplace Account not found!')
             
@@ -1427,11 +1527,13 @@ class WebhookServer(models.Model):
             _logger.info('Create Shipping Address')
             _logger.info('Data Shipping Address %s %s - %s' % (values.get('mp_recipient_address_phone'), values.get('mp_recipient_address_name'), partner.name))
             shipping_address = False
-            shipping_address = self.env['res.partner'].sudo().search([('parent_id', '=', partner.id), ('name', '=', values.get('mp_recipient_address_name'))], limit=1)
             
-            if not shipping_address:
-                shipping_address = self.env['res.partner'].sudo().search(
-                    [('phone', '=', values.get('mp_recipient_address_phone')), ('parent_id', '=', partner.id)], limit=1)
+            if values.get('mp_recipient_address_phone'):
+                shipping_address = self.env['res.partner'].sudo().search([('parent_id', '=', partner.id), ('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
+            
+            # if not shipping_address:
+            #     shipping_address = self.env['res.partner'].sudo().search(
+            #         [('name', '=', values.get('mp_recipient_address_name')), ('parent_id', '=', partner.id)], limit=1)
 
             if not shipping_address and self.is_shipping_address:
                 shipping_address = self.env['res.partner'].sudo().create({
@@ -1445,13 +1547,13 @@ class WebhookServer(models.Model):
                     'zip': values.get('mp_recipient_address_zipcode'),
                 })
             else:
-                shipping_address.write({
-                    # 'phone': values.get('mp_recipient_address_phone'),
+                shipping_address.sudo().write({
                     'name': values.get('mp_recipient_address_name'),
                     'street': values.get('mp_recipient_address_full'),
                     'city': values.get('mp_recipient_address_city'),
                     'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
                     'zip': values.get('mp_recipient_address_zipcode'),
+                    'type': 'delivery',
                 })
             # Replace Values
             res['partner_id'] = partner.id
@@ -1460,10 +1562,11 @@ class WebhookServer(models.Model):
 
             # Add Order Component
             _logger.info('Add Order Component')
-            component_configs = self.env['order.component.config'].sudo().search([('active','=',True),
-                '|', '|', ('mp_tokopedia_ids','in', values.get('mp_tokopedia_id')),
-                ('mp_shopee_ids','in', values.get('mp_shopee_id')),
-                ('mp_lazada_ids','in', values.get('mp_lazada_id'))])
+            component_configs = self.env['order.component.config'].sudo().search([('active', '=', True),
+                '|', '|', '|', ('mp_tokopedia_ids', 'in', values.get('mp_tokopedia_id')),
+                ('mp_shopee_ids', 'in', values.get('mp_shopee_id')),
+                ('mp_lazada_ids', 'in', values.get('mp_lazada_id')),
+                ('mp_blibli_ids', 'in', values.get('mp_blibli_id'))])
             for component_config in component_configs:
                 if values.get('date_order', False):
                     if component_config.date_start and values['date_order'] < component_config.date_start.strftime('%Y-%m-%d %H:%M:%S'):
@@ -1497,7 +1600,7 @@ class WebhookServer(models.Model):
                                 if line.discount_line_product_type == 'all' or (val[2].get('product_id', False) and val[2].get('product_id') in line.discount_line_product_ids.ids):
                                     price_unit = val[2]['price_unit']
                                     if 100 - line.percentage_value > 0:
-                                        new_price_unit = round(100*price_unit/(100 - line.percentage_value))
+                                        new_price_unit = round(100 * price_unit / (100 - line.percentage_value))
                                     values['order_line'][index][2].update({
                                         'price_unit': new_price_unit,
                                         'discount': line.percentage_value,
@@ -1515,7 +1618,8 @@ class WebhookServer(models.Model):
                                             for staging in product.product_tmpl_id.product_staging_ids:
                                                 if (values['mp_tokopedia_id'] and values['mp_tokopedia_id'] == staging.mp_tokopedia_id.id) \
                                                     or (values['mp_shopee_id'] and values['mp_shopee_id'] == staging.mp_shopee_id.id) \
-                                                    or (values['mp_lazada_id'] and values['mp_lazada_id'] == staging.mp_lazada_id.id):    
+                                                    or (values['mp_lazada_id'] and values['mp_lazada_id'] == staging.mp_lazada_id.id) \
+                                                    or (values['mp_blibli_id'] and values['mp_blibli_id'] == staging.mp_blibli_id.id): 
                                                     normal_price = staging.list_price
                                                     break
                                         if normal_price == 0:
@@ -1528,7 +1632,7 @@ class WebhookServer(models.Model):
                                         # Calculate Discount %
                                         discount_percentage = 0
                                         if normal_price > 0 and price_unit > 0:
-                                            discount_percentage = int(round((normal_price-price_unit)*100/normal_price))
+                                            discount_percentage = int(round((normal_price - price_unit) * 100 / normal_price))
                                             if discount_percentage > 0:
                                                 values['order_line'][index][2].update({
                                                     'price_unit': normal_price,
@@ -1544,7 +1648,7 @@ class WebhookServer(models.Model):
                                 percentage = line.account_tax_id.amount
                                 if percentage > 0:
                                     price_unit = val[2]['price_unit']
-                                    new_price = (price_unit*100)/(100+percentage)
+                                    new_price = (price_unit * 100) / (100 + percentage)
                                     values['order_line'][index][2].update({
                                         'price_unit': new_price,
                                         'tax_id': [(6, 0, [line.account_tax_id.id])],
@@ -1562,7 +1666,7 @@ class WebhookServer(models.Model):
                             if line.fixed_value:
                                 price_unit = line.fixed_value
                             elif line.percentage_value:
-                                price_unit = round(line.percentage_value*amount_total/100)
+                                price_unit = round(line.percentage_value * amount_total / 100)
                             values['order_line'].append((0, 0, {
                                 'name': line.name,
                                 'product_id': line.additional_product_id.id,
@@ -1576,7 +1680,6 @@ class WebhookServer(models.Model):
 
             res['order_line'] = values['order_line']
             _logger.info('Preparation Done')
-
         return res
 
     def custom_after_create(self, model_name, record, values):
@@ -1597,6 +1700,11 @@ class WebhookServer(models.Model):
             mapping = self.env['product.mapping'].sudo().search([('product_template_izi_id', '=', values['id'])], limit=1)
             if mapping and mapping.product_id and mapping.product_id.product_tmpl_id:
                 res = mapping.product_id.product_tmpl_id
+
+                # Check if exist record with izi and record from mapping are different
+                if record and record.id != res.id:
+                    record.izi_id = False 
+
                 res.izi_id = values['id']
                 print('Product Template Mapping %s' % mapping.product_id.product_tmpl_id.name)
         if model_name == 'product.product':
@@ -1608,18 +1716,39 @@ class WebhookServer(models.Model):
                     print('Product in Order Mapping %s' % mapping.order_product_id.name)
                 elif mapping.product_id:
                     res = mapping.product_id
+
+                    # Check if exist record with izi and record from mapping are different
+                    if record and record.id != res.id:
+                        record.izi_id = False 
+
                     res.izi_id = values['id']
                     print('Product Variant Mapping %s' % mapping.product_id.name)
         if model_name == 'stock.warehouse':
             mapping = self.env['warehouse.mapping'].sudo().search([('warehouse_izi_id', '=', values['id'])], limit=1)
             if mapping and mapping.warehouse_id:
                 res = mapping.warehouse_id
+
+                # Check if exist record with izi and record from mapping are different
+                if record and record.id != res.id:
+                    record.izi_id = False
+
                 res.izi_id = values['id']
                 print('Warehouse Mapping %s' % mapping.warehouse_id.name)
+        if model_name == 'res.company':
+            mapping = self.env['company.mapping'].sudo().search([('company_izi_id', '=', values['id'])], limit=1)
+            if mapping and mapping.company_id:
+                res = mapping.company_id
+
+                # Check if exist record with izi and record from mapping are different
+                if record and record.id != res.id:
+                    record.izi_id = False
+
+                res.izi_id = values['id']
+                print('Company Mapping %s' % mapping.company_id.name)
         if model_name == 'mp.lazada.product.attr':
             if 'id' in values['item_id_staging']:
                 prod_staging_by_izi_id = values['item_id_staging']['id']
-                prod_staging = self.env['product.staging'].search([('izi_id','=',prod_staging_by_izi_id)])
+                prod_staging = self.env['product.staging'].sudo().search([('izi_id', '=', prod_staging_by_izi_id)])
                 for attr in prod_staging.lz_attributes:
                     if attr.attribute_id.izi_id == values['attribute_id']['id'] and attr.attribute_id.name == values['attribute_id']['name']:
                         res = attr
@@ -1630,6 +1759,14 @@ class WebhookServer(models.Model):
                 order = self.env['sale.order'].search([('mp_invoice_number', '=', values.get('mp_invoice_number'))], limit=1)
                 if order:
                     res = order[0]
+        if model_name == 'mp.lazada.category.attr.opt':
+            if res:
+                if res.name != values['name']:
+                    res = self.env[model_name].sudo().search([('name','=',values['name'])])
+        if model_name == 'mp.blibli.item.attr.option':
+            if res:
+                if res.name != values['name']:
+                    res = self.env[model_name].sudo().search([('name','=',values['name'])])
         return res
 
     def get_existing_record(self, model_name, values, mandatory=False):
@@ -1637,15 +1774,14 @@ class WebhookServer(models.Model):
             raise UserError('Field id not found in the values.')
         Model = self.env[model_name].sudo()
 
+        # check record exist with izi_id
         if 'active' in Model._fields:
             domain = ['&', ('izi_id', '=', values['id']), '|', ('active', '=', True), ('active', '=', False)]
         else:
             domain = [('izi_id', '=', values['id'])]
         record = Model.search(domain, limit=1)
         
-        # Mapping. Only use mapping, if the record with izi_id is not exist yet
-        if not record:
-            record = self.get_existing_record_from_mapping(record, model_name, values)
+        record = self.get_existing_record_from_mapping(record, model_name, values)
         
         if not record:
             if model_name in existing_fields_by_model_name and existing_fields_by_model_name[model_name]:
@@ -1687,15 +1823,18 @@ class WebhookServer(models.Model):
                     res_values['izi_id'] = values[key]
                 elif isinstance(Model._fields[key], fields.Selection) and isinstance(values[key], int):
                     values[key] = str(values[key])  # Since Odoo 13.0 all selection should be string.
-                elif isinstance(Model._fields[key], fields.Many2one) and values[key] and 'id' in values[key]:
-                    comodel_name = Model._fields[key].comodel_name
-                    if comodel_name == model_name:
-                        # If it has relation to itself, skipped, handle manually in custom_mapping_field
-                        if model_name not in processed_model_with_many2one_itself:
-                            continue
-                    record = self.get_existing_record(comodel_name, values[key], mandatory=True)
-                    if record:
-                        res_values[key] = record.id
+                elif isinstance(Model._fields[key], fields.Many2one):
+                    if values[key] and 'id' in values[key]:
+                        comodel_name = Model._fields[key].comodel_name
+                        if comodel_name == model_name:
+                            # If it has relation to itself, skipped, handle manually in custom_mapping_field
+                            if model_name not in processed_model_with_many2one_itself:
+                                continue
+                        record = self.get_existing_record(comodel_name, values[key], mandatory=True)
+                        if record:
+                            res_values[key] = record.id
+                    else:
+                        res_values[key] = False
                 elif isinstance(Model._fields[key], fields.Binary):
                     img = False
                     if not self.is_skip_image:
@@ -1776,6 +1915,8 @@ class WebhookServer(models.Model):
                 res_values['mp_type'] = 'Shopee'
             elif res_values.get('mp_lazada_id'):
                 res_values['mp_type'] = 'Lazada'
+            elif res_values.get('mp_blibli_id'):
+                res_values['mp_type'] = 'Blibli'
         elif model_name == 'mp.tokopedia':
             res_values['active'] = True
             res_values['server_id'] = self.id
@@ -1783,6 +1924,9 @@ class WebhookServer(models.Model):
             res_values['active'] = True
             res_values['server_id'] = self.id
         elif model_name == 'mp.lazada':
+            res_values['active'] = True
+            res_values['server_id'] = self.id
+        elif model_name == 'mp.blibli':
             res_values['active'] = True
             res_values['server_id'] = self.id
         return res_values
@@ -1829,6 +1973,31 @@ class WebhookServer(models.Model):
             'target': 'new'
         }
 
+    def get_companies(self):
+        url = self.name + '/api/ui/read/list-detail/%s?offset=%s&limit=%s&order=%s&sort=%s' % (
+            'res.company', 0, 1000, 'id', 'asc')
+        r = requests.get(url, headers={'X-Openerp-Session-Id': self.session_id})
+        res = r.json() if r.status_code == 200 else {}
+        if res.get('code') == 200:
+            for res_values in res.get('data'):
+                company = self.get_existing_record('res.company', res_values)
+                if not company:
+                    self.env['res.company'].sudo().create({
+                        'name': res_values.get('name'),
+                        'street': res_values.get('street'),
+                        'street2': res_values.get('street2'),
+                        'city': res_values.get('city'),
+                        'state_id': res_values.get('state_id') if res_values.get('state_id') else False,
+                        'zip': res_values.get('zip'),
+                        'website': res_values.get('website'),
+                        'email': res_values.get('email'),
+                        'izi_id': res_values.get('id'),
+                    })
+                else:
+                    company.sudo().write({
+                        'izi_id': res_values.get('id')
+                    })
+
     def get_warehouses(self):
         url = self.name + '/api/ui/read/list-detail/%s?offset=%s&limit=%s&order=%s&sort=%s&domain_code=%s' % (
             'stock.warehouse', 0, 1000, 'id', 'asc', 'marketplace')
@@ -1838,10 +2007,13 @@ class WebhookServer(models.Model):
             for res_values in res.get('data'):
                 wh = self.get_existing_record('stock.warehouse', res_values)
                 if not wh:
+                    company = self.get_existing_record('res.company', res_values.get('company_id'))
                     wh = self.env['stock.warehouse'].sudo().create({
                         'name': res_values.get('name'),
+                        'company_id': company.id,
+                        'partner_id': company.partner_id.id,
                         'code': res_values.get('code'),
-                        'izi_id': res_values.get('id')
+                        'izi_id': res_values.get('id'),
                     })
                 if wh.lot_stock_id and res_values.get('lot_stock_id'):
                     izi_location_id = res_values.get('lot_stock_id')
@@ -2131,7 +2303,7 @@ class WebhookServer(models.Model):
         is_success = self.post_records(model_name, jsondata, True)
         if is_success[0]:
             #### self._cr.commit()
-            pass ####
+            pass  ####
         return is_success
 
     def get_limit(self, day=1):
@@ -2162,7 +2334,7 @@ class WebhookServer(models.Model):
             is_success = self.post_records(model_name, data, True)
             if is_success[0]:
                 #### self._cr.commit()
-                pass ####
+                pass  ####
         return True
 
     def get_updated_izi_id(self, Model_id, data):
@@ -2261,7 +2433,7 @@ class WebhookServer(models.Model):
     def _sync_data(self, bulk=False):
         start_time = time.time()
         _logger.info('----- Upload started -----')
-        records = self.search([],limit=1)
+        records = self.search([], limit=1)
         if bulk:
             records[0].upload_to_izi()
         else:
@@ -2275,7 +2447,7 @@ class WebhookServer(models.Model):
             records[0].upload_to_izi_one('product.staging.wholesale')
             records[0].upload_to_izi_one('product.image.staging')
         _logger.info(
-            '----- Upload successfull in %0.2f seconds -----' %
+            '----- Upload successfull in %0.2f seconds -----' % 
             (time.time() - start_time))
     
     def execute_action(self, model_name, model_id, method, push_self=True):
@@ -2389,6 +2561,7 @@ class WebhookServer(models.Model):
         webhook_servers = self.search([('active', '=', True)])
         for webhook_server in webhook_servers:
             webhook_server.with_context({'run_by_cron': True}).get_orders(domain_code='last_hour')
+
             
 class WebhookServerToken(models.Model):
     _name = 'webhook.server.token'
@@ -2451,7 +2624,7 @@ class WebhookServerMQ(models.Model):
                                 res.config_id.name),
                             json=json.loads(res.request),
                             headers={
-                                'Authorization': 'Bearer %s' %
+                                'Authorization': 'Bearer %s' % 
                                 (res.config_id.access_token)
                             }
                         )
@@ -2482,7 +2655,7 @@ class WebhookServerMQ(models.Model):
                                 res.config_id.name) + patch_url,
                             json=json.loads(res.request),
                             headers={
-                                'Authorization': 'Bearer %s' %
+                                'Authorization': 'Bearer %s' % 
                                 (res.config_id.access_token)
                             }
                         )
@@ -2545,7 +2718,7 @@ class WebhookServerMQ(models.Model):
                             patch_url,
                             json=json.loads(mq_id.request),
                             headers={
-                                'Authorization': 'Bearer %s' %
+                                'Authorization': 'Bearer %s' % 
                                 (mq_id.config_id.access_token)
                             }
                         )
@@ -2619,6 +2792,7 @@ class WebhookServerMQStatus(models.Model):
     mq_id = fields.Many2one('webhook.server.mq', 'MQ', ondelete='cascade')
     status_code = fields.Integer(required=True, default=0)
     response = fields.Text()
+
 
 class WebhookServerLog(models.Model):
     _name = 'webhook.server.log'

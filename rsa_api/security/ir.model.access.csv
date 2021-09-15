@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_rsa_api_rsa_api,rsa_api.rsa_api,model_rsa_api_rsa_api,base.group_user,1,1,1,1

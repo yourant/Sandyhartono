@@ -13,67 +13,222 @@
                         <field name="mp_shopee_id" attrs="{'invisible': [('marketplace', '!=', 'shopee'), ]}" options="{'no_create_edit': True, 'no_open': True, }" />
                         <field name="mp_lazada_id" attrs="{'invisible': [('marketplace', '!=', 'lazada'), ]}" options="{'no_create_edit': True, 'no_open': True, }" />
                     </group>
-                    <group attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
+                    <!-- <group attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
                         <field name="is_replace_fields"/>
-                    </group>
+                    </group> -->
                     <group string="Generic Fields" attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
-                        <group>
+
+                        <group style="width:90%">
                             <field name="list_price" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_list_price" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+
+                        <group style="width:90%">
                             <field name="min_order" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_min_order" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+
+                        <group style="width:90%">
                             <field name="is_active" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_is_active" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+
+                        <group style="width:90%" attrs="{'invisible': [('mp_shopee_id', 'in', False), ('mp_lazada_id', 'in', False)]}">
+                            <field name="description_sale" />
+                        </group>
+                        <group style="width:10%" attrs="{'invisible': [('mp_shopee_id', 'in', False), ('mp_lazada_id', 'in', False)]}">
+                            <field name="is_description_sale" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+
+                        <group style="width:90%">
                             <field name="qty_available" />
-                            <field name="weight" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_qty_available" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+                        <group style="width:90%">
+                            <label for="weight"/>
+                            <div class="o_row" name="weight">
+                                <field name="weight"/>
+                                <span>gr</span>
+                            </div>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_weight" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+                        <group style="width:90%">
                             <field name="length" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_length" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+                        <group style="width:90%">
                             <field name="width" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_width" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
+                        <group style="width:90%">
                             <field name="height" />
                         </group>
+                        <group style="width:10%">
+                            <field name="is_height" widget="boolean_toggle" nolabel="1" />
+                        </group>
+
                     </group>
-                    <group string="Product Images" attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
-                        <field name="batch_upload_image_ids" class="o_website_sale_image_list" nolabel="1" view_mode='tree,form'>
-                            <tree string="Upload Image">
-                                <field name="image" widget='image'/>
-                            </tree>
-                            <form string="Upload Image">
-                                <group>
+                    <group attrs="{'invisible': [('mp_tokopedia_id', '==', False), ('mp_shopee_id', '==', False), ('mp_lazada_id', '==', False), ], }">
+                        <group string="Product Images" style="width:90%">
+                            <field name="batch_upload_image_ids" class="o_website_sale_image_list" nolabel="1" view_mode='tree,form'>
+                                <tree>
+                                    <field name="image" widget='image'/>
+                                </tree>
+                                <form string="Upload Image">
                                     <group>
-                                        <field name='image' widget='image'/>
+                                        <group>
+                                            <field name='image' widget='image'/>
+                                        </group>
                                     </group>
-                                </group>
-                            </form>
-                        </field>
-                    </group>
-                    <group string='Tokopedia Fields' attrs="{'invisible': [('mp_tokopedia_id', '==', False), ]}">
-                        <group>
-                            <field name="tp_condition" />
-                            <field name="tp_weight_unit" />
-                            <field name="tp_category_id" domain="[('child_ids','=',False)]" options="{'no_create': True, 'no_open': True, }" />
+                                </form>
+                            </field>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_image" widget="boolean_toggle" nolabel="1" />
                         </group>
                     </group>
-                    <group string='Shopee Fields' attrs="{'invisible': [('mp_shopee_id', '==', False), ]}">
-                        <group>
-                            <!-- <field name="tp_condition" />
+
+                    <group string='Tokopedia Fields' attrs="{'invisible': [('mp_tokopedia_id', '==', False), ]}">
+                        <group style="width:90%">
+                            <field name="tp_condition" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_tp_condition" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                        <group style="width:90%">
                             <field name="tp_weight_unit" />
-                            <field name="tp_category_id" domain="[('child_ids','=',False)]" options="{'no_create': True, 'no_open': True, }" /> -->
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_tp_weight_unit" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                        <group style="width:90%">
+                            <field name="tp_category_id" domain="[('child_ids','=',False)]" options="{'no_create': True, 'no_open': True, }" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_tp_category_id" widget="boolean_toggle" nolabel="1" />
                         </group>
                     </group>
                     <group string='Lazada Fields' attrs="{'invisible': [('mp_lazada_id', '==', False), ]}">
-                        <group>
+                        <group style="width:90%">
                             <field name="lz_category_id" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_lz_category_id" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                        <group style="width:90%">
                             <field name="lz_brand_id" />
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_lz_brand_id" widget="boolean_toggle" nolabel="1" />
                         </group>
                     </group>
                     <group string="Attribute Category" attrs="{'invisible': [('mp_lazada_id', '==', False), ]}">
-                        <field name="lz_attributes" string="Attributes">
-                            <tree create="false" delete="false" editable="false">
-                                <field name='item_id_staging' invisible='1' />
-                                <field name="attribute_id" force_save="1" readonly="1" />
-                                <field name="value" force_save="1" readonly="1" />
-                                <field name="is_mandatory" readonly="1" />
-                                <field name="values" invisible="1" />
-                                <field name="option_id" attrs="{'required':[('is_mandatory','=',True)]}" />
-                            </tree>
-                        </field>
+                        <group style="width:80%">
+                            <field name="lz_attributes" string="Attributes">
+                                <tree create="false" delete="false" editable="false">
+                                    <field name="attribute_id" force_save="1" readonly="1" />
+                                    <field name="value" force_save="1" readonly="1" />
+                                    <field name="is_mandatory" readonly="1" />
+                                    <field name="values" invisible="1" />
+                                    <field name="option_id" attrs="{'required':[('is_mandatory','=',True)]}" />
+                                </tree>
+                            </field>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_lz_attributes" widget="boolean_toggle" nolabel="1" />
+                        </group>
                     </group>
+
+                    <group string='Shopee Fields' attrs="{'invisible': [('mp_shopee_id', '==', False)]}">
+                        <group style="width:90%">
+                            <field name="sp_condition"/>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_sp_condition" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                        <group style="width:90%">
+                            <field name="sp_is_pre_order"/>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_sp_is_pre_order" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                        <group style="width:90%">
+                            <field name="sp_days_to_ship"/>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_sp_days_to_ship" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                        <group style="width:90%">
+                            <field name="sp_category_id" options="{'no_create': True, 'no_open': True, }"/>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_sp_category_id" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                        <group style="width:90%">
+                            <field name="sp_brand_id" options="{'no_create': True, 'no_open': True, }" domain="[('categories', 'child_of', sp_category_id)]"/>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_sp_brand_id" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                    </group>
+
+                    <group string="Attribute Category" attrs="{'invisible': [('mp_shopee_id', '==', False)]}">
+                        <group style="width:90%">
+                            <field name="sp_attributes" string="Attributes">
+                                <tree create="false" delete="false" editable="false">
+                                    <field name="attribute_id" force_save="1" readonly="1"/>
+                                    <!-- <field name="attribute_id"/> -->
+                                    <field name="attribute_value" force_save="1" readonly="1"/>
+                                    <field name="is_mandatory" readonly="1" />
+                                    <field name="values" invisible="1" />
+                                    <field name="value" attrs="{'required':[('is_mandatory','=',True)]}" />
+                                </tree>
+                            </field>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_sp_attributes" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                    </group>
+
+                    <group string="Shopee Logistik" attrs="{'invisible': [('mp_shopee_id', '==', False)]}">
+                        <group style="width:90%">
+                            <field name="sp_logistics" string="Logistic">
+                                <tree editable="bottom">
+                                    <field name="logistic_id"/>
+                                    <field name="enabled"/>
+                                    <field name="shipping_fee" readonly="1"/>
+                                    <field name="is_free"/>
+                                    <field name="estimated_shipping_fee" readonly="1"/>
+                                </tree>
+                            </field>
+                        </group>
+                        <group style="width:10%">
+                            <field name="is_sp_logistics" widget="boolean_toggle" nolabel="1" />
+                        </group>
+                    </group>
+
                     <footer>
                         <button name="batch_upload" string="Batch Upload" type="object" class="btn-primmary"/>
                         <button string="Cancel" class="btn-default" special="cancel"/>
@@ -82,16 +237,14 @@
             </field>
         </record>
 
-        <record id="action_batch_upload_product" model="ir.actions.act_window">
-            <field name="name">Batch Upload Product</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">batch.upload.product.wizard</field>
-            <field name="binding_model_id" ref="product.model_product_template"/>
-            <field name="binding_view_types">form</field>
-            <field name="view_mode">form</field>
-            <field name="view_id" ref="juragan_product.batch_upload_product_view"/>
-            <field name="target">new</field>
-        </record>
+        <act_window name="Batch Upload Product"
+            id="action_batch_upload_product"
+            res_model="batch.upload.product.wizard"
+            binding_model="product.template"
+            binding_views="list"
+            view_mode="form"
+            target="new"
+        />
 
         <record id="view_partner_form" model="ir.ui.view">
             <field name="name">res.partner.form</field>
@@ -118,6 +271,7 @@
             <field name='model'>product.staging</field>
             <field name='arch' type='xml'>
                 <tree string="description" decoration-muted="not active">
+                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                     <field name="mp_type"/>
                     <field name="name"/>
                     <field name="barcode"/>
@@ -191,11 +345,23 @@
                                 <label for="weight"/>
                                 <div class="o_row" name="weight">
                                     <field name="weight" required="1"/>
-                                    <span attrs="{'invisible': [('mp_type','!=','Shopee'), ('mp_type','!=','Lazada')]}">kg</span>
+                                    <span attrs="{'invisible': [('mp_type','!=','Shopee'),('mp_type','!=','Lazada')]}">gr</span>
                                 </div>
-                                <field name="length" />
-                                <field name="width" />
-                                <field name="height" />
+                                <label for="length"/>
+                                <div class="o_row" name="length">
+                                    <field name="length" required="1"/>
+                                    <span>cm</span>
+                                </div>
+                                <label for="width"/>
+                                <div class="o_row" name="width">
+                                    <field name="width" required="1"/>
+                                    <span>cm</span>
+                                </div>
+                                <label for="height"/>
+                                <div class="o_row" name="height">
+                                    <field name="height" required="1"/>
+                                    <span>cm</span>
+                                </div>
                                 <field name="is_uploaded" readonly='1'/>
                             </group>
                         </group>
@@ -242,6 +408,13 @@
                             </group>
                         </group>
 
+                        <group string='Blibli' attrs="{'invisible': [('mp_type','!=','Blibli')]}">
+                            <group>
+                                <field name="bli_brand_id"/>
+                                <field name="bli_category_id" options="{'no_create': True, 'no_open': True, }"/>
+                            </group>
+                        </group>
+
                         <group string="Attribute Category" attrs="{'invisible': [('mp_type','!=','Shopee')]}">
                             <field name="sp_attributes" string="Attributes">
                                 <tree create="false" delete="false" editable="false">
@@ -270,12 +443,26 @@
                             </field>
                         </group>
 
+                        <group string="Attribute Category" attrs="{'invisible': [('mp_type','!=','Blibli')]}">
+                            <field name="bli_attributes" string="Attributes">
+                                <tree create="false" delete="false" editable="false">
+                                    <field name='item_id_staging' invisible='1'/>
+                                    <field name="attribute_id" force_save="1" readonly="1"/>
+                                    <!-- <field name="attribute_id"/> -->
+                                    <field name="attribute_value" force_save="1" readonly="1"/>
+                                    <field name="is_mandatory" readonly="1" />
+                                    <field name="values" invisible="1" />
+                                    <field name="attribute_value_id" attrs="{'required':[('is_mandatory','=',True)]}" />
+                                </tree>
+                            </field>
+                        </group>
+
                         <group string="Shopee Logistik" attrs="{'invisible': [('mp_type','!=','Shopee')]}">
                             <field name="sp_logistics" required="1" string="Logistik">
                                 <tree editable="bottom">
                                     <field name="shop_logistic" invisible="1" />
                                     <field name='item_id_staging' invisible='1'/>
-                                    <field name="logistic_id" force_save="1"/>
+                                    <field name="logistic_id"/>
                                     <field name="enabled"/>
                                     <field name="shipping_fee" readonly="1"/>
                                     <field name="is_free"/>
@@ -328,7 +515,7 @@
                             <field name="sp_attribute_line_ids" nolabel='1'>
                                 <tree editable="bottom">
                                     <field name="attribute_id"/>
-                                    <field name="value_ids" widget="many2many_tags"/>
+                                    <field name="value_ids" widget="many2many_tags" domain="[('attribute_id', '=', attribute_id)]"/>
                                 </tree>
                             </field>
                         </group>
@@ -338,6 +525,14 @@
                                     <field name="attribute_id" force_save="1"/>
                                     <field name="attr_values" invisible="1"/>
                                     <field name="lz_variant_value_ids" widget="many2many_tags"/>
+                                </tree>
+                            </field>
+                        </group>
+                        <group string="Product Variants" attrs="{'invisible': [('mp_type','!=','Blibli')]}">
+                            <field name="bli_attribute_line_ids" nolabel='1'>
+                                <tree create="false" delete="false" editable="false">
+                                    <field name="attribute_id" force_save="1"/>
+                                    <field name="bli_variant_value_ids" widget="many2many_tags"/>
                                 </tree>
                             </field>
                         </group>
@@ -389,8 +584,9 @@
                         <field name="mp_tokopedia_ids" widget='many2many_tags' readonly='1'/>
                         <field name="mp_shopee_ids" widget='many2many_tags' readonly='1'/>
                         <field name="mp_lazada_ids" widget='many2many_tags' readonly='1'/>
+                        <field name="mp_blibli_ids" widget='many2many_tags' readonly='1'/>
                         <field name="product_status" invisible="1"/>
-                        <field name="product_staging_ids" view_mode='tree,form' context="{'default_tmpl_id': id, 'default_name': name, 'default_description_sale': description_sale, 'default_length': length, 'default_weight': weight, 'default_volume': volume, 'default_width': width, 'default_height': height, }" string='Product Staging' colspan='2'/>
+                        <field name="product_staging_ids" view_mode='tree,form' context="{'default_tmpl_id': id, 'default_name': name, 'default_description_sale': description_sale, 'default_length': length, 'default_weight': weight, 'default_volume': volume, 'default_width': width, 'default_height': height, 'company_id': company_id}" string='Product Staging' colspan='2'/>
                         <field name="product_wholesale_ids" view_mode='tree,form' string="Wholesale">
                             <tree string='description' editable='botom'>
                                 <field name='product_tmpl_id' invisible='1'/>
@@ -438,6 +634,7 @@
                     <field name="mp_tokopedia_ids"/>
                     <field name="mp_shopee_ids"/>
                     <field name="mp_lazada_ids"/>
+                    <field name="mp_blibli_ids"/>
                 </xpath>
                 <xpath expr="//div[hasclass('oe_kanban_global_click')]" position="inside">
                     <div class="oe_kanban_content">
@@ -448,6 +645,7 @@
                                 <img t-if="record.mp_tokopedia_ids.raw_value != ''" src="/juragan_product/static/src/img/tp.png" t-att-title="Tokopedia" t-att-alt="Tokopedia" width="24" height="24" class="oe_kanban_avatar"/>
                                 <img t-if="record.mp_shopee_ids.raw_value != ''" src="/juragan_product/static/src/img/shp.png" t-att-title="Shopee" t-att-alt="Shopee" width="24" height="24" class="oe_kanban_avatar"/>
                                 <img t-if="record.mp_lazada_ids.raw_value != ''" src="/juragan_product/static/src/img/lz.png" t-att-title="Lazada" t-att-alt="Lazada" width="24" height="24" class="oe_kanban_avatar"/>
+                                <img t-if="record.mp_blibli_ids.raw_value != ''" src="/juragan_product/static/src/img/bli.png" t-att-title="Blibli" t-att-alt="Blibli" width="24" height="24" class="oe_kanban_avatar"/>
                             </div>
                         </div>
                     </div>

@@ -34,7 +34,7 @@ class MPShopee(models.Model):
         ('shop','Shop Warehouse'),], string='Take Stock From', default='main')
     sync_stock_active = fields.Boolean('Realtime Stock Update')
     partner_id = fields.Many2one(comodel_name="res.partner", string="Default Customer", required=False)
-    company_id = fields.Many2one(comodel_name="res.company", string="Company")
+    company_id = fields.Many2one(comodel_name="res.company", string="Company", required=False)
 
     def name_get(self):
         result = []
@@ -71,7 +71,8 @@ class MPShopeeItemCategory(models.Model):
     days_to_ship_limits_max_limit = fields.Integer()
     days_to_ship_limits_min_limit = fields.Integer()
 
-    attributes = BigMany2many('mp.shopee.item.attribute')
+    # attributes = BigMany2many('mp.shopee.item.attribute')
+    attributes = fields.One2many('mp.shopee.item.attribute', 'category_id', string='Attributes')
     brands = fields.Many2many('mp.shopee.item.brand', 'mp_shopee_item_brand_mp_shopee_item_category_rel')
 #     parent_attributes = BigMany2many('mp.shopee.item.attribute', compute='_get_parent_attribute')
 
@@ -108,7 +109,7 @@ class MPShopeeItemAttribute(models.Model):
     _description = 'Shopee Item Attribute'
     _rec_name = 'attribute_name'
 
-    attribute_id = BigMany2one(_name)
+    attribute_id = BigInteger()
     attribute_name = fields.Char()
     original_attribute_name = fields.Char()
     is_mandatory = fields.Boolean()
@@ -117,8 +118,10 @@ class MPShopeeItemAttribute(models.Model):
     input_type = fields.Char()
     date_format_type = fields.Char()
 
+    category_id = fields.Many2one('mp.shopee.item.category', string='Category')
 
-    options = BigMany2many('mp.shopee.item.attribute.option')
+    options = fields.One2many('mp.shopee.item.attribute.option','attribute_id')
+    # options = BigMany2many('mp.shopee.item.attribute.option')
 
     # attribute_wizard = fields.One2many('mp.shopee.item.wizard.item.attr','attributes_id')
 
@@ -134,22 +137,23 @@ class MPShopeeItemAttributeOption(models.Model):
 
     name = fields.Char(required=True)
     original_value_name = fields.Char()
+    attribute_id = fields.Many2one('mp.shopee.item.attribute', string='Attribute ID')
     value_unit = fields.Char()
     value_id = BigInteger()
     izi_id = fields.Integer('Izi ID')
     izi_md5 = fields.Char()
     
-    _sql_constraints = [
-        ('name_unique', 'unique(name)', 'Name must be unique.')
-    ]
+    # _sql_constraints = [
+    #     ('name_unique', 'unique(name)', 'Name must be unique.')
+    # ]
 
-    @api.model
-    def create(self, vals):
-        if vals.get('name'):
-            res = self.search([('name', '=', vals.get('name'))], limit=1)
-            if res:
-                return res
-        return super(MPShopeeItemAttributeOption, self).create(vals)
+    # @api.model
+    # def create(self, vals):
+    #     if vals.get('name'):
+    #         res = self.search([('name', '=', vals.get('name'))], limit=1)
+    #         if res:
+    #             return res
+    #     return super(MPShopeeItemAttributeOption, self).create(vals)
 
 
 class MPShopeeItemAttributeVal(models.Model):
@@ -158,7 +162,7 @@ class MPShopeeItemAttributeVal(models.Model):
     _rec_name = 'attribute_id'
 
     attribute_int = BigInteger()
-    attribute_id = fields.Many2one('mp.shopee.item.attribute', compute='_get_attribute_id', inverse='_set_attribute_id')
+    attribute_id = fields.Many2one('mp.shopee.item.attribute',store=True,)
     attribute_value = fields.Char()
     item_id_staging = fields.Many2one('product.staging')
 
@@ -178,13 +182,13 @@ class MPShopeeItemAttributeVal(models.Model):
                 rec.is_mandatory = False
                 rec.values = []
 
-    def _get_attribute_id(self):
-        for rec in self:
-            rec.attribute_id = rec.attribute_int
+    # def _get_attribute_id(self):
+    #     for rec in self:
+    #         rec.attribute_id = rec.attribute_int
 
     # @api.one
-    def _set_attribute_id(self):
-        self.attribute_int = self.attribute_id.id
+    # def _set_attribute_id(self):
+    #     self.attribute_int = self.attribute_id.id
     
 
     @api.onchange('value')
@@ -236,8 +240,53 @@ class MPShopeeItemAttributeVal(models.Model):
     #     return res
 
 
+class MPShopeeItemAttributeValWizard(models.TransientModel):
+    _name = 'mp.shopee.item.attribute.val.wizard'
+    _description = 'Shopee Item Attribute Value'
+    _rec_name = 'attribute_id'
+
+    attribute_int = BigInteger()
+    attribute_id = fields.Many2one('mp.shopee.item.attribute', compute='_get_attribute_id', inverse='_set_attribute_id')
+    attribute_value = fields.Char()
+    item_id_staging_wizard = fields.Many2one('batch.upload.product.wizard')
+
+    is_mandatory = fields.Boolean(compute='_compute_attribute',readonly=1)
+    values = fields.Many2many('mp.shopee.item.attribute.option', compute='_compute_attribute')
+    value = fields.Many2one('mp.shopee.item.attribute.option', domain="[('id','in',values)]")
+
+    @api.depends('attribute_id')
+    def _compute_attribute(self):
+        for rec in self:
+            if rec.attribute_id:
+                rec.is_mandatory = rec.attribute_id.is_mandatory
+                rec.values = rec.attribute_id.options.ids
+            else:
+                rec.is_mandatory = False
+                rec.values = []
+
+    def _get_attribute_id(self):
+        for rec in self:
+            rec.attribute_id = rec.attribute_int
+
+    def _set_attribute_id(self):
+        self.attribute_int = self.attribute_id.id
+    
+
+    @api.onchange('value')
+    def _set_attribute_value(self):
+      self.attribute_value = self.value.display_name
 
 
+    def write(self, vals):
+        if vals.get('value'):
+            option_id = vals.get('value')
+            option_obj = self.env['mp.shopee.item.attribute.option'].browse(option_id)
+            if option_obj:
+                vals.update({
+                    'attribute_value': option_obj.display_name
+                })
+        res = super(MPShopeeItemAttributeValWizard, self).write(vals)
+        return res
 
 class MPShopeeLogistic(models.Model):
     _name = 'mp.shopee.logistic'
@@ -311,7 +360,7 @@ class MPShopeeItemLogistic(models.Model):
     is_free = fields.Boolean()
     estimated_shipping_fee = fields.Float()
 
-    shop_logistic = fields.Many2many('mp.shopee.logistic', compute='_compute_logistic')
+    shop_logistic = fields.Many2many('mp.shopee.logistic')
     # value_log = fields.Many2one('mp.shopee.shop.logistic', domain="[('id','in',shop_logistic)]")
     
     izi_id = fields.Integer('Izi ID')
@@ -327,12 +376,33 @@ class MPShopeeItemLogistic(models.Model):
                 mp_id = rec.item_id_staging.mp_shopee_id.id
                 shop_logistic = self.env['mp.shopee.shop.logistic'].search([('mp_id','=',mp_id),('enabled','=',True),('is_parent','=',True)])
                 shop_logistic_ids = []
-                for log in shop_logistic:
-                    shop_logistic_ids.append(log.logistic_id.id)
-                rec.shop_logistic = [(6, 0, shop_logistic_ids)] 
+                if shop_logistic:
+                    for log in shop_logistic:
+                        shop_logistic_ids.append(log.logistic_id.id)
+                    rec.shop_logistic = [(6, 0, shop_logistic_ids)]
+                else:
+                    rec.shop_logistic = []
+            else:
+                rec.shop_logistic = []
 
 
+class MPShopeeItemLogisticWizard(models.TransientModel):
+    _name = 'mp.shopee.item.logistic.wizard'
+    _description = 'Shopee Item Logistic'
+    _rec_name = 'logistic_id'
 
+    item_id_staging_wizard = fields.Many2one('batch.upload.product.wizard')
+    logistic_id = fields.Many2one('mp.shopee.logistic')
+    enabled = fields.Boolean()
+    shipping_fee = fields.Float()
+    size_id = fields.Many2one('mp.shopee.logistic.size')
+    is_free = fields.Boolean()
+    estimated_shipping_fee = fields.Float()
+
+    # value_log = fields.Many2one('mp.shopee.shop.logistic', domain="[('id','in',shop_logistic)]")
+    
+    izi_id = fields.Integer('Izi ID')
+    izi_md5 = fields.Char()
 class MPShopeeProductAttributeVar(models.Model):
     _name = "mp.shopee.item.var.attribute"
     _description = "Shopee Product Attribute Variant"

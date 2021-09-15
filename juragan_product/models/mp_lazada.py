@@ -42,7 +42,7 @@ class MPLazada(models.Model):
         ('shop','Shop Warehouse'),], string='Take Stock From', default='main')
     sync_stock_active = fields.Boolean('Realtime Stock Update')
     partner_id = fields.Many2one(comodel_name="res.partner", string="Default Customer", required=False)
-    company_id = fields.Many2one(comodel_name="res.company", string="Company")
+    company_id = fields.Many2one(comodel_name="res.company", string="Company", required=False)
 
     def name_get(self):
         result = []
@@ -200,6 +200,44 @@ class MPLazadaProductAttr(models.Model):
                         'value': option_obj.display_name
                     })
         res = super(MPLazadaProductAttr, self).write(vals)
+        return 
+
+class MPLazadaProductAttrWizard(models.TransientModel):
+    _name = 'mp.lazada.product.attr.wizard'
+    _description = 'Lazada Product Attribute Wizard'
+    
+    # attribute_id = BigMany2one('mp.lazada.category.attr', compute='_get_attribute_id', inverse='_set_attribute_id')
+    item_id_staging_wizard = fields.Many2one('batch.upload.product.wizard')
+    attribute_id = fields.Many2one('mp.lazada.category.attr')
+    name = fields.Char()
+    value = fields.Text()
+    values = fields.Many2many('mp.lazada.category.attr.opt', compute='_compute_attribute')
+    option_id = fields.Many2one('mp.lazada.category.attr.opt',domain="[('id','in',values)]")
+    is_mandatory = fields.Boolean(compute='_compute_attribute',readonly=1)
+
+    izi_id = fields.Integer()
+    izi_md5 = fields.Char()
+    
+    @api.depends('attribute_id')
+    def _compute_attribute(self):
+        for rec in self:
+            if rec.attribute_id:
+                rec.is_mandatory = rec.attribute_id.is_mandatory
+                rec.values = rec.attribute_id.options.ids
+            else:
+                rec.is_mandatory = False
+                rec.values = []
+
+    def write(self, vals):
+        if not self.env.context.get('create_product_attr'):
+            if vals.get('value'):
+                option_id = vals.get('value')
+                option_obj = self.env['mp.lazada.category.attr.opt'].browse(option_id)
+                if option_obj:
+                    vals.update({
+                        'value': option_obj.display_name
+                    })
+        res = super(MPLazadaProductAttrWizard, self).write(vals)
         return res
 
 class MPLazadaAttributeLine(models.Model):

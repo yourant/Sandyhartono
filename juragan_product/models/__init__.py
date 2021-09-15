@@ -13,3 +13,4 @@ from . import warehouse_config_wizard
 from . import order_component_config
 from . import campaign
 from . import product_discount
+from . import mp_blibli

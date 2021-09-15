@@ -17,7 +17,13 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'auth_oauth', 'web_notify'],
+    'depends': [
+        'base',
+        'auth_oauth',
+        'web_notify',
+        'rsa',
+        'rsa_api',
+    ],
 
     # always loaded
     'data': [
@@ -34,6 +40,7 @@
 
         # view
         'views/views.xml',
+        # 'views/remote_views.xml',
         'views/templates.xml',
 
         # wizard

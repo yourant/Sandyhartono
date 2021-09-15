@@ -244,8 +244,8 @@ class JuraganCampaign(models.Model):
             if discount_line_count > campaign_rule_count:
                 # if number of discount line greater than number of campaign rule, then there's new discount line
                 # that need to be added as campaign rule in this campaign
-                discount_line_ids_need_add += mp_campaign_product_discount.product_ids.ids - \
-                                              mp_campaign.pricelist_item_ids.mapped('discount_line_id').ids
+                discount_line_ids_need_add += list(set(mp_campaign_product_discount.product_ids.ids) - \
+                                              set(mp_campaign.pricelist_item_ids.mapped('discount_line_id').ids))
 
             # find campaign rule that need to be updated or removed
             for pli in mp_campaign.pricelist_item_ids:
@@ -276,7 +276,7 @@ class JuraganCampaign(models.Model):
                     'remove_campaign_rule': campaign_rule_ids_need_remove,
                     'add_campaign_rule': discount_line_ids_need_add
                 }
-                mp_campaign._sync_with_discount(**sync_data)
+                mp_campaign.with_context(sync_discount=True)._sync_with_discount(**sync_data)
 
     def action_push(self):
         self.ensure_one()

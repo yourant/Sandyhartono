@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><odoo>
+    <data>
+        <record id="view_remote_mp" model="ir.ui.view">
+            <field name="model">remote.mp</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="upload" string="Upload" type="object"/>
+                        <button name="view_detail" string="View Detail" type="object"/>
+                        <field name="state" statusbar_visible="draft,done" widget="statusbar"/>
+                    </header>
+                    <header>
+                        <!-- <button context="{'action':'write','args':[{'active':True}]}" name="remote_action" string="Activate" type="object"/>
+                        <button context="{'action':'write','args':[{'active':False}]}" name="remote_action" string="Deactivate" type="object"/> -->
+                        <button context="{'action':'initial_sync'}" name="remote_action" string="Initialize" type="object"/>
+                        <button context="{'action':'method_direct_trigger'}" name="remote_action" string="Sync Manually" type="object"/>
+                        <button context="{'action':'sync_product'}" name="remote_action" string="Sync Product" type="object"/>
+                        <button name="import_stock_mp" string="Sync Stock" type="object"/>
+                    </header>
+                    <field invisible="1" name="server_id"/>
+                </form>
+            </field>
+        </record>
+        <record id="view_mp_tokopedia_form" model="ir.ui.view">
+            <field name="model">mp.tokopedia</field>
+            <field name="mode">primary</field>
+            <field name="inherit_id" ref="view_remote_mp"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header[last()]/button[last()]" position="after">
+                    <button context="{'action':'get_access_token'}" name="remote_action" string="Access Token" type="object"/>
+                    <button context="{'action':'generate_key_pair'}" name="remote_action" string="Generate Key Pair" type="object"/>
+                    <button context="{'action':'register_public_key'}" name="remote_action" string="Register Public Key" type="object"/>
+                </xpath>
+                <xpath expr="//header[last()]" position="after">
+                    <group>
+                        <field name="shop_url" required="1"/>
+                        <field name="fs_id" required="1"/>
+                        <field name="client_id" required="1"/>
+                        <field name="client_secret" password="1" required="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Config">
+                            <group>
+                                <group>
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="cron_active" widget="boolean_toggle"/>
+                                    <field name="load_shop" widget="boolean_toggle"/>
+                                    <field name="load_etalase" widget="boolean_toggle"/>
+                                    <field name="load_category" widget="boolean_toggle"/>
+                                </group>
+                                <group>
+                                    <field name="force_import" widget="boolean_toggle"/>
+                                    <field name="update_master" widget="boolean_toggle"/>
+                                    <field name="check_order_detail" widget="boolean_toggle"/>
+                                    <field name="log_error" widget="boolean_toggle"/>
+                                </group>
+                                <group>
+                                    <field name="sync_stock_active" widget="boolean_toggle"/>
+                                    <field name="sync_stock_history_active" widget="boolean_toggle"/>
+                                    <field name="sync_stock_sale_active" widget="boolean_toggle"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_mp_shopee_form" model="ir.ui.view">
+            <field name="model">mp.shopee</field>
+            <field name="mode">primary</field>
+            <field name="inherit_id" ref="view_remote_mp"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header[last()]/button[last()]" position="after">
+                    <button context="{'action':'action_auth_v2'}" name="remote_action" string="Authenticate" type="object"/>
+                </xpath>
+                <xpath expr="//header[last()]" position="after">
+                    <group>
+                        <field name="shop_name" required="1"/>
+                        <field name="username" required="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Config">
+                            <group>
+                                <group>
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="cron_active" widget="boolean_toggle"/>
+                                    <field name="load_shop" widget="boolean_toggle"/>
+                                    <field name="load_shop_category" widget="boolean_toggle"/>
+                                    <field name="load_item_category" widget="boolean_toggle"/>
+                                    <field name="load_item" widget="boolean_toggle"/>
+                                    <field name="load_discount" widget="boolean_toggle"/>
+                                    <field name="load_order" widget="boolean_toggle"/>
+                                    <field name="load_logistic" widget="boolean_toggle"/>
+                                    <field name="load_return" widget="boolean_toggle"/>
+                                    <field name="load_payment" widget="boolean_toggle"/>
+                                </group>
+                                <group>
+                                    <field name="force_import" widget="boolean_toggle"/>
+                                    <field name="update_master" widget="boolean_toggle"/>
+                                    <field name="check_order_detail" widget="boolean_toggle"/>
+                                    <field name="log_error" widget="boolean_toggle"/>
+                                </group>
+                                <group>
+                                    <field name="sync_stock_active" widget="boolean_toggle"/>
+                                    <field name="sync_stock_history_active" widget="boolean_toggle"/>
+                                    <field name="sync_stock_sale_active" widget="boolean_toggle"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_mp_lazada_form" model="ir.ui.view">
+            <field name="model">mp.lazada</field>
+            <field name="mode">primary</field>
+            <field name="inherit_id" ref="view_remote_mp"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header[last()]/button[last()]" position="after">
+                    <button context="{'action':'get_code'}" name="remote_action" string="Get Code" type="object"/>
+                    <button context="{'action':'open_url_auth'}" groups="base.group_no_one" name="remote_action" string="Open URL" type="object"/>
+                    <button context="{'action':'get_access_token'}" name="remote_action" string="Access Token" type="object"/>
+                </xpath>
+                <xpath expr="//header[last()]" position="after">
+                    <group>
+                        <field name="country" required="1"/>
+                        <field name="email" required="1"/>
+                        <field name="password" password="1" required="1"/>
+                        <field name="code"/>
+                    </group>
+                    <notebook>
+                        <page string="Config">
+                            <group>
+                                <group>
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="cron_active" widget="boolean_toggle"/>
+                                    <field name="load_brand" widget="boolean_toggle"/>
+                                    <field name="load_category" widget="boolean_toggle"/>
+                                    <field name="load_product" widget="boolean_toggle"/>
+                                    <field name="load_order" widget="boolean_toggle"/>
+                                </group>
+                                <group>
+                                    <field name="sync_stock_active" widget="boolean_toggle"/>
+                                    <field name="sync_stock_history_active" widget="boolean_toggle"/>
+                                    <field name="sync_stock_sale_active" widget="boolean_toggle"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </xpath>
+            </field>
+        </record>
+        <record id="view_webhook_server_remote_form" model="ir.ui.view">
+            <field name="model">webhook.server</field>
+            <field name="inherit_id" ref="juragan_webhook.view_webhook_server_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook/page[last()]" position="after">
+                    <page groups="base.group_no_one" string="RSA">
+                        <group>
+                            <field name="public_key"/>
+                            <field name="rsa_token"/>
+                        </group>
+                        <group>
+                            <button name="get_rsa_token" string="Get RSA Token" type="object"/>
+                        </group>
+                    </page>
+                </xpath>
+                <field name="mp_tokopedia_ids" position="after">
+                    <button context="{'models':['mp.tokopedia']}" name="get_accounts" string="Get Account" type="object"/>
+                    <button context="{'model': 'mp.tokopedia'}" name="create_account" string="Create Account" type="object"/>
+                </field>
+                <field name="mp_shopee_ids" position="after">
+                    <button context="{'models':['mp.shopee']}" name="get_accounts" string="Get Account" type="object"/>
+                    <button context="{'model': 'mp.shopee'}" name="create_account" string="Create Account" type="object"/>
+                </field>
+                <field name="mp_lazada_ids" position="after">
+                    <button context="{'models':['mp.lazada']}" name="get_accounts" string="Get Account" type="object"/>
+                    <button context="{'model': 'mp.lazada'}" name="create_account" string="Create Account" type="object"/>
+                </field>
+                <xpath expr="//field[@name='mp_tokopedia_ids']/tree/field[last()]" position="after">
+                    <field name="state"/>
+                    <button icon="fa-edit" name="open_form" type="object"/>
+                </xpath>
+                <xpath expr="//field[@name='mp_shopee_ids']/tree/field[last()]" position="after">
+                    <field name="state"/>
+                    <button icon="fa-edit" name="open_form" type="object"/>
+                </xpath>
+                <xpath expr="//field[@name='mp_lazada_ids']/tree/field[last()]" position="after">
+                    <field name="state"/>
+                    <button icon="fa-edit" name="open_form" type="object"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -62,6 +62,16 @@ class CategoryMapping(models.Model):
     server_id = fields.Many2one('webhook.server', 'Server')
 
 
+class CompanyMapping(models.Model):
+    _name = 'company.mapping'
+
+    company_izi_id = fields.Integer()
+    reference = fields.Char()
+    name = fields.Char()
+    company_id = fields.Many2one('res.company', 'Company')
+    server_id = fields.Many2one('webhook.server', 'Server')
+
+
 class ProductTemplate(models.Model):
     _name = 'product.template'
     _inherit = ['product.template']
@@ -109,6 +119,11 @@ class ProductTemplate(models.Model):
         [('consu', 'Consumable'),
          ('service', 'Service'), ('product', 'Stockable Product')],
         'Product Type Adapter', compute='set_type_adapter')
+    mp_blibli_ids = fields.Many2many(
+        'mp.blibli', string='Blibli Account',
+        domain=['|', ('active', '=', False), ('active', '=', True), ],
+        context={'active_test': False})
+    mp_blibli_icon = fields.Binary(string="Blibli Icon") #, compute="_compute_mp_icon"
     product_wholesale_ids = fields.One2many(
         'product.template.wholesale', 'product_tmpl_id')
     default_code = fields.Char('Internal Reference')
@@ -125,7 +140,7 @@ class ProductTemplate(models.Model):
     def create(self, vals_list):
         templates = super(ProductTemplate, self).create(vals_list)
         if 'izi_id' in self._fields:
-            if not templates.izi_id or templates.izi_id == 0:
+            if (not templates.izi_id or templates.izi_id == 0) and templates.id:
                 self._cr.execute('UPDATE %s SET izi_id = NULL WHERE id = %s' % (self._table, templates.id))
         return templates
 
@@ -241,6 +256,13 @@ class ProductTemplate(models.Model):
                 mp_lazada_ids.append({'id': mp_lazada.izi_id})
             json_data.update({
                 'mp_lazada_ids': mp_lazada_ids
+            })
+
+            mp_blibli_ids = []
+            for mp_blibli in product_tmpl_id.mp_blibli_ids:
+                mp_blibli_ids.append({'id': mp_blibli.izi_id})
+            json_data.update({
+                'mp_blibli_ids': mp_blibli_ids
             })
 
             images = []
@@ -430,7 +452,7 @@ class ProductImage(models.Model):
             elif rec.url_external:
                 rec.url = rec.url_external
             else:
-                rec.image_url = False
+                rec.url = False
 
 
 class ProductImageStaging(models.Model):
@@ -457,7 +479,7 @@ class ProductImageStaging(models.Model):
             elif rec.url_external:
                 rec.url = rec.url_external
             else:
-                rec.image_url = False
+                rec.url = False
 
 class ProductCategory(models.Model):
     _inherit = 'product.category'
@@ -545,6 +567,44 @@ class BatchUploadWizard(models.TransientModel):
     ], string='Marketplace')
 
     is_replace_fields = fields.Boolean(string='Is replace fields?')
+
+    is_description_sale = fields.Boolean()
+    is_list_price = fields.Boolean()
+    is_weight = fields.Boolean()
+    is_length = fields.Boolean()
+    is_width = fields.Boolean()
+    is_height = fields.Boolean()
+    is_qty_available = fields.Boolean()
+    is_min_order = fields.Boolean()
+    is_image = fields.Boolean()
+    is_is_active = fields.Boolean()
+
+    is_tp_category_id = fields.Boolean()
+    is_tp_etalase_id = fields.Boolean()
+    is_tp_available_status = fields.Boolean()
+    is_tp_active_status = fields.Boolean()
+    is_tp_condition = fields.Boolean()
+    is_tp_weight_unit = fields.Boolean()
+    is_tp_is_must_insurance = fields.Boolean()
+    is_tp_is_free_return = fields.Boolean()
+    is_tp_preorder = fields.Boolean()
+    is_tp_preorder_duration = fields.Boolean()
+    is_tp_preorder_time_unit = fields.Boolean()
+
+    is_sp_condition = fields.Boolean()
+    is_sp_is_pre_order = fields.Boolean()
+    is_sp_days_to_ship = fields.Boolean()
+    is_sp_category_id = fields.Boolean()
+    is_sp_logistics = fields.Boolean()
+    is_sp_attributes = fields.Boolean()
+    is_sp_brand_id = fields.Boolean()
+    
+    is_lz_category_id = fields.Boolean()
+    is_lz_brand_id = fields.Boolean()
+    is_lz_attributes = fields.Boolean()
+    is_lz_status = fields.Boolean()
+
+
     description_sale = fields.Text('Description')
     list_price = fields.Float(
         'Sales Price', digits=dp.get_precision('Product Price'))
@@ -596,32 +656,22 @@ class BatchUploadWizard(models.TransientModel):
 
     # Shopee Fields
     mp_shopee_id = fields.Many2one('mp.shopee', string='Shopee Account')
-    # sp_category_int = BigInteger()
-    # sp_category_id = BigMany2one('mp.shopee.item.category',string='Shopee Category')
-    # sp_logistics = fields.One2many('mp.shopee.item.logistic', 'item_id_staging') 
-    # sp_brand_id =  fields.Many2one('mp.shopee.item.brand', string='Shopee Brand')
-    # sp_days_to_ship = fields.Integer(default=2)
-    # sp_attributes = fields.One2many('mp.shopee.item.attribute.val', 'item_id_staging')
-
     sp_condition = fields.Selection(
         [('NEW', 'NEW'), ('USED', 'USED')], 'Condition')
-    sp_status = fields.Selection(
-        [('NORMAL', 'NORMAL'), ('UNLIST', 'UNLIST')], 'Status Produk', compute='_set_sp_status')
     sp_is_pre_order = fields.Boolean('Pre Order')
     sp_days_to_ship = fields.Integer(default=2)
     sp_category_id = BigMany2one('mp.shopee.item.category',string='Shopee Category')
-    sp_category_int = BigInteger()
+    # sp_category_int = BigInteger()
     sp_logistics = fields.One2many(
-        'mp.shopee.item.logistic', 'item_id_staging')
+        'mp.shopee.item.logistic.wizard', 'item_id_staging_wizard')
     sp_attributes = fields.One2many(
-        'mp.shopee.item.attribute.val', 'item_id_staging')
-    sp_brand_id =  fields.Many2one('mp.shopee.item.brand', string='Shopee Brand')
-
+        'mp.shopee.item.attribute.val.wizard', 'item_id_staging_wizard')
+    sp_brand_id =  fields.Many2one('mp.shopee.item.brand', string='Shopee Brand', domain="[('categories', 'child_of', sp_category_id)])")
     # Lazada Fields
     mp_lazada_id = fields.Many2one('mp.lazada', string='Lazada Account')
     lz_category_id =  fields.Many2one('mp.lazada.category', string='Product Category')
     lz_brand_id =  fields.Many2one('mp.lazada.brand', string='Product Brand')
-    lz_attributes = fields.One2many('mp.lazada.product.attr', 'item_id_staging', string='Attributes Category')
+    lz_attributes = fields.One2many('mp.lazada.product.attr.wizard', 'item_id_staging_wizard', string='Attributes Category')
     lz_status = fields.Selection([
         ('active', 'Active'),
         ('inactive', 'Inactive'),
@@ -658,6 +708,26 @@ class BatchUploadWizard(models.TransientModel):
                             'value': att.option_id.name,
                             'attribute_id': att.attribute_id.id,
                             'option_id': att.option_id.id,
+                        }))
+
+                # process sp_attributes
+                sp_attributes = []
+                if self.sp_attributes:
+                    for att in self.sp_attributes:
+                        sp_attributes.append((0, 0, {
+                            'attribute_value': att.value.display_name if att.value else '',
+                            'attribute_id': att.attribute_id.id,
+                        }))
+
+                # process sp_logistics
+                sp_logistics = []
+                if self.sp_logistics:
+                    for logistic in self.sp_logistics:
+                        sp_logistics.append((0, 0, {
+                            "logistic_id": logistic.logistic_id.id,
+                            "estimated_shipping_fee": logistic.estimated_shipping_fee,
+                            "is_free": logistic.is_free,
+                            "enabled": logistic.enabled,
                         }))
 
                 default_loc = self.env['stock.inventory']._default_location_id()
@@ -699,7 +769,6 @@ class BatchUploadWizard(models.TransientModel):
                         'is_active': self.is_active,
                         'list_price': self.list_price,
                         'min_order': self.min_order,
-                        'weight': self.weight,
                         'length': self.length,
                         'width': self.width,
                         'height': self.height,
@@ -709,6 +778,8 @@ class BatchUploadWizard(models.TransientModel):
                     if self.mp_tokopedia_id:
                         # Tokopedia Fields
                         values.update({
+                            'weight': self.weight,
+                            'default_code': product_tmpl_id.default_code,
                             'mp_tokopedia_id': self.mp_tokopedia_id.id,
                             'tp_active_status': 1 if self.is_active else 3,
                             'tp_available_status': self.tp_available_status,
@@ -721,11 +792,27 @@ class BatchUploadWizard(models.TransientModel):
                         # Lazada Fields
                         default_code = product_tmpl_id.name.lower().replace(' ', '-')
                         values.update({
+                            'weight': self.weight,
                             'mp_lazada_id': self.mp_lazada_id.id,
                             'default_code': default_code,
                             'lz_category_id': self.lz_category_id.id,
                             'lz_brand_id': self.lz_brand_id.id,
                             'lz_attributes': lz_attributes,
+                        })
+                    
+                    elif self.mp_shopee_id:
+                        # Shopee Fields
+                        values.update({
+                            'weight': self.weight,
+                            'mp_shopee_id': self.mp_shopee_id.id,
+                            'sp_category_id': self.sp_category_id.id,
+                            'default_code': product_tmpl_id.default_code,
+                            'sp_condition': self.sp_condition,
+                            'sp_is_pre_order': self.sp_is_pre_order,
+                            'sp_days_to_ship': self.sp_days_to_ship,
+                            'sp_brand_id': self.sp_brand_id.id,
+                            'sp_attributes': sp_attributes,
+                            'sp_logistics': sp_logistics,
                         })
                     
                     product_staging_id = self.env['product.staging'].create(values)
@@ -749,25 +836,38 @@ class BatchUploadWizard(models.TransientModel):
                         stock_inventory.unlink()
                         raise UserError(str(e))
                 else:
+                    if self.mp_shopee_id or self.mp_lazada_id:
+                        # validation
+                        if self.list_price == 0 and self.is_list_price:
+                            raise UserError('Price must be higher than 0')
+                        if self.weight == 0 and self.is_weight:
+                            raise UserError('Weight must be higher than 0')
+                        if self.length == 0 and self.is_length:
+                            raise UserError('Length must be higher than 0')
+                        if self.width == 0 and self.is_width:
+                            raise UserError('Width must be higher than 0')
+                        if self.height == 0 and self.is_height:
+                            raise UserError('Height must be higher than 0')
+
                     values = {
-                        'description_sale': self.set_value_is_replace(product_staging_id.description_sale, self.description_sale),
-                        'is_active': self.set_value_is_replace(product_staging_id.is_active, self.is_active),
-                        'list_price': self.set_value_is_replace(product_staging_id.list_price, self.list_price),
-                        'min_order': self.set_value_is_replace(product_staging_id.min_order, self.min_order),
-                        'weight': self.set_value_is_replace(product_staging_id.weight, self.weight),
-                        'length': self.set_value_is_replace(product_staging_id.length, self.length),
-                        'width': self.set_value_is_replace(product_staging_id.width, self.width),
-                        'height': self.set_value_is_replace(product_staging_id.height, self.height),
+                        'description_sale': self.set_value_is_replace(self.is_description_sale,product_staging_id.description_sale, self.description_sale),
+                        'is_active': self.set_value_is_replace(self.is_is_active, product_staging_id.is_active, self.is_active),
+                        'list_price': self.set_value_is_replace(self.is_list_price, product_staging_id.list_price, self.list_price),
+                        'min_order': self.set_value_is_replace(self.is_min_order, product_staging_id.min_order, self.min_order),
+                        'weight': self.set_value_is_replace(self.is_weight, product_staging_id.weight, self.weight),
+                        'length': self.set_value_is_replace(self.is_length, product_staging_id.length, self.length),
+                        'width': self.set_value_is_replace(self.is_width, product_staging_id.width, self.width),
+                        'height': self.set_value_is_replace(self.is_height, product_staging_id.height, self.height),
                     }
 
                     if product_staging_id.mp_tokopedia_id:
                         # Tokopedia Fields
                         values.update({
-                            'tp_active_status': self.set_value_is_replace(product_staging_id.tp_active_status, 1 if self.is_active else 3),
-                            'tp_available_status': self.set_value_is_replace(product_staging_id.tp_available_status, self.tp_available_status),
-                            'tp_category_id': self.set_value_is_replace(product_staging_id.tp_category_id.id, self.tp_category_id.id),
-                            'tp_condition': self.set_value_is_replace(product_staging_id.tp_condition, self.tp_condition),
-                            'tp_weight_unit': self.set_value_is_replace(product_staging_id.tp_weight_unit, self.tp_weight_unit),
+                            'tp_active_status': self.set_value_is_replace(self.is_tp_active_status, product_staging_id.tp_active_status, 1 if self.is_active else 3),
+                            'tp_available_status': self.set_value_is_replace(self.tp_available_status, product_staging_id.tp_available_status, self.tp_available_status),
+                            'tp_category_id': self.set_value_is_replace(self.tp_category_id, product_staging_id.tp_category_id.id, self.tp_category_id.id),
+                            'tp_condition': self.set_value_is_replace(self.tp_condition, product_staging_id.tp_condition, self.tp_condition),
+                            'tp_weight_unit': self.set_value_is_replace(self.tp_weight_unit, product_staging_id.tp_weight_unit, self.tp_weight_unit),
                         })
                     
                     elif product_staging_id.mp_lazada_id:
@@ -777,27 +877,56 @@ class BatchUploadWizard(models.TransientModel):
                             default_code = product_staging_id.name.lower().replace(' ', '-')
                         values.update({
                             'default_code': default_code,
-                            'lz_category_id': self.set_value_is_replace(product_staging_id.lz_category_id.id, self.lz_category_id.id),
-                            'lz_brand_id': self.set_value_is_replace(product_staging_id.lz_brand_id.id, self.lz_brand_id.id),
+                            'lz_category_id': self.set_value_is_replace(self.is_lz_category_id, product_staging_id.lz_category_id.id, self.lz_category_id.id),
+                            'lz_brand_id': self.set_value_is_replace(self.lz_brand_id, product_staging_id.lz_brand_id.id, self.lz_brand_id.id),
                         })
 
-                        if self.is_replace_fields or not product_staging_id.lz_attributes:
+                        if self.is_lz_attributes or not product_staging_id.lz_attributes:
                             # process lz_attributes
-                            product_staging_id.lz_attributes.unlink()
+                            for lz_attr in product_staging_id.lz_attributes:
+                                lz_attr.unlink()
                             product_staging_id.write({
                                 'lz_attributes': lz_attributes
                             })
 
+                    elif product_staging_id.mp_shopee_id:
+                        # Shopee Fields
+                        values.update({
+                            'default_code': product_tmpl_id.default_code,
+                            'sp_category_id': self.set_value_is_replace(self.is_sp_category_id, product_staging_id.sp_category_id.id, self.sp_category_id.id),
+                            'sp_brand_id': self.set_value_is_replace(self.is_sp_brand_id, product_staging_id.sp_brand_id.id, self.sp_brand_id.id),
+                            'sp_condition': self.set_value_is_replace(self.is_sp_condition, product_staging_id.sp_condition, self.sp_condition),
+                            'sp_is_pre_order': self.set_value_is_replace(self.is_sp_is_pre_order, product_staging_id.sp_is_pre_order, self.sp_is_pre_order),
+                            'sp_days_to_ship': self.set_value_is_replace(self.is_sp_days_to_ship, product_staging_id.sp_days_to_ship, self.sp_days_to_ship),
+                        })
+
+                        if self.is_sp_attributes or not product_staging_id.sp_attributes:
+                            # process sp_attributes
+                            for sp_attr in product_staging_id.sp_attributes:
+                                sp_attr.unlink()
+                            product_staging_id.write({
+                                'sp_attributes': sp_attributes
+                            })
+                        if self.is_sp_logistics or not product_staging_id.sp_logistics:
+                            # process sp_logistic
+                            for sp_logistic in product_staging_id.sp_logistics:
+                                sp_logistic.unlink()
+                            product_staging_id.write({
+                                'sp_logistics': sp_logistics
+                            })
+                        
+
                     product_staging_id.write(values)
 
-                    if self.is_replace_fields or not product_staging_id.product_image_staging_ids:
+                    if self.is_image or not product_staging_id.product_image_staging_ids:
                         # process image stagings
-                        product_staging_id.product_image_staging_ids.unlink()
+                        for img_stg in product_staging_id.product_image_staging_ids:
+                            img_stg.unlink()
                         product_staging_id.write({
                             'product_image_staging_ids': images
                         })
 
-                    if self.is_replace_fields or product_staging_id.qty_available == 0:
+                    if self.is_qty_available or product_staging_id.qty_available == 0:
                         product_id = product_tmpl_id.product_variant_id.id
                         stock_inventory = self.env['stock.inventory'].create({
                             'name': product_tmpl_id.product_variant_id.display_name,
@@ -819,16 +948,41 @@ class BatchUploadWizard(models.TransientModel):
 
                 if not product_tmpl_id.izi_id:
                     product_tmpl_id.upload_product_tmpl_izi()
-                upload_status.append(product_staging_id.with_context(batch_upload=True).upload_product_stg_izi())
+                upload_staging = product_staging_id.with_context(batch_upload=True).upload_product_stg_izi()
+                upload_status.append(upload_staging)
             except Exception as e:
                 upload_status.append({
                     'product': 'Master Product : ' + product_tmpl_id.name,
                     'default_code': 'SKU Master : ' + product_tmpl_id.default_code,
                     'status': False,
-                    'message': 'Failed to prepare staging data',
+                    'message': e.name if e else 'Failed to prepare staging data',
                 })
+        
+
+        messages = ''
+        for msg in upload_status:
+            if msg['status']:
+                status = 'Success'
+                messages += 'Product with name %s (%s), upload %s \n' % (msg['product'], msg['default_code'], status)
+            else:
+                status = 'Failed'
+                messages += 'Product with name %s (%s), upload %s, with message: %s\n' % (msg['product'], msg['default_code'], status, msg['message'])
+            
+      
+        form_view = self.env.ref('juragan_product.popup_message_wizard')
+        view_id = form_view and form_view.id or False
+        context = dict(self._context or {})
+        context['message'] = messages
         return {
-            'type': 'ir.actions.act_window_close'
+            'name': 'Batch Upload Status.',
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'view_type': 'form',
+            'res_model': 'popup.message.wizard',
+            'views': [(view_id,'form')],
+            'view_id' : form_view.id,
+            'target': 'new',
+            'context': context,
         }
 
     def get_webhook_server(self):
@@ -837,8 +991,8 @@ class BatchUploadWizard(models.TransientModel):
             raise UserError('There is no webhook server.')
         return server
 
-    def set_value_is_replace(self, exist_value, replace_value):
-        if self.is_replace_fields or not exist_value:
+    def set_value_is_replace(self, object_field, exist_value, replace_value):
+        if object_field or not exist_value:
             return replace_value
         else:
             return exist_value
@@ -870,6 +1024,33 @@ class BatchUploadWizard(models.TransientModel):
             except Exception as e:
                 _logger.warn(e)
 
+                
+    
+    @api.onchange('sp_category_id')
+    def _sp_change_category_id(self):
+        if self.mp_shopee_id and self.sp_category_id:
+            try:
+                mp_id_by_izi_id = self.mp_shopee_id.izi_id
+                category_id = self.sp_category_id.izi_id
+                server = self.get_webhook_server()
+                if server:
+                    if not self.sp_category_id.attributes:
+                        res = server.sp_get_attribute_category(category_id,mp_id_by_izi_id)
+                    if not self.sp_category_id.brands:
+                        res = server.sp_get_attribute_brand(category_id,mp_id_by_izi_id)
+                # self.mp_ids[0].get_item_category(category_ids=self.category_id.ids)
+                self.sp_attributes = [(5, 0, 0), *[(0, 0, {
+                    'attribute_id': attribute.id
+                }) for attribute in self.sp_category_id.attributes]]
+            except Exception as e:
+                _logger.warn(e)
+
+            if not self.sp_logistics:
+                logistic_shop = self.env['mp.shopee.shop.logistic'].search([('mp_id','=',self.mp_shopee_id.id),('enabled','=',True),('is_parent','=',True)])
+                self.sp_logistics = [(5, 0, 0), *[(0, 0, {
+                            'logistic_id': logistic.logistic_id.id
+                        }) for logistic in logistic_shop]]
+    
 class BatchUploadImage(models.TransientModel):
     _name = 'batch.upload.image'
 
@@ -883,6 +1064,7 @@ class WebhookServer(models.Model):
     category_mapping_ids = fields.One2many('product.category.mapping', 'server_id','Product Category Mapping')
     warehouse_mapping_ids = fields.One2many('warehouse.mapping', 'server_id', 'Warehouse Mapping')
     location_mapping_ids = fields.One2many('location.mapping', 'server_id', 'Location Mapping')
+    company_mapping_ids = fields.One2many('company.mapping', 'server_id', 'Company Mapping')
 
     def delete_product_mapping(self):
         self.env.cr.execute('''
@@ -1113,7 +1295,65 @@ class WebhookServer(models.Model):
                         lm_by_izi_id[loc['id']].write(values)
             else:
                 loop = False
+    
+    def start_company_mapping(self):
+        # GET existing
+        cm_by_izi_id = {}
+        company_mappings = self.env['company.mapping'].sudo().search([])
+        for cm in company_mappings:
+            if cm.company_izi_id:
+                cm_by_izi_id[cm.company_izi_id] = cm
+        # GET existing companies
+        cp_by_name = {}
+        companies = self.env['res.company'].sudo().search([])
+        for cp in companies:
+            if cp.name:
+                cp_by_name[cp.name] = cp
 
+        loop = True
+        offset = 0
+        limit = 1000
+        while loop:
+            r = requests.get(self.name + '/api/ui/read/list-detail/res.company?offset=%s&limit=%s' % (
+                str(offset), str(limit)),
+                headers={'X-Openerp-Session-Id': self.session_id}
+            )
+            res = r.json() if r.status_code == 200 else {}
+            if res.get('code') == 200:
+                if len(res.get('data')) == 0:
+                    loop = False
+                else:
+                    offset += limit
+                # Create Companies Mapping
+                for cp in res.get('data'):
+                    # Search for companies that has same name
+                    same_company = False
+                    if cp['name'] in cp_by_name:
+                        same_company = cp_by_name[cp['name']]
+                    # Create or Update
+                    if cp['id'] not in cm_by_izi_id:
+                        values = {
+                            'company_izi_id': cp['id'],
+                            'reference': cp['name'],
+                            'name': cp['name'],
+                            'server_id': self.id,
+                        }
+                        if same_company:
+                            values['company_id'] = same_company.id
+                        self.env['company.mapping'].sudo().create(values)
+                    else:
+                        values = {
+                            'company_izi_id': cp['id'],
+                            'reference': cp['name'],
+                            'name': cp['name'],
+                            'server_id': self.id,
+                        }
+                        if not cm_by_izi_id[cp['id']].company_id and same_company:
+                            values['company_id'] = same_company.id
+                        cm_by_izi_id[cp['id']].write(values)
+            else:
+                loop = False
+    
     def get_product_category_mapping(self):
         # GET existing 
         pcm_by_izi_id = {}
@@ -1124,70 +1364,72 @@ class WebhookServer(models.Model):
 
     def get_staging_attribute_line_and_staging_variant(self, offset=0, limit=100, order_field='id', sort='asc', retry_login_count=3, retry_login=False,domain_url_attr=False, domain_url_var=False,mp_type=False):
          # Temporary Product Templates
-        product_staging = self.env['product.staging'].search(
+        product_staging = self.env['product.staging'].sudo().search(
             [('izi_id', '!=', False), '|', ('active','=',True), ('active','=',False)])
         product_staging_by_izi_id = {}
         for pt in product_staging:
             product_staging_by_izi_id[pt.izi_id] = pt
 
         # Temporary Shopee Attributes
-        sp_var_attributes = self.env['mp.shopee.item.var.attribute'].search(
+        sp_var_attributes = self.env['mp.shopee.item.var.attribute'].sudo().search(
             [('izi_id', '!=', False)])
         sp_var_attributes_by_izi_id = {}
         for at in sp_var_attributes:
             sp_var_attributes_by_izi_id[at.izi_id] = at
 
         # Temporary Shopee Attribute Values
-        sp_var_attribute_values = self.env['mp.shopee.item.var.attribute.value'].search(
+        sp_var_attribute_values = self.env['mp.shopee.item.var.attribute.value'].sudo().search(
             [('izi_id', '!=', False)])
         sp_var_attribute_values_by_izi_id = {}
         for av in sp_var_attribute_values:
             sp_var_attribute_values_by_izi_id[av.izi_id] = av
 
          # Temporary Shopee Attribute Lines
-        sp_var_attribute_lines = self.env['mp.shopee.attribute.line'].search(
+        sp_var_attribute_lines = self.env['mp.shopee.attribute.line'].sudo().search(
             [('izi_id', '!=', False)])
         sp_var_attribute_lines_by_izi_id = {}
         for al in sp_var_attribute_lines:
             sp_var_attribute_lines_by_izi_id[al.izi_id] = al
         
         # Temporary Lazada Attributes
-        lz_var_attributes = self.env['mp.lazada.category.attr'].search(
+        lz_var_attributes = self.env['mp.lazada.category.attr'].sudo().search(
             [('izi_id', '!=', False),('is_sale_prop','=',True)])
         lz_var_attributes_by_izi_id = {}
         for at in lz_var_attributes:
             lz_var_attributes_by_izi_id[at.izi_id] = at
 
         # Temporary Lazada Attribute Values
-        lz_var_attribute_values = self.env['mp.lazada.variant.value'].search(
+        lz_var_attribute_values = self.env['mp.lazada.variant.value'].sudo().search(
             [('izi_id', '!=', False)])
         lz_var_attribute_values_by_izi_id = {}
         for av in lz_var_attribute_values:
             lz_var_attribute_values_by_izi_id[av.izi_id] = av
 
         # Temporary Lazada Attribute Lines
-        lz_var_attribute_lines = self.env['mp.lazada.attribute.line'].search(
+        lz_var_attribute_lines = self.env['mp.lazada.attribute.line'].sudo().search(
             [('izi_id', '!=', False)])
         lz_var_attribute_lines_by_izi_id = {}
         for al in lz_var_attribute_lines:
             lz_var_attribute_lines_by_izi_id[al.izi_id] = al
 
         # Temporary Product Products
-        product_products = self.env['product.product'].search(
-            [('izi_id', '!=', False), '|', ('active', '=', True), ('active', '=', False)])
+        product_products = self.env['product.product'].sudo().search(
+            [('izi_id', '!=', False),'|',('active','=',True),('active','=',False)])
         product_products_by_izi_id = {}
         for pp in product_products:
             product_products_by_izi_id[pp.izi_id] = pp
 
-         # Temporary Product Variant Staging
-        product_stg_var = self.env['product.staging.variant'].search(
-            [('izi_id', '!=', False), '|', ('active', '=', True), ('active', '=', False)])
+        # Temporary Product Variant Staging
+        product_stg_var = self.env['product.staging.variant'].sudo().search(
+            [('izi_id', '!=', False),'|',('active','=',True),('active','=',False)])
+
         product_stg_var_by_izi_id = {}
         for pp in product_stg_var:
             product_stg_var_by_izi_id[pp.izi_id] = pp
         
         def get_sp_attribute_lines(offset, limit, order_field, sort, retry_login_count, retry_login, domain_url_attr):
             try:
+                i = 0
                 while True:
                     if domain_url_attr:
                         url = self.name + '/api/ui/read/list-detail/izi-shopee-item-attribute-line/%s?offset=%s&limit=%s&order=%s&sort=%s' % (
@@ -1205,41 +1447,90 @@ class WebhookServer(models.Model):
                             break
                         else:
                             offset += limit
+                        # Prepare Server Log
+                        ServerLog = self.env['webhook.server.log'].sudo()
+                        server_logs = ServerLog.search([('model_name', '=', 'mp.shopee.item.attribute.line'), ('status', '=', 'failed')])
+                        server_logs_by_izi_id = {}
+                        for sl in server_logs:
+                            server_logs_by_izi_id[sl.izi_id] = sl
+                        # Start Read Record
                         for atline in res.get('data'):
-                            if atline.get('product_staging_id').get('id') not in product_staging_by_izi_id:
-                                raise UserError(
-                                    'Product Staging with this izi_id not imported yet.')                            
+                            i += 1
+                            error_message = False
+                            izi_id = atline.get('id')
+                            _logger.info('(%s) Get record %s IZI ID %s' % (i, 'mp.shopee.attribute.line', izi_id))
+                            # Detail Log
+                            self.log_record('mp.shopee.item.attribute.line', atline)
+                            try:
+                                if atline.get('id') in sp_var_attribute_lines_by_izi_id:
+                                    record = sp_var_attribute_lines_by_izi_id.get(atline.get('id'))
+                                else:
+                                    record = False
 
-                            # Create Template Attribute Value First
-                            sp_var_attribute_value_ids = []
-                            for atvalue in atline.get('value_ids'):
-                                if atvalue.get('id') not in sp_var_attribute_values_by_izi_id:
+                                if atline.get('product_staging_id').get('id') not in product_staging_by_izi_id:
                                     raise UserError(
-                                        'Attribute Value with this izi_id not imported yet.')
-                                sp_var_attribute_value_ids.append(
-                                    sp_var_attribute_values_by_izi_id.get(atvalue.get('id')).id)
+                                        'product.staging with this izi_id %s not imported yet.'%(str(atline.get('product_staging_id').get('id'))))                            
 
-                            # Create Template Attribute Line, Link to Product Template
-                            if atline.get('attribute_id').get('id') not in sp_var_attributes_by_izi_id:
-                                raise UserError(
-                                    'Attributes with this izi_id not imported yet.')
-                            if atline.get('id') not in sp_var_attribute_lines_by_izi_id:
-                                self.env['mp.shopee.attribute.line'].create({
-                                    'izi_id': atline.get('id'),
-                                    'izi_md5': hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest(),
-                                    'product_staging_id': product_staging_by_izi_id.get(atline.get('product_staging_id').get('id')).id,
-                                    'attribute_id': sp_var_attributes_by_izi_id.get(atline.get('attribute_id').get('id')).id,
-                                    'value_ids': [(6, 0, sp_var_attribute_value_ids)]
-                                })
-                            else:
-                                if sp_var_attribute_lines_by_izi_id.get(atline.get('id')).izi_md5 != hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest():
-                                    sp_var_attribute_lines_by_izi_id.get(atline.get('id')).write({
+                                # Create Template Attribute Value First
+                                sp_var_attribute_value_ids = []
+                                for atvalue in atline.get('value_ids'):
+                                    if atvalue.get('id') not in sp_var_attribute_values_by_izi_id:
+                                        raise UserError(
+                                            'mp.shopee.item.var.attribute.value with this izi_id %s not imported yet.'%(str(atvalue.get('id'))))
+                                    sp_var_attribute_value_ids.append(
+                                        sp_var_attribute_values_by_izi_id.get(atvalue.get('id')).id)
+
+                                # Create Template Attribute Line, Link to Product Template
+                                if atline.get('attribute_id').get('id') not in sp_var_attributes_by_izi_id:
+                                    raise UserError(
+                                        'mp.shopee.item.var.attribute with this izi_id %s not imported yet.' %(str(atline.get('attribute_id').get('id'))))
+                                if not record:
+                                    record = self.env['mp.shopee.attribute.line'].create({
+                                        'izi_id': atline.get('id'),
                                         'izi_md5': hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest(),
                                         'product_staging_id': product_staging_by_izi_id.get(atline.get('product_staging_id').get('id')).id,
                                         'attribute_id': sp_var_attributes_by_izi_id.get(atline.get('attribute_id').get('id')).id,
                                         'value_ids': [(6, 0, sp_var_attribute_value_ids)]
                                     })
-                                sp_var_attribute_lines_by_izi_id.pop(atline.get('id'))
+                                else:
+                                    if sp_var_attribute_lines_by_izi_id.get(atline.get('id')).izi_md5 != hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest():
+                                        record.write({
+                                            'izi_md5': hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest(),
+                                            'product_staging_id': product_staging_by_izi_id.get(atline.get('product_staging_id').get('id')).id,
+                                            'attribute_id': sp_var_attributes_by_izi_id.get(atline.get('attribute_id').get('id')).id,
+                                            'value_ids': [(6, 0, sp_var_attribute_value_ids)]
+                                        })
+                                    sp_var_attribute_lines_by_izi_id.pop(atline.get('id'))
+                            except Exception as e:
+                                _logger.info('Failed Create / Update %s. Cause %s' % ('mp.shopee.item.attribute.line', str(e)))
+                                if not self.is_skip_error:
+                                    raise UserError(str(e))
+                                else:
+                                    error_message = str(e)
+                            # Check Log
+                            if not error_message:
+                                if izi_id in server_logs_by_izi_id:
+                                    server_logs_by_izi_id[izi_id].write({
+                                        'res_id': record.id if record else False,
+                                        'status': 'success',
+                                        'last_retry_time': fields.Datetime.now(),
+                                    })
+                            else:
+                                log_values = {
+                                    'name': '%s %s' % (str('mp.shopee.item.attribute.line'), str(izi_id)),
+                                    'server_id': self.id,
+                                    'model_name': 'mp.shopee.item.attribute.line',
+                                    'izi_id': izi_id,
+                                    'status': 'failed',
+                                    'res_id': False,
+                                    'notes': self.get_notes('mp.shopee.item.attribute.line', atline),
+                                    'error_message': error_message,
+                                    'last_retry_time': fields.Datetime.now(),
+                                }
+                                if izi_id in server_logs_by_izi_id:
+                                    server_logs_by_izi_id[izi_id].write(log_values)
+                                else:
+                                    ServerLog.create(log_values)
                     elif res.get('code') == 401:
                         if retry_login:
                             self.retry_login(retry_login_count)
@@ -1255,6 +1546,7 @@ class WebhookServer(models.Model):
         
         def get_lz_attribute_lines(offset, limit, order_field, sort, retry_login_count, retry_login, domain_url_attr):
             try:
+                i = 0
                 while True:
                     if not self.session_id:
                         self.retry_login(retry_login_count)
@@ -1275,41 +1567,90 @@ class WebhookServer(models.Model):
                             break
                         else:
                             offset += limit
+                        # Prepare Server Log
+                        ServerLog = self.env['webhook.server.log'].sudo()
+                        server_logs = ServerLog.search([('model_name', '=', 'mp.lazada.attribute.line'), ('status', '=', 'failed')])
+                        server_logs_by_izi_id = {}
+                        for sl in server_logs:
+                            server_logs_by_izi_id[sl.izi_id] = sl
                         for atline in res.get('data'):
-                            if atline.get('product_staging_id').get('id') not in product_staging_by_izi_id:
-                                raise UserError(
-                                    'Product Staging with this izi_id not imported yet.')                            
+                            i += 1
+                            error_message = False
+                            izi_id = atline.get('id')
+                            _logger.info('(%s) Get record %s IZI ID %s' % (i, 'mp.lazada.attribute.line', izi_id))
+                            # Detail Log
+                            self.log_record('mp.lazada.attribute.line', atline)
+                            try:
+                                if atline.get('id') in lz_var_attribute_lines_by_izi_id:
+                                    record = lz_var_attribute_lines_by_izi_id.get(atline.get('id'))
+                                else:
+                                    record = False
 
-                            # Create Template Attribute Value First
-                            lz_var_attribute_value_ids = []
-                            for atvalue in atline.get('lz_variant_value_ids'):
-                                if atvalue.get('id') not in lz_var_attribute_values_by_izi_id:
+                                if atline.get('product_staging_id').get('id') not in product_staging_by_izi_id:
                                     raise UserError(
-                                        'Attribute Value with this izi_id not imported yet.')
-                                lz_var_attribute_value_ids.append(
-                                    lz_var_attribute_values_by_izi_id.get(atvalue.get('id')).id)
+                                        'product.staging with this izi_id %s not imported yet.' % (str(atline.get('product_staging_id').get('id'))))                            
 
-                            # Create Template Attribute Line, Link to Product Template
-                            if atline.get('attribute_id').get('id') not in lz_var_attributes_by_izi_id:
-                                raise UserError(
-                                    'Attributes with this izi_id not imported yet.')
-                            if atline.get('id') not in lz_var_attribute_lines_by_izi_id:
-                                self.env['mp.lazada.attribute.line'].create({
-                                    'izi_id': atline.get('id'),
-                                    'izi_md5': hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest(),
-                                    'product_staging_id': product_staging_by_izi_id.get(atline.get('product_staging_id').get('id')).id,
-                                    'attribute_id': lz_var_attributes_by_izi_id.get(atline.get('attribute_id').get('id')).id,
-                                    'lz_variant_value_ids': [(6, 0, lz_var_attribute_value_ids)]
-                                })
-                            else:
-                                if lz_var_attribute_lines_by_izi_id.get(atline.get('id')).izi_md5 != hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest():
-                                    lz_var_attribute_lines_by_izi_id.get(atline.get('id')).write({
+                                # Create Template Attribute Value First
+                                lz_var_attribute_value_ids = []
+                                for atvalue in atline.get('lz_variant_value_ids'):
+                                    if atvalue.get('id') not in lz_var_attribute_values_by_izi_id:
+                                        raise UserError(
+                                            'mp.lazada.variant.value with this izi_id %s not imported yet.'%(str(atvalue.get('id'))))
+                                    lz_var_attribute_value_ids.append(
+                                        lz_var_attribute_values_by_izi_id.get(atvalue.get('id')).id)
+
+                                # Create Template Attribute Line, Link to Product Template
+                                if atline.get('attribute_id').get('id') not in lz_var_attributes_by_izi_id:
+                                    raise UserError(
+                                        'mp.lazada.category.attr with this izi_id %s not imported yet.'%(str(atline.get('attribute_id'))))
+                                if not record:
+                                    record = self.env['mp.lazada.attribute.line'].create({
+                                        'izi_id': atline.get('id'),
                                         'izi_md5': hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest(),
                                         'product_staging_id': product_staging_by_izi_id.get(atline.get('product_staging_id').get('id')).id,
                                         'attribute_id': lz_var_attributes_by_izi_id.get(atline.get('attribute_id').get('id')).id,
                                         'lz_variant_value_ids': [(6, 0, lz_var_attribute_value_ids)]
                                     })
-                                lz_var_attribute_lines_by_izi_id.pop(atline.get('id'))
+                                else:
+                                    if lz_var_attribute_lines_by_izi_id.get(atline.get('id')).izi_md5 != hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest():
+                                        record.write({
+                                            'izi_md5': hashlib.md5(json.dumps(atline).encode('utf-8')).hexdigest(),
+                                            'product_staging_id': product_staging_by_izi_id.get(atline.get('product_staging_id').get('id')).id,
+                                            'attribute_id': lz_var_attributes_by_izi_id.get(atline.get('attribute_id').get('id')).id,
+                                            'lz_variant_value_ids': [(6, 0, lz_var_attribute_value_ids)]
+                                        })
+                                    lz_var_attribute_lines_by_izi_id.pop(atline.get('id'))
+                            except Exception as e:
+                                _logger.info('Failed Create / Update %s. Cause %s' % ('mp.shopee.item.attribute.line', str(e)))
+                                if not self.is_skip_error:
+                                    raise UserError(str(e))
+                                else:
+                                    error_message = str(e)
+    
+                            # Check Log
+                            if not error_message:
+                                if izi_id in server_logs_by_izi_id:
+                                    server_logs_by_izi_id[izi_id].write({
+                                        'res_id': record.id if record else False,
+                                        'status': 'success',
+                                        'last_retry_time': fields.Datetime.now(),
+                                    })
+                            else:
+                                log_values = {
+                                    'name': '%s %s' % (str('mp.lazada.attribute.line'), str(izi_id)),
+                                    'server_id': self.id,
+                                    'model_name': 'mp.lazada.attribute.line',
+                                    'izi_id': izi_id,
+                                    'status': 'failed',
+                                    'res_id': False,
+                                    'notes': self.get_notes('mp.lazada.attribute.line', atline),
+                                    'error_message': error_message,
+                                    'last_retry_time': fields.Datetime.now(),
+                                }
+                                if izi_id in server_logs_by_izi_id:
+                                    server_logs_by_izi_id[izi_id].write(log_values)
+                                else:
+                                    ServerLog.create(log_values)
                     elif res.get('code') == 401:
                         if retry_login:
                             self.retry_login(retry_login_count)
@@ -1325,6 +1666,7 @@ class WebhookServer(models.Model):
         
         def get_product_staging_variants(offset, limit, order_field, sort, retry_login_count, retry_login, domain_url_var):
             try:
+                i = 0
                 while True:
                     if domain_url_var:
                         url = self.name + '/api/ui/read/list-detail/izi-product-staging-variants/%s?offset=%s&limit=%s&order=%s&sort=%s' % (
@@ -1344,6 +1686,9 @@ class WebhookServer(models.Model):
                             offset += limit
                         variants_by_product_staging = {}
                         for variant in res.get('data'):
+                            i += 1
+                            izi_id = variant.get('id')
+                            _logger.info('(%s) Get record %s IZI ID %s' % (i, 'product.staging.variant', izi_id))
                             if variant.get('product_stg_id').get('id') not in product_staging_by_izi_id:
                                 raise UserError(
                                     'Product Staging with this izi_id not imported yet.')
@@ -1462,6 +1807,12 @@ class WebhookServer(models.Model):
                 'mp': 'lazada',
                 'mp_id': mp_lazada_id.izi_id
             })
+        mp_blibli_ids = self.env['mp.blibli'].search([])
+        for mp_blibli_id in mp_blibli_ids:
+            mp_list.append({
+                'mp': 'blibli',
+                'mp_id': mp_blibli_id.izi_id
+            })
         r = requests.post(self.name + '/ui/products/import/all', headers={
                           'X-Openerp-Session-Id': self.session_id, 'Content-type': 'application/json'}, json={'mp_list': mp_list})
         res = r.json()
@@ -1492,7 +1843,7 @@ class WebhookServer(models.Model):
         # create new campaigns then sync with discount
         for product_discount in product_discounts:
             campaign_values = campaign_obj._prepare_campaign_values_from_discount(product_discount, update=False)
-            campaign = campaign_obj.create(campaign_values)
+            campaign = campaign_obj.with_context(sync_discount=True).create(campaign_values)
             campaign.sync_with_discount(force=True)
             _logger.info("New campaign created: %s" % campaign.name)
 
@@ -1509,10 +1860,14 @@ class WebhookServer(models.Model):
             self.get_records('product.product', force_update=True, domain_code='all_active', limit=500, commit_every=100)
             self.get_records('mp.tokopedia.variant.value', force_update=True, limit=500, commit_every=100)
             self.get_records('mp.tokopedia.attribute.line', force_update=True, limit=500, commit_every=100)
+            self.get_records('mp.blibli.attribute.line', force_update=True, limit=500, commit_every=100)
             self.get_records('product.staging.variant', force_update=True, limit=500, commit_every=100)
 
             # get product discount
-            self.get_product_discounts()
+            try:
+                self.get_product_discounts()
+            except Exception as e:
+                _logger.error(str(e))
 
             self.after_get_products()
 
@@ -1521,6 +1876,7 @@ class WebhookServer(models.Model):
             self.get_records('mp.shopee.item.logistic', force_update=True, limit=500, commit_every=100)
 
             self.with_context(create_product_attr=True).get_records('mp.lazada.product.attr',force_update=True, limit=500, commit_every=100)
+            self.with_context(create_product_attr=True).get_records('mp.blibli.item.attribute.val',force_update=True, limit=500, commit_every=100)
         except Exception as e:
             raise UserError(e)
 
@@ -1531,19 +1887,25 @@ class WebhookServer(models.Model):
                          domain_url="[('parent_id', '!=', False), ('child_ids', '!=', False)]", limit=1000, loop_commit=False, commit_every=500)
         self.get_records('mp.tokopedia.category',
                          domain_url="[('child_ids', '=', False)]", limit=1000, loop_commit=False, commit_every=500)
-        self.get_records('mp.shopee.item.attribute.option', limit=1000, loop_commit=False, commit_every=500)
-        self.get_records('mp.shopee.item.attribute', limit=1000, domain_code='all_active', loop_commit=False, commit_every=500)
+        self.get_records('mp.shopee.item.brand', limit=1000, domain_code='all_active', loop_commit=False, commit_every=500)
         self.get_records('mp.shopee.item.category', limit=1000, domain_code='has_children', loop_commit=False, commit_every=500)
+        self.get_records('mp.shopee.item.attribute', limit=1000, domain_code='all_active', loop_commit=False, commit_every=500)
+        self.get_records('mp.shopee.item.attribute.option', limit=1000, loop_commit=False, commit_every=500)
 
         # if not self.env['mp.lazada.brand'].search([]):
         self.get_records('mp.lazada.category.attr.opt', limit=1000, loop_commit=False, commit_every=500)
         self.get_records('mp.lazada.variant.value', limit=1000, loop_commit=False, commit_every=500)
         self.get_records('mp.lazada.category', limit=1000, domain_code='has_children', loop_commit=False, commit_every=500)
         self.get_records('mp.lazada.category.attr', limit=1000, loop_commit=False, commit_every=500)
-    
+
+        self.get_records('mp.blibli.item.attr.option', limit=1000, loop_commit=False, commit_every=500)
+        self.get_records('mp.blibli.variant.value', force_update=True, limit=500, commit_every=100)
+        self.get_records('mp.blibli.item.category.attr', limit=1000, loop_commit=False, commit_every=500)
+        self.get_records('mp.blibli.item.category', limit=1000, domain_code='has_children', loop_commit=False, commit_every=500)
+
 
     def get_product_brand(self):
-        self.get_records('mp.shopee.item.brand', limit=1000, domain_code='all_active', loop_commit=False, commit_every=500)
+        self.get_records('mp.blibli.brand', limit=5000, loop_commit=False, commit_every=500)
         self.get_records('mp.lazada.brand', limit=5000, loop_commit=False, commit_every=500)
 
     def get_product_dependency(self):
@@ -1563,7 +1925,14 @@ class WebhookServer(models.Model):
 
         # Lazada
 
+        self.get_records('mp.blibli.logistic', limit=1000, loop_commit=False)
+
+
     def sp_get_attribute_category(self,category_id=False,mp_id=False):
+        server = self.env['webhook.server'].search(
+            [('active', 'in', [False, True])], limit=1, order='write_date desc')
+        if not server:
+            raise UserError('Create at least 1 webhook server')
         r = requests.post(self.name + '/public/ui/products/sp/category/attributes', json={
             'category_id': category_id,'mp_id': mp_id
         }, headers={
@@ -1576,50 +1945,59 @@ class WebhookServer(models.Model):
             # self.get_records('mp.shopee.item.attribute')
             res = res['result']
 
-            def process_model(model_name, data):
-                attr_ids = []
-                for res_values in data:
-                    record = self.get_existing_record(
-                        model_name, res_values)
-                    if record:
-                        if 'izi_md5' in self.env[model_name]._fields:
-                            izi_md5 = hashlib.md5(json.dumps(
-                                res_values).encode('utf-8')).hexdigest()
-                            values = self.mapping_field(
-                                model_name, res_values, update=True)
-                            values.update({
-                                'izi_md5': izi_md5
-                            })
-                            record.write(values)
-                            if model_name == 'mp.shopee.item.attribute':
-                                attr_ids.append(record.id)
-                        else:
-                            values = self.mapping_field(
-                                model_name, res_values, update=True)
-                            record.write(values)
-                            if model_name == 'mp.shopee.item.attribute':
-                                attr_ids.append(record.id)
-                    else:
-                        values = self.mapping_field(
-                            model_name, res_values, update=False)
-                        obj = self.env[model_name].create(values)
-                        if model_name == 'mp.shopee.item.attribute':
-                            attr_ids.append(obj.id)
+            # def process_model(model_name,data):
+            #     attr_ids = []
+            #     for res_values in data:
+            #         record = self.get_existing_record(
+            #             model_name, res_values)
+            #         if record:
+            #             if 'izi_md5' in self.env[model_name]._fields:
+            #                 izi_md5 = hashlib.md5(json.dumps(
+            #                     res_values).encode('utf-8')).hexdigest()
+            #                 values = self.mapping_field(
+            #                     model_name, res_values, update=True)
+            #                 values.update({
+            #                     'izi_md5': izi_md5
+            #                 })
+            #                 record.write(values)
+            #                 if model_name == 'mp.shopee.item.attribute':
+            #                     attr_ids.append(record.id)
+            #             else:
+            #                 values = self.mapping_field(
+            #                     model_name, res_values, update=True)
+            #                 record.write(values)
+            #                 if model_name == 'mp.shopee.item.attribute':
+            #                     attr_ids.append(record.id)
+            #         else:
+            #             values = self.mapping_field(
+            #                 model_name, res_values, update=False)
+            #             obj = self.env[model_name].create(values)
+            #             if model_name == 'mp.shopee.item.attribute':
+            #                 attr_ids.append(obj.id)
                             
-                    #### self.env.cr.commit()
+            #         #### self.env.cr.commit()
                 
-                if model_name == 'mp.shopee.item.attribute':
-                    return attr_ids
+            #     if model_name == 'mp.shopee.item.attribute':
+            #         return attr_ids
             
-            process_model('mp.shopee.item.attribute.option', res['options'])
-            attribute_proc = process_model('mp.shopee.item.attribute', res['data'])
+            # process_model('mp.shopee.item.attribute.option', res['options'])
 
-            category = self.env['mp.shopee.item.category'].search([('izi_id', '=', category_id)])
-            if category and attribute_proc:
-                category.write({
-                    'attributes': [(6, 0, attribute_proc)]
-                })
-                #### self.env.cr.commit()
+            attribute_by_izi_id = []
+            options_by_izi_id = []
+            for attr in res.get('data'):
+                attribute_by_izi_id.append(attr['id'])
+            for opt in res.get('options'):
+                options_by_izi_id.append(opt['id'])
+
+            server.get_records('mp.shopee.item.category', force_update=True, domain_url="[('id', '=', %s)]" % str(
+                                    category_id))
+            server.get_records('mp.shopee.item.attribute', force_update=True, domain_url="[('id', 'in', %s)]" % str(
+                                    attribute_by_izi_id))
+            server.get_records('mp.shopee.item.attribute.option', force_update=True, domain_url="[('id', 'in', %s)]" % str(
+                                    options_by_izi_id))
+            
+
+            #### self.env.cr.commit()
         return res
 
     def sp_get_attribute_brand(self,category_id=False,mp_id=False):

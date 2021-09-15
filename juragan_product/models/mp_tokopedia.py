@@ -55,7 +55,7 @@ class MPTokopedia(models.Model):
         ('shop','Shop Warehouse'),], string='Take Stock From', default='main')
     sync_stock_active = fields.Boolean('Realtime Stock Update')
     partner_id = fields.Many2one(comodel_name="res.partner", string="Default Customer", required=False)
-    company_id = fields.Many2one(comodel_name="res.company", string="Company")
+    company_id = fields.Many2one(comodel_name="res.company", string="Company", required=False)
 
     def _get_shop_name(self):
         for rec in self:

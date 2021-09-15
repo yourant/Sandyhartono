@@ -31,6 +31,8 @@ class ProductStaging(models.Model):
             mp_type = 'Shopee'
         elif res.get('mp_lazada_id'):
             mp_type = 'Lazada'
+        elif res.get('mp_blibli_id'):
+            mp_type = 'Blibli'
         if not res.get('mp_type'):
             res['mp_type'] = mp_type
         if not res.get('product_template_id'):
@@ -71,6 +73,7 @@ class ProductStaging(models.Model):
         ('Tokopedia', 'Tokopedia'),
         ('Shopee', 'Shopee'),
         ('Lazada', 'Lazada'),
+        ('Blibli', 'Blibli'),
     ], 'Marketplace', )
     mp_external_id = BigInteger()
 
@@ -150,6 +153,17 @@ class ProductStaging(models.Model):
     ])
     lz_sku_id = fields.Char()
 
+    mp_blibli_id = fields.Many2one('mp.blibli', string='Blibli ID',
+        domain=['|', ('active', '=', False), ('active', '=', True), ],
+        context={'active_test': False})
+
+    bli_brand_id =  fields.Many2one('mp.blibli.brand', string='Blibli Brand')
+    bli_category_id =  fields.Many2one('mp.blibli.item.category', string='Blibli Category')
+    bli_attributes = fields.One2many('mp.blibli.item.attribute.val', 'item_id_staging')
+    bli_itemsku = fields.Char()
+    bli_productsku = fields.Char()
+    bli_attribute_line_ids = fields.One2many('mp.blibli.attribute.line', 'product_staging_id', 'Product Attributes Variations')
+
     product_wholesale_ids = fields.One2many(
         'product.staging.wholesale', 'product_stg_id')
 
@@ -159,8 +173,65 @@ class ProductStaging(models.Model):
     image_url = fields.Char('Image URL', compute='_get_image_url')
     image_url_external = fields.Char('Image URL External')
 
+    company_id = fields.Many2one(comodel_name="res.company", string="Company", required=False)
     izi_id = fields.Integer('Izi ID')
     izi_md5 = fields.Char()
+
+    @api.onchange('list_price')
+    def price_validation(self):
+        if self.list_price < 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Price must higher than 0',
+                }
+            }
+        elif self.list_price < 99 and self.list_price != 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Price must higher than 99',
+                }
+            }
+
+    @api.onchange('weight')
+    def weight_validation(self):
+        if self.weight < 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Weight must higher than 0',
+                }
+            }
+    @api.onchange('length')
+    def length_validation(self):
+        if self.length < 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Length must higher than 0',
+                }
+            }
+
+    @api.onchange('width')
+    def width_validation(self):
+        if self.width < 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Width must higher than 0',
+                }
+            }
+
+    @api.onchange('height')
+    def height_validation(self):
+        if self.height < 0:
+            return {
+                'warning': {
+                    'title': 'Warning Validation',
+                    'message': 'Please input Height must higher than 0',
+                }
+            }
 
     def _get_image_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -209,6 +280,14 @@ class ProductStaging(models.Model):
         self.product_template_id.message_post(
             body=uploaded[1], subject=msg)
 
+    def get_company_from_mp_accounts(self):
+        mp_account_fields = ['mp_tokopedia_id', 'mp_shopee_id', 'mp_lazada_id', 'mp_blibli_id']
+        for mp_account_field in mp_account_fields:
+            mp_account = getattr(self, mp_account_field)
+            if mp_account:
+                return mp_account.company_id
+        return False
+
     def action_toggle_mp(self):
         ctx = self._context
         pd_tmpl = self.product_template_id
@@ -235,7 +314,15 @@ class ProductStaging(models.Model):
             pd_tmpl.mp_lazada_ids = [(4, lz)]
 
             self.mp_lazada_id = lz
-        
+        if ctx.get('mp_tipe') == 'Blibli':
+            bli = mp_id
+            pd_tmpl.mp_lazada_ids = [(4, bli)]
+
+            self.mp_blibli_id = bli
+
+        # set company based on mp_account's company
+        self.company_id = getattr(self.get_company_from_mp_accounts(), 'id', False)
+
         # mapping pd template field to pd staging
         self.default_code = pd_tmpl.default_code
         self.barcode = pd_tmpl.barcode
@@ -310,26 +397,21 @@ class ProductStaging(models.Model):
                 lot_stock_id = rec.mp_shopee_id.wh_id.lot_stock_id.id
             elif rec.mp_lazada_id:
                 lot_stock_id = rec.mp_lazada_id.wh_id.lot_stock_id.id
-            if rec.product_template_id and rec.product_template_id.product_variant_ids:
-                for variant in rec.product_template_id.product_variant_ids:
-                    is_product_staging_variant = False
-                    if variant.active:
-                        if rec.is_uploaded:
+            elif rec.mp_blibli_id:
+                lot_stock_id = rec.mp_blibli_id.wh_id.lot_stock_id.id
+            if rec.product_template_id:
+                if rec.product_template_id.product_variant_ids:
+                    for variant in rec.product_template_id.product_variant_ids:
+                        is_product_staging_variant = False
+                        if variant.active and len(variant.product_variant_stg_ids) > 0:
                             if len(variant.product_variant_stg_ids) > 0:
                                 for staging_variant in variant.product_variant_stg_ids:
                                     if staging_variant.product_stg_id.id == rec.id:
                                         is_product_staging_variant = True
-                            else:
-                                is_product_staging_variant = True
                         else:
-                            if len(variant.product_variant_stg_ids) > 0:
-                                for staging_variant in variant.product_variant_stg_ids:
-                                    if staging_variant.product_stg_id.id == rec.id:
-                                        is_product_staging_variant = True
-                            else:
-                                is_product_staging_variant = True
-                    if is_product_staging_variant:
-                        product_ids.append(variant.id)
+                            is_product_staging_variant = True
+                        if is_product_staging_variant:
+                            product_ids.append(variant.id)
             if lot_stock_id and product_ids:
                 quants = self.env['stock.quant'].search(
                     [('product_id', 'in', product_ids),
@@ -342,7 +424,7 @@ class ProductStaging(models.Model):
                 # rec.product_uom_id = False
 
             # check last stock quantity for tokopedia product
-            if rec.mp_tokopedia_id:
+            if rec.mp_tokopedia_id and rec.is_uploaded == 1:
                 if rec.qty_available <= 0:
                     rec.write({
                         'is_active': False,
@@ -440,7 +522,9 @@ class ProductStaging(models.Model):
             return {
                 'mp_int_id': mp_int_id,
                 'mp_name': mp_name,
-                'mp_tipe': mp_id._name.replace('mp.', '').title()}
+                'mp_tipe': mp_id._name.replace('mp.', '').title(),
+                'mp_company': mp_id.company_id.name or ''
+            }
 
         res = super(ProductStaging, self).fields_view_get(
             view_id=view_id, view_type=view_type, toolbar=toolbar,
@@ -453,6 +537,7 @@ class ProductStaging(models.Model):
         exist_mp_tokopedia_ids = []
         exist_mp_shopee_ids = []
         exist_mp_lazada_ids = []
+        exist_mp_blibli_ids = []
         if product_template_id:
             for product_staging in product_template_id.product_staging_ids:
                 if product_staging.mp_tokopedia_id:
@@ -461,6 +546,8 @@ class ProductStaging(models.Model):
                     exist_mp_shopee_ids.append(product_staging.mp_shopee_id.id)
                 elif product_staging.mp_lazada_id:
                     exist_mp_lazada_ids.append(product_staging.mp_lazada_id.id)
+                elif product_staging.mp_blibli_id:
+                    exist_mp_blibli_ids.append(product_staging.mp_blibli_id.id)
 
         if (mdl == 'product.staging') and (view_type == 'form'):
             doc = etree.fromstring(res['arch'])
@@ -472,14 +559,25 @@ class ProductStaging(models.Model):
                     "<p><strong>Please save this product to create marketplace product.<br/>Press button 'discard' bellow...</strong></p>"))
                 res['arch'] = etree.tostring(doc, encoding='unicode')
                 return res
-            mp_button_xml = """<button type="object" name="action_toggle_mp" class="btn-bg btn-info btn-mp-izi" context="{'mp_int_id': %(mp_int_id)d,'mp_tipe': '%(mp_tipe)s'}"><strong>%(mp_tipe)s</strong><p>%(mp_name)s</p></button>"""
+            mp_button_xml = """
+            <button type="object" name="action_toggle_mp" class="btn-bg btn-info btn-mp-izi" 
+            context="{'mp_int_id': %(mp_int_id)d,'mp_tipe': '%(mp_tipe)s'}">
+                <strong>%(mp_tipe)s</strong>
+                <p>%(mp_name)s</p>
+                <p><i>%(mp_company)s</i></p>
+            </button> """
             mp_list = []
+            domain = [
+                ('company_id', '=', context.get('allowed_company_ids')[0])
+            ]
             mp_tokopedia_ids = self.env['mp.tokopedia'].with_context(
-                active_test=True).search([])
+                active_test=True).search(domain)
             mp_shopee_ids = self.env['mp.shopee'].with_context(
-                active_test=True).search([])
+                active_test=True).search(domain)
             mp_lazada_ids = self.env['mp.lazada'].with_context(
-                active_test=True).search([])
+                active_test=True).search(domain)
+            mp_blibli_ids = self.env['mp.blibli'].with_context(
+                active_test=True).search(domain)
             for mp in mp_tokopedia_ids:
                 if mp.id not in exist_mp_tokopedia_ids:
                     mp_list.append(mp_name_get(mp))
@@ -488,6 +586,9 @@ class ProductStaging(models.Model):
                     mp_list.append(mp_name_get(mp))
             for mp in mp_lazada_ids:
                 if mp.id not in exist_mp_lazada_ids:
+                    mp_list.append(mp_name_get(mp))
+            for mp in mp_blibli_ids:
+                if mp.id not in exist_mp_blibli_ids:
                     mp_list.append(mp_name_get(mp))
             for mpl in mp_list:
                 btn_xml = mp_button_xml % mpl
@@ -954,6 +1055,47 @@ class ProductStaging(models.Model):
 
     def upload_product_stg_izi(self):
         for product_staging in self:
+
+            # add validation before upload to product_staging
+            if product_staging.mp_shopee_id:
+                enabled = False
+                if not product_staging.sp_logistics:
+                    form_view = self.env.ref('juragan_product.popup_message_wizard')
+                    view_id = form_view and form_view.id or False
+                    context = dict(self._context or {})
+                    context['message'] = 'Shopee Logistic must be filled'
+                    return {
+                        'name': 'Error Validation',
+                        'type': 'ir.actions.act_window',
+                        'view_mode': 'form',
+                        'view_type': 'form',
+                        'res_model': 'popup.message.wizard',
+                        'views': [(view_id,'form')],
+                        'view_id' : form_view.id,
+                        'target': 'new',
+                        'context': context,
+                    }
+                else:
+                    for logistic in product_staging.sp_logistics:
+                        if logistic.enabled:
+                            enabled = True
+                    if not enabled:
+                        form_view = self.env.ref('juragan_product.popup_message_wizard')
+                        view_id = form_view and form_view.id or False
+                        context = dict(self._context or {})
+                        context['message'] = 'Shopee Logistic must be filled'
+                        return {
+                            'name': 'Error Validation',
+                            'type': 'ir.actions.act_window',
+                            'view_mode': 'form',
+                            'view_type': 'form',
+                            'res_model': 'popup.message.wizard',
+                            'views': [(view_id,'form')],
+                            'view_id' : form_view.id,
+                            'target': 'new',
+                            'context': context,
+                        }
+
             do_upload = False
             do_upload = product_staging._do_upload_product_stg_izi(generate_variant=True, do_export=True)
             if self.env.context.get('batch_upload'):
@@ -1103,6 +1245,13 @@ class ProductStaging(models.Model):
     @api.onchange('is_active')
     def _change_is_active(self):
         for rec in self:
+            mp_shopee_id = False
+            mp_lazada_id = False
+            product_stg_izi_id = rec.izi_id
+            if rec.mp_shopee_id:
+                mp_shopee_id = True
+            if rec.mp_lazada_id:
+                mp_lazada_id = True
             if rec.mp_tokopedia_id:
                 if rec.is_active:
                     rec.tp_active_status = '1'
@@ -1126,6 +1275,27 @@ class ProductStaging(models.Model):
                         domain_url = "[('id', 'in', [%s])]" % str(rec.izi_id)
                         server.get_records(
                             'product.staging', domain_url=domain_url, force_update=True, loop_commit=False)
+                    
+                        if mp_shopee_id:
+                            # unlink before get
+                            for logistic in rec.sp_logistics:
+                                logistic.sudo().unlink()
+
+                            # Get Logistic Shopee
+                            server.get_records('mp.shopee.item.logistic', domain_url="[('item_id_staging', '=', %i)]" % int(product_stg_izi_id), force_update=True)
+
+                            # unlink before get
+                            for attr in rec.sp_attributes:
+                                attr.sudo().unlink()
+
+                            # Get Attribute Shopee
+                            server.get_records('mp.shopee.item.attribute.val', domain_url="[('item_id_staging', '=', %i)]" % int(product_stg_izi_id), force_update=True)
+
+                        if mp_lazada_id:
+                            for lz_attr in rec.lz_attributes:
+                                lz_attr.unlink()
+                            server.with_context(create_product_attr=True).get_records(
+                                'mp.lazada.product.attr', domain_url="[('item_id_staging', '=', %i)]" % int(product_stg_izi_id), force_update=True)
 
     def generate_shopee_variant(self):
         server = self.env['webhook.server'].search(

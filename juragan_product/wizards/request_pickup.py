@@ -29,7 +29,8 @@ class RequestPickupWizard(models.TransientModel):
             server.get_records('sale.order',domain_url=domain_url)
 
             # sale.action_validate_picking()
-            sale.action_confirm()
+            if sale.state == 'draft':
+                sale.action_confirm()
         
             # return {
             #     'name': 'Label',

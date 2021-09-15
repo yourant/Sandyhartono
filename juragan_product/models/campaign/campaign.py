@@ -88,12 +88,71 @@ class JuraganCampaign(models.Model):
     day_5 = fields.Boolean(string="Friday", states=READONLY_STATES)
     day_6 = fields.Boolean(string="Saturday", states=READONLY_STATES)
 
+    @api.model
+    def create(self, values):
+        if not self.env.context.get('sync_discount'):
+            self.check_start_end_datetime(values)
+        return super(JuraganCampaign, self).create(values)
+
+    def write(self, values):
+        if not self.env.context.get('sync_discount'):
+            self.check_start_end_datetime(values)
+        return super(JuraganCampaign, self).write(values)
+
+    def check_start_end_datetime(self, values):
+        date_time_start = False
+        date_time_end = False
+        # check if date_time_start is set
+        if 'date_time_start' in values:
+            if type(values['date_time_start']) == str:
+                date_time_start = datetime.strptime(values['date_time_start'], '%Y-%m-%d %H:%M:%S')
+            else:
+                date_time_start = values['date_time_start']
+            # check if date_time_start at least 10 minutes more than now
+            if date_time_start < datetime.today() + timedelta(minutes=10):
+                raise ValidationError('You are only allowed to set Start Datetime at least 10 minutes more than current date time')
+        # check if date_time_end is set
+        if 'date_time_end' in values:
+            if type(values['date_time_end']) == str:
+                date_time_end = datetime.strptime(values['date_time_end'], '%Y-%m-%d %H:%M:%S')
+            else:
+                date_time_end = values['date_time_end']
+            # check if difference between date_time_start and date_time_end at least 1 hour
+            if date_time_end - timedelta(hours=1) < date_time_start:
+                raise ValidationError('You are only allowed to set End Datetime at least 1 hour more than Start Datetime')
+
+
     @api.onchange('set_mode')
     def change_set_mode(self):
         self.set_datetime = self.set_mode == 'set_datetime'
         self.set_weekday = self.set_mode == 'set_weekday'
 
-    # @api.multi
+    @api.onchange('date_time_start')
+    def change_date_time_start(self):
+        if self.date_time_start:
+            # check if date_time_start is less than current date
+            if self.date_time_start < datetime.today().replace(hour=0, minute=0, second=0, microsecond=0):
+                self.date_time_start = False
+                return {
+                    'warning': {
+                        'title': 'Not Allowed',
+                        'message': 'Set date at least today',
+                    }
+                }
+
+    @api.onchange('date_time_end')
+    def change_date_time_end(self):
+        if self.date_time_end:
+            # check if date_time_end is less than current date
+            if self.date_time_end < datetime.today().replace(hour=0, minute=0, second=0, microsecond=0):
+                self.date_time_end = False
+                return {
+                    'warning': {
+                        'title': 'Not Allowed',
+                        'message': 'Set date at least today',
+                    }
+                }
+
     def action_run(self):
         # TODO: Need validaton before run
         self.ensure_one()
@@ -116,7 +175,6 @@ class JuraganCampaign(models.Model):
         campaign_job_obj.init_jobs(self)
         self.campaign_job_ids.setup()
 
-    # @api.multi
     def action_draft(self):
         self.ensure_one()
         # Make sure to rollback all previous applied wholesale

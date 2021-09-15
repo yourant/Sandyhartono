@@ -1,0 +1,2 @@
+id,name,model_id:id,domain_force,global,groups:id,perm_read,perm_write,perm_create,perm_unlink
+juragan_product.rule_product_staging_crud_global_multi_company,Product Staging Rule for Global (Multi Company): CRUD,juragan_product.model_product_staging,"['|', ('company_id', 'in', company_ids), ('company_id', '=', False)]",1,,1,1,1,1

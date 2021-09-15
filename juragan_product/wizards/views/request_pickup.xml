@@ -6,8 +6,8 @@
         <field name="arch" type="xml">
             <form string="Request Pickup">
                 <group class="oe_title">
-                    <field name="pickup_id" widget="many2one" domain="[('order_id', '=', context.get('order_id')),'|',('active','=',False),('active','=',True)]" options="{'no_create': True, 'no_create_edit':True, 'no_quick_create': True}"/>
                     <field name="address_id" widget="many2one" domain="[('mp_shopee_ids', 'in', context.get('mp_shopee_ids')),'|',('default_address', '=', True),('pickup_address', '=', True)]"/>
+                    <field name="pickup_id" widget="many2one" domain="[('order_id', '=', context.get('order_id')),('address_id', '=', address_id),'|',('active','=',False),('active','=',True)]" options="{'no_create': True, 'no_create_edit':True, 'no_quick_create': True}"/>
                 </group>
                 <footer>
                     <button name="request_pickup" string="Submit" type="object" class="btn-primary"/>

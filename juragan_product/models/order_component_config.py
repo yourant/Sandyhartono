@@ -8,6 +8,7 @@ class OrderComponentConfig(models.Model):
     mp_tokopedia_ids = fields.Many2many('mp.tokopedia', string='Tokopedia Accounts')
     mp_shopee_ids = fields.Many2many('mp.shopee', string='Shopee Accounts')
     mp_lazada_ids = fields.Many2many('mp.lazada', string='Lazada Accounts')
+    mp_blibli_ids = fields.Many2many('mp.blibli', string='Blibli Accounts')
     line_ids = fields.One2many('order.component.config.line', 'config_id', 'Discount Details')
     date_start = fields.Datetime('Start Date')
     date_end = fields.Datetime('End Date')

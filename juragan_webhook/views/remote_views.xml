@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><odoo>
+    <data>
+        <record id="view_webhook_server_remote_form" model="ir.ui.view">
+            <field name="model">webhook.server</field>
+            <field name="inherit_id" ref="view_webhook_server_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook/page[1]" position="after">
+                    <page string="Marketplace">
+                        <group>
+                            <field name="tokopedia_ids">
+                                <tree>
+                                    <field name="shop_url"/>
+                                    <field name="state"/>
+                                </tree>
+                                <form>
+                                    <header>
+                                        <button name="view_detail" string="View Detail" type="object"/>
+                                        <button name="upload" string="Upload" type="object"/>
+                                    </header>
+                                    <group>
+                                        <field name="shop_url"/>
+                                        <field name="fs_id"/>
+                                        <field name="client_id"/>
+                                        <field name="client_secret"/>
+                                        <field groups="base.group_no_one" name="state"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                        <group>
+                            <button context="{'tokopedia':True}" name="get_remote_mp" string="Get Tokopedia Data" type="object"/>
+                        </group>
+                        <group>
+                            <field name="shopee_ids">
+                                <tree>
+                                    <field name="username"/>
+                                    <field name="state"/>
+                                </tree>
+                                <form>
+                                    <header>
+                                        <button name="view_detail" string="View Detail" type="object"/>
+                                        <button name="upload" string="Upload" type="object"/>
+                                    </header>
+                                    <group>
+                                        <field name="shop_name"/>
+                                        <field name="username"/>
+                                        <field groups="base.group_no_one" name="state"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                        <group>
+                            <button context="{'shopee':True}" name="get_remote_mp" string="Get Shopee Data" type="object"/>
+                        </group>
+                        <group>
+                            <field name="lazada_ids">
+                                <tree>
+                                    <field name="email"/>
+                                    <field name="state"/>
+                                </tree>
+                                <form>
+                                    <header>
+                                        <button name="view_detail" string="View Detail" type="object"/>
+                                        <button name="upload" string="Upload" type="object"/>
+                                    </header>
+                                    <group>
+                                        <field name="country"/>
+                                        <field name="email"/>
+                                        <field groups="base.group_no_one" name="state"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                        <group>
+                            <button context="{'lazada':True}" name="get_remote_mp" string="Get Lazada Data" type="object"/>
+                        </group>
+                    </page>
+                    <page groups="base.group_no_one" string="RSA">
+                        <group>
+                            <field name="public_key"/>
+                            <field name="rsa_token"/>
+                        </group>
+                        <group>
+                            <button name="get_rsa_token" string="Get RSA Token" type="object"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

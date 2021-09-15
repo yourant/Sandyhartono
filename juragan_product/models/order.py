@@ -4,6 +4,9 @@ import requests
 import json
 from odoo.addons.juragan_webhook import BigInteger
 
+import logging
+
+_logger = logging.getLogger(__name__)
 
 ORDER_STATUS_DICT = {
     0: 'Seller cancel order.',
@@ -44,6 +47,7 @@ SHOPEE_ORDER_STATUS = [
     ('READY_TO_SHIP', 'Ready to Ship'),
     ('SHIPPED', 'Shipped'),
     ('COMPLETED', 'Completed'),
+    ('TO_CONFIRM_RECEIVE', 'In Confirm Receive'),
     ('IN_CANCEL', 'In Cancel'),
     ('CANCELLED', 'Cancelled'),
     ('TO_RETURN', 'To Return'),
@@ -62,6 +66,18 @@ LAZADA_ORDER_STATUS = [
     ('ready_to_ship', 'ready_to_ship'),
     ('ready_to_ship_pending', 'ready_to_ship_pending'),
     ('pending', 'pending'),
+]
+
+BLIBLI_ORDER_STATUS = [
+    ('FP', 'Waiting'),
+    ('PF', 'Ready To Ship'),
+    ('CR', 'Customer Request'),
+    ('CX', 'In Delivery'),
+    ('PU', 'Waiting to Pick Up '),
+    ('OS', 'Product Out of Stock'),
+    ('BP', 'Big Product Ready to Deliver'),
+    ('D', 'Delivered'),
+    ('X', 'Canceled'),
 ]
 
 class ResUsers(models.Model):
@@ -156,6 +172,17 @@ class StockPicking(models.Model):
                     res = server.action_orders('confirm_shipping', [order.izi_id])
                     if not (res and res.get('code') == 200):
                         raise UserError('Failed to Confirm Shipping Lazada. %s' % str(res))
+                # TODO: No Request Pickup From Validate Picking. Request Pickup is From Order Only
+                # elif order.mp_delivery_type == 'pickup' and order.order_status == 'ready-ship':
+                #     res = server.action_orders('request_pickup', [order.izi_id])
+                #     if not (res and res.get('code') == 200):
+                #         raise UserError('Failed to Request Pickup Tokopedia.')
+            elif picking.sale_id and picking.sale_id.mp_blibli_id:
+                order = picking.sale_id
+                if order.mp_delivery_type == 'drop off' and order.order_status == 'process':
+                    res = server.action_orders('confirm_shipping', [order.izi_id])
+                    if not (res and res.get('code') == 200):
+                        raise UserError('Failed to Confirm Shipping Blibli. %s' % str(res))
                 # TODO: No Request Pickup From Validate Picking. Request Pickup is From Order Only
                 # elif order.mp_delivery_type == 'pickup' and order.order_status == 'ready-ship':
                 #     res = server.action_orders('request_pickup', [order.izi_id])
@@ -257,6 +284,7 @@ class SaleOrder(models.Model):
         ('tp', 'Tokopedia'),
         ('sp', 'Shopee'),
         ('lz', 'Lazada'),
+        ('bli', 'Blibli'),
     ], compute='_compute_mp_channel')
     order_status = fields.Selection([
             ('new', 'Baru'),
@@ -296,11 +324,14 @@ class SaleOrder(models.Model):
     mp_recipient_address_full = fields.Text('Recipient Full Address')
     mp_amount_insurance = fields.Integer()
     mp_delivery_carrier_name = fields.Char('Delivery Name')
+    mp_delivery_carrier_type = fields.Char('Delivery Carrier Type')
     mp_delivery_type = fields.Selection([
             ('pickup', 'Pickup'),
             ('drop off', 'Drop Off'),
             ('both','Pickup & Drop Off')])
-    shipping_date = fields.Date(string='Batas Tanggal Pengiriman')
+    mp_accept_deadline = fields.Datetime(string='Batas Tanggal Konfirmasi')
+    shipping_date = fields.Datetime(string='Batas Tanggal Pengiriman')
+
 
     # Tokopedia
     tp_order_status = fields.Selection(ORDER_STATUS)
@@ -312,6 +343,8 @@ class SaleOrder(models.Model):
     tp_cancel_request_create_time = fields.Datetime('Request Time')
     tp_cancel_request_reason = fields.Text('Reason')
     tp_cancel_request_status = fields.Integer('Request Cancel Reason Status')
+    tp_comment = fields.Text('Comment')
+    mp_delivery_weight = fields.Float(string='Weight (KG)')
 
     # Shopee
     mp_shopee_id = fields.Many2one('mp.shopee', string='Shopee Account', ondelete='cascade')
@@ -326,12 +359,21 @@ class SaleOrder(models.Model):
     mp_lazada_id = fields.Many2one('mp.lazada', string='Lazada Account', ondelete='cascade')
     lz_order_status = fields.Selection(LAZADA_ORDER_STATUS)
 
+    # Blibli
+    mp_blibli_id = fields.Many2one('mp.blibli', string='Blibli Account', ondelete='cascade')
+    bli_order_status = fields.Selection(BLIBLI_ORDER_STATUS)
+
     # TODO: Add sale.order.cancel.reason
     cancel_reason_id = fields.Many2one('sale.order.cancel.reason', 'Cancel Order Reason')
     pickup_ids = fields.One2many('sale.order.pickup.info', 'order_id')
+    
+    no_action_marketplace = fields.Boolean('Unsync Marketplace Action', default=False)
 
+    _sql_constraints = [
+        ('sale_order_invoice_unique', 'unique(mp_invoice_number)', 'Invoice already exist'),
+    ]
 
-    @api.depends('state', 'picking_ids', 'invoice_ids', 'sp_order_status','picking_ids.state', 'invoice_ids.state', 'tp_order_status','mp_awb_number','mp_tokopedia_id','mp_shopee_id', 'mp_lazada_id', 'lz_order_status')
+    @api.depends('state', 'picking_ids', 'invoice_ids', 'sp_order_status','picking_ids.state', 'invoice_ids.state', 'tp_order_status','mp_awb_number','mp_tokopedia_id','mp_shopee_id', 'mp_lazada_id', 'lz_order_status', 'mp_blibli_id', 'bli_order_status')
     def _compute_order_status(self):
         # Deprecated.
         return True
@@ -413,10 +455,10 @@ class SaleOrder(models.Model):
                 elif (lazada_order_status == 'delivered'):
                     order_status = 'done'
                     order.action_done()
-                elif (lazada_order_status == 'pending'):
+                elif (lazada_order_status in ('pending', 'repacked')):
                     order_status = 'process'
                     order.action_draft()
-                elif (lazada_order_status in ('packed', 'repacked')):
+                elif (lazada_order_status == 'packed'):
                     order_status = 'ready-process'
                     order.action_draft()
                 elif (lazada_order_status in ('ready_to_ship', 'ready_to_ship_pending')):
@@ -431,6 +473,25 @@ class SaleOrder(models.Model):
                 elif (lazada_order_status == 'unpaid'):
                     order_status = 'waiting'
                     order.action_draft()
+            
+            # Blibli
+            if order.mp_blibli_id:
+                blibli_order_status = order.bli_order_status
+                if (blibli_order_status == 'FP'):
+                    order_status = 'ready-process'
+                    order.action_draft()
+                elif (blibli_order_status == 'X'):
+                    order_status = 'cancel'
+                    order.action_cancel()
+                elif (blibli_order_status == 'D'):
+                    order_status = 'done'
+                    order.action_done()
+                elif (blibli_order_status == 'CX'):
+                    order_status = 'ship'
+                    order.action_confirm()
+                elif (blibli_order_status in ('PF', 'PU')):
+                    order_status = 'ready-ship'
+                    order.action_confirm()
 
             # Set Status
             order.order_status = order_status
@@ -441,19 +502,20 @@ class SaleOrder(models.Model):
             for order in self:
                 if order.mp_tokopedia_id:
                     server = order.get_webhook_server()
-                    if server.no_action_marketplace:
+                    if server.no_action_marketplace or order.no_action_marketplace:
                         continue
                     # First, Accept The Order
                     if order.order_status == 'ready-process':
                         res = server.action_orders('accept_order', [order.izi_id], refresh=False)
                         if not (res and res.get('code') == 200):
                             raise UserError('Failed to Accept Order Tokopedia. %s' % str(res))
-                    # Second, Get No Resi
-                    res = server.action_orders('get_label', [order.izi_id])
-                    if not (res and res.get('code') == 200):
-                        raise UserError('Failed to Get No Resi Tokopedia. %s' % str(res))
-                    elif res.get('data') and res.get('data').get('awb_number'):
-                        order.mp_awb_number = res['data']['awb_number'][0]
+                    # # Second, Get No Resi
+                    # res = server.action_orders('get_label', [order.izi_id])
+                    # if not (res and res.get('code') == 200):
+                    #     # raise UserError('Failed to Get No Resi Tokopedia. %s' % str(res))
+                    #     _logger.error('Failed to Get No Resi Tokopedia. %s' % str(res))
+                    # elif res.get('data') and res.get('data').get('awb_number'):
+                    #     order.mp_awb_number = res['data']['awb_number'][0]
         return super(SaleOrder, self).action_confirm()
 
     # TODO: Where is Shopee and Lazada Code?
@@ -462,7 +524,7 @@ class SaleOrder(models.Model):
             for order in self:
                 if order.mp_tokopedia_id:
                     server = order.get_webhook_server()
-                    if server.no_action_marketplace:
+                    if server.no_action_marketplace or order.no_action_marketplace:
                         continue
                     if order.order_status not in ('cancel', 'done'):
                         res = server.action_orders('reject_order', [order.izi_id])
@@ -470,7 +532,7 @@ class SaleOrder(models.Model):
                             raise UserError('Failed to Reject Order Tokopedia. %s' % str(res))
                 if order.mp_shopee_id:
                     server = order.get_webhook_server()
-                    if server.no_action_marketplace:
+                    if server.no_action_marketplace or order.no_action_marketplace:
                         continue
                     if order.order_status not in ('cancel', 'done'):
                         super(SaleOrder, self).action_cancel()
@@ -488,7 +550,7 @@ class SaleOrder(models.Model):
         
         return super(SaleOrder, self).action_cancel()
 
-    @api.depends('mp_tokopedia_id', 'mp_shopee_id', 'mp_lazada_id')
+    @api.depends('mp_tokopedia_id', 'mp_shopee_id', 'mp_lazada_id', 'mp_blibli_id')
     def _compute_mp_channel(self):
         for order in self:
             if order.mp_tokopedia_id:
@@ -497,6 +559,8 @@ class SaleOrder(models.Model):
                 order.mp_channel = 'sp'
             elif order.mp_lazada_id:
                 order.mp_channel = 'lz'
+            elif order.mp_blibli_id:
+                order.mp_channel = 'bli'
             else:
                 order.mp_channel = False
 
@@ -537,6 +601,8 @@ class SaleOrder(models.Model):
             mp_type = 'tp'
         elif self.mp_lazada_id:
             mp_type = 'lz'
+        elif self.mp_blibli_id:
+            mp_type = 'bli'
 
         return {
             'name': 'Cancel Order',
@@ -608,6 +674,15 @@ class SaleOrder(models.Model):
         server = self.get_webhook_server()
         for order in self:
             res = server.action_orders('packing', [order.izi_id])
+            if res['code'] == 400:
+                raise UserError('Failed to Packing Order Blibli. %s' % str(res['data']['error']))
+
+    def action_orders_status(self):
+        server = self.get_webhook_server()
+        for order in self:
+            res = server.action_orders('update_status', [order.izi_id])
+            if res['code'] == 400:
+                raise UserError('Failed to Update Status Order Blibli. %s' % str(res['data']['error']))
     
     def action_orders_confirm_shipping(self):
         server = self.get_webhook_server()
@@ -664,7 +739,9 @@ class SaleOrder(models.Model):
                     server.get_records('mp.shop.address')
                     data = res['data']
 
-                    orders = self.env['sale.order'].search([])
+                    orders = self.env['sale.order'].search([
+                        ('mp_shopee_id', '!=', False)
+                    ])
                     order_by_izi_id = {}
                     for order in orders:
                         order_by_izi_id[order.izi_id] = order
@@ -676,7 +753,7 @@ class SaleOrder(models.Model):
 
                     pickup_data = pickup_obj.sudo().search([('order_id','=',self.id),'|',('active','=',True),('active','=',False)])
                     if pickup_data:
-                        for pickup in pickup_obj:
+                        for pickup in pickup_data:
                             pickup.sudo().unlink()
 
                     for pickup_list in data['pickup_list']:
@@ -798,6 +875,22 @@ class SaleOrder(models.Model):
                                         'target': 'new',
                                         'url': res['data']['url']+'&session_id='+server.session_id,
                                     }
+                    elif res['code'] == 429:
+                        form_view = self.env.ref('juragan_product.popup_message_wizard')
+                        view_id = form_view and form_view.id or False
+                        context = dict(self._context or {})
+                        context['message'] = 'AWB Number is not available, Please waiting a few minutes.'
+                        return {
+                            'name': 'Warning',
+                            'type': 'ir.actions.act_window',
+                            'view_mode': 'form',
+                            'view_type': 'form',
+                            'res_model': 'popup.message.wizard',
+                            'views': [(view_id,'form')],
+                            'view_id' : form_view.id,
+                            'target': 'new',
+                            'context': context,
+                        }
                     else:
                         raise UserError('Get Label Failed %s' % str(res))
     
@@ -807,6 +900,7 @@ class WebhookServer(models.Model):
     mp_tokopedia_ids = fields.One2many('mp.tokopedia', 'server_id', 'Tokopedia Account')
     mp_shopee_ids = fields.One2many('mp.shopee', 'server_id', 'Shopee Account')
     mp_lazada_ids = fields.One2many('mp.lazada', 'server_id', 'Lazada Account')
+    mp_blibli_ids = fields.One2many('mp.blibli', 'server_id', 'Blibli Account')
 
     #
     # API Get Specific
@@ -845,8 +939,10 @@ class WebhookServer(models.Model):
         if res:
             res = res['result']
             domain_url = "[('id', 'in', %s)]" % str(order_ids)
-            self.get_records(
-                'sale.order', domain_url=domain_url, force_update=True)
+            try:
+                self.get_records('sale.order', domain_url=domain_url, force_update=True)
+            except Exception as e:
+                _logger.info(str(e))
             if refresh:
                 self.with_context(no_push=True).sync_order()
         return res
@@ -909,11 +1005,24 @@ class PickupInformation(models.Model):
             'Thursday': 'Kamis',
             'Friday': 'Jum\'at',
             'Saturday': 'Sabtu',
-            'Sunday': 'Minggu'
+            'Sunday': 'Minggu',
+            'Senin':'Senin',
+            'Selasa': 'Selasa',
+            'Rabu': 'Rabu',
+            'Kamis': 'Kamis',
+            'Jumat': 'Jum\'at',
+            'Sabtu': 'Sabtu',
+            'Minggu': 'Minggu',
         }
         for rec in self:
             day = date_dict[rec.start_datetime.strftime('%A')]
-            time = rec.start_datetime.strftime('%d-%m-%y, %H:%M') + '-' + rec.end_datetime.strftime('%H:%M')
+            start_datetime = rec.start_datetime.strftime('%d-%m-%y, %H:%M')
+            end_datetime = rec.end_datetime.strftime('%H:%M') if rec.end_datetime else False
+            if start_datetime and end_datetime:
+                time =  start_datetime + '-' + end_datetime
+            elif start_datetime and not end_datetime:
+                time =  start_datetime
+
             date_time = day+', '+time
 
             res.append((rec.id, date_time))
@@ -949,6 +1058,7 @@ class CancelReasonOrder(models.Model):
         ('shp','Shopee'),
         ('tp','Tokopedia'), 
         ('lz','Lazada'), 
+        ('bli','Blibli'),
     ])
 
     reason_status = fields.Char(store=True)

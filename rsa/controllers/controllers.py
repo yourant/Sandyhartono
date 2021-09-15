@@ -9,13 +9,23 @@ import odoo
 
 class RSAController(http.Controller):
 
-    @http.route('/rsa/pem/public', auth='public')
+    @http.route('/rsa/pem/public', auth='none')
     def index(self, **kw):
         return request.env['rsa'].get_public_pem()
     
-    @http.route('/rsa/encrypt/<string:data>', auth='public')
+    @http.route('/rsa/encrypt/<string:data>', auth='none')
     def encrypt(self, data, **kw):
         return request.env['rsa'].encrypt(data)
+    
+    @http.route('/rsa/test', auth='none')
+    def test(self, **kw):
+        return request.env['rsa'].encrypt('''
+            {
+                "kwargs": {
+                    "fields": ["name", "display_name"]
+                }
+            }
+        ''')
 
 
 class Home(Home):

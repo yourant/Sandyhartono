@@ -20,10 +20,12 @@ class StockDistribution(models.Model):
     mp_tokopedia_id = fields.Many2one('mp.tokopedia', 'Tokopedia Account')
     mp_shopee_id = fields.Many2one('mp.shopee', 'Shopee Account')
     mp_lazada_id = fields.Many2one('mp.lazada', 'Lazada Account')
+    mp_blibli_id = fields.Many2one('mp.blibli', 'Blibli Account')
     mp_account_type = fields.Selection([
         ('tokopedia', 'Tokopedia'),
         ('shopee', 'Shopee'),
-        ('lazada', 'Lazada'),], string='Related Marketplace', required=True)
+        ('lazada', 'Lazada'),
+        ('blibli', 'Blibli')], string='Related Marketplace', required=True)
     
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -48,6 +50,12 @@ class StockDistribution(models.Model):
         for rec in self:
             rec.location_id = rec.mp_lazada_id.wh_main_id.lot_stock_id.id
             rec.location_dest_id = rec.mp_lazada_id.wh_shop_id.lot_stock_id.id
+
+    @api.onchange('mp_blibli_id')
+    def _set_mp_blibli_location(self):
+        for rec in self:
+            rec.location_id = rec.mp_blibli_id.wh_main_id.lot_stock_id.id
+            rec.location_dest_id = rec.mp_blibli_id.wh_shop_id.lot_stock_id.id
 
     def open_warehouse_config_wizard(self):
         view = self.env.ref('juragan_product.warehouse_config_wizard')
