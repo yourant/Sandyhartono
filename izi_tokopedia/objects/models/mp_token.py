@@ -25,3 +25,13 @@ class MarketplaceToken(models.Model):
             'raw': json.dumps(raw_token, indent=4)
         }
         mp_token_obj.create(values)
+
+    @api.multi
+    def tokopedia_validate_current_token(self):
+        self.ensure_one()
+        if self.state != 'valid':
+            self.mp_account_id.action_authenticate()
+            return self.mp_account_id.mp_token_ids.sorted('expired_date', reverse=True)[0]
+        return self
+
+
