@@ -41,7 +41,7 @@
         # 'views/action/action.xml',
 
         # view
-        'views/common/mp_account.xml'
+        'views/common/mp_account.xml',
         'views/common/mp_token.xml',
         # wizard
 
