@@ -13,14 +13,14 @@ _logger = logging.getLogger(__name__)
 
 class ShopeeAccount(object):
 
-    def __init__(self, partner_id, partner_key, base_url=False, mp_id=False, shop_id=False, code=False, refresh_token=False):
+    def __init__(self, partner_id, partner_key, **kwargs):
         self.partner_id = partner_id
         self.partner_key = partner_key
-        self.base_url = base_url
-        self.mp_id = mp_id
-        self.shop_id = shop_id
-        self.code = code
-        self.refresh_token = refresh_token
+        self.base_url = kwargs.get('base_url', None)
+        self.mp_id = kwargs.get('mp_id', None)
+        self.shop_id = kwargs.get('shop_id', None)
+        self.code = kwargs.get('code', None)
+        self.refresh_token = kwargs.get('refresh_token', None)
 
 
     def get_redirect_url(self):
