@@ -5,7 +5,6 @@ from odoo import api, fields, models
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 
 
-
 class MarketplaceAccount(models.Model):
     _inherit = 'mp.account'
 
@@ -17,8 +16,6 @@ class MarketplaceAccount(models.Model):
     marketplace = fields.Selection(selection_add=[('shopee', 'Shopee')])
     sp_partner_id = fields.Char(string="Partner ID", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_partner_key = fields.Char(string="Partner Key", required_if_marketplace="shopee", states=READONLY_STATES)
-
-
 
     @api.model
     def shopee_get_account(self, **kwargs):
@@ -38,16 +35,27 @@ class MarketplaceAccount(models.Model):
     def shopee_authenticate(self):
         self.ensure_one()
         sp_account = self.shopee_get_account()
-        return {
-            'type': 'ir.actions.act_url',
-            'target': 'new',
-            'url': sp_account.get_auth_url_v2()
-        }
-       
+        current_token = False
+        if self.mp_token_ids:
+            current_token = self.mp_token_ids.sorted('expired_date', reverse=True)[0]
+        if current_token:
+            if current_token.sp_refresh_token:
+                self.get_token_shopee(**{'refresh_token': current_token.sp_refresh_token,
+                                         'shop_id': current_token.sp_shop_id})
+        else:
+            return {
+                'type': 'ir.actions.act_url',
+                'target': 'new',
+                'url': sp_account.get_auth_url_v2()
+            }
+
     @api.multi
     def get_token_shopee(self, **kwargs):
         mp_token_obj = self.env['mp.token']
         sp_account = self.shopee_get_account(**kwargs)
+        shop_id = kwargs.get('shop_id', None)
         raw_token = sp_account.get_token()
+        if shop_id:
+            raw_token['shop_id'] = shop_id
         mp_token_obj.create_token(self, raw_token)
         self.write({'state': 'authenticated'})
