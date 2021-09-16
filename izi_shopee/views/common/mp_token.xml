@@ -10,7 +10,7 @@
           <group name="sp_token" string="Shopee Attributes"
                  attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
             <field name="sp_shop_id" string="Shop ID"/>
-            <field name="sp_refresh_token" string="Refresh Token"/>
+            <field name="refresh_token" string="Refresh Token"/>
           </group>
         </group>
       </field>
