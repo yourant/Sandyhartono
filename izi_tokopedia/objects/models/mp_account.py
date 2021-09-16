@@ -3,6 +3,7 @@
 
 from odoo import api, fields, models
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.shop import TokopediaShop
 
 
 class MarketplaceAccount(models.Model):
@@ -40,3 +41,19 @@ class MarketplaceAccount(models.Model):
         raw_token = tp_account.authenticate()
         mp_token_obj.create_token(self, raw_token)
         self.write({'state': 'authenticated'})
+
+    @api.multi
+    def tokopedia_get_dependencies(self):
+        self.ensure_one()
+        self.tokopedia_get_shop()
+
+    @api.multi
+    def tokopedia_get_shop(self):
+        mp_tokopedia_shop_obj = self.env['mp.tokopedia.shop']
+
+        self.ensure_one()
+
+        tp_account = self.tokopedia_get_account()
+        tp_shop = TokopediaShop(tp_account)
+        tp_data = tp_shop.get_shop_info()
+        mp_tokopedia_shop_obj.with_context({'mp_account_id': self.id}).create_shop(tp_data, isinstance(tp_data, list))

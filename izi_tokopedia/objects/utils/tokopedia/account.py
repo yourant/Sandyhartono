@@ -3,6 +3,7 @@
 import requests
 from base64 import b64encode
 
+from .tools import validate_response
 from .endpoint import TokopediaEndpoint
 
 
@@ -31,5 +32,5 @@ class TokopediaAccount(object):
         prepared_request = self.endpoints.build_request('token', **{
             'headers': headers
         })
-        response = requests.request(**prepared_request)
+        response = validate_response(requests.request(**prepared_request))
         return response.json()
