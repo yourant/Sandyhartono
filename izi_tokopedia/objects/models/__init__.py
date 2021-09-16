@@ -3,3 +3,4 @@
 
 from . import mp_account
 from . import mp_token
+from . import mp_tokopedia_shop

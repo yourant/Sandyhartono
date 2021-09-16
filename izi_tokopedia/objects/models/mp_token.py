@@ -22,7 +22,7 @@ class MarketplaceToken(models.Model):
             'expired_date': fields.Datetime.to_string(expired_date),
             'mp_account_id': mp_account.id,
             'tp_token_type': raw_token.get('token_type'),
-            'raw': json.dumps(raw_token, indent=4)
+            'raw': self.format_raw_data(raw_token)
         }
         mp_token_obj.create(values)
 
