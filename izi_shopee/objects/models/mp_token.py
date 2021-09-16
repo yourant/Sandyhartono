@@ -10,7 +10,6 @@ from odoo import api, fields, models
 class MarketplaceToken(models.Model):
     _inherit = 'mp.token'
 
-    sp_refresh_token = fields.Char(string="Shopee Refresh Token", readonly=True)
     sp_shop_id = fields.Char(String="Shopee Shop ID", readonly=True)
 
     @api.model
@@ -22,9 +21,9 @@ class MarketplaceToken(models.Model):
             'name': raw_token.get('access_token'),
             'expired_date': fields.Datetime.to_string(expired_date),
             'mp_account_id': mp_account.id,
-            'sp_refresh_token': raw_token.get('refresh_token'),
+            'refresh_token': raw_token.get('refresh_token'),
             'sp_shop_id': raw_token.get('shop_id'),
-            'raw': json.dumps(raw_token, indent=4)
+            'raw': self.format_raw_data(raw_token)
         }
         mp_token_obj.create(values)
 
