@@ -15,5 +15,5 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.multi
     def _compute_mp_external_id(self):
-        for shop in self:
-            shop.mp_external_id = getattr(shop, shop._rec_mp_external_id, False)
+        for rec in self:
+            rec.mp_external_id = getattr(rec, rec._rec_mp_external_id, False)
