@@ -38,7 +38,7 @@
         # data
 
         # global action
-        # 'views/action/action.xml',
+        'views/common/mp_account.xml',
 
         # view
 

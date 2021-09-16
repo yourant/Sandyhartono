@@ -58,6 +58,7 @@ class MarketplaceAccount(models.Model):
         for mp_account in self:
             if mp_account.mp_token_ids:
                 mp_token = mp_account.mp_token_ids.sorted('expired_date', reverse=True)[0]
+                mp_token = mp_token.validate_current_token()
                 mp_account.mp_token_id = mp_token.id
             else:
                 mp_account.mp_token_id = False

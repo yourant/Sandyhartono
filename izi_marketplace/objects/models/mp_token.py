@@ -34,3 +34,10 @@ class MarketplaceToken(models.Model):
     def create_token(self, mp_account, raw_token):
         if hasattr(self, '%s_create_token' % mp_account.marketplace):
             getattr(self, '%s_create_token' % mp_account.marketplace)(mp_account, raw_token)
+
+    @api.multi
+    def validate_current_token(self):
+        self.ensure_one()
+        if hasattr(self, '%s_validate_current_token' % self.marketplace):
+            return getattr(self, '%s_validate_current_token' % self.marketplace)()
+        return self.env['mp.token']
