@@ -19,6 +19,7 @@ class MarketplaceToken(models.Model):
     expired_date = fields.Datetime(string="Expired Date", readonly=True, required=True)
     mp_account_id = fields.Many2one(readonly=True)
     state = fields.Selection(string="Status", selection=TOKEN_STATES, compute="_compute_state")
+    refresh_token = fields.Char(string="Refresh Token")
 
     @api.multi
     def _compute_state(self):

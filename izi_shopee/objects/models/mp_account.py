@@ -38,9 +38,9 @@ class MarketplaceAccount(models.Model):
         current_token = False
         if self.mp_token_ids:
             current_token = self.mp_token_ids.sorted('expired_date', reverse=True)[0]
-        if current_token:
+        if current_token and current_token.state == 'valid':
             if current_token.sp_refresh_token:
-                self.get_token_shopee(**{'refresh_token': current_token.sp_refresh_token,
+                self.get_token_shopee(**{'refresh_token': current_token.refresh_token,
                                          'shop_id': current_token.sp_shop_id})
         else:
             return {
@@ -50,7 +50,7 @@ class MarketplaceAccount(models.Model):
             }
 
     @api.multi
-    def get_token_shopee(self, **kwargs):
+    def shopee_get_token(self, **kwargs):
         mp_token_obj = self.env['mp.token']
         sp_account = self.shopee_get_account(**kwargs)
         shop_id = kwargs.get('shop_id', None)
