@@ -6,8 +6,8 @@ from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
 
 
-class ProductStaging(models.Model):
-    _name = 'product.staging'
+class MarketplaceProduct(models.Model):
+    _name = 'mp.product'
     _inherit = 'mp.base'
     _description = 'Marketplace Product Representation'
 
