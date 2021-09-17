@@ -3,7 +3,8 @@
 import uuid
 import requests
 from requests.auth import HTTPBasicAuth
-# from .endpoint import ENDPOINTS_PATH,BASE_ENDPOINTS
+from .tools import validate_response
+# from .endpoint import BlibliEndpoint
 
 
 class BlibliAccount(object):
@@ -20,14 +21,14 @@ class BlibliAccount(object):
     def authenticate(self):
         # Test with API if credential is True
         params = {
-            'requestId': 'IZI-'+ str(uuid.uuid4()),
+            'requestId': 'IZI-' + str(uuid.uuid4()),
             'storeCode': self.shop_code,
             'channelId': self.shop_name,
             'username': self.usermail,
             'storeId': int(self.store_id)
         }
         res = requests.get(
-            'https://api.blibli.com/v2/proxy/seller/v1/logistics', 
+            'https://api.blibli.com/v2/proxy/seller/v1/logistics',
             auth=HTTPBasicAuth(self.client_id, self.client_secret),
             params=params,
             headers={
@@ -36,8 +37,5 @@ class BlibliAccount(object):
                 'Accept': 'application/json'
             }
         )
-        if res.status_code == 200:
-            result = True
-        else:
-            result = False
-        return result
+        response = validate_response(res)
+        return response
