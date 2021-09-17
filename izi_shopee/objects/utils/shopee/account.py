@@ -8,6 +8,7 @@ import urllib
 import logging
 import json
 
+from .tools import validate_response
 from .endpoint import ShopeeEndpoint
 
 _logger = logging.getLogger(__name__)
@@ -47,18 +48,19 @@ class ShopeeAccount(object):
                 'Content-Type': 'application/json',
             }
             payload = {
-                **({'refresh_token': self.refresh_token} if self.refresh_token else {'code': self.code}),
                 'shop_id': int(self.shop_id),
                 'partner_id': int(self.partner_id)
             }
+            if self.refresh_token:
+                payload.update({'refresh_token': self.refresh_token})
+            else:
+                payload.update({'code': self.code})
             prepared_request = self.endpoints.build_request('token_renew' if self.refresh_token else 'token_get',
                                                             self.partner_id, self.partner_key, self.shop_id,
                                                             **{
                                                                 'headers': headers,
                                                                 'json': payload
                                                             })
-            response = requests.request(**prepared_request)
-
+            response = validate_response(requests.request(**prepared_request))
             _logger.info('\n%s' % (json.dumps(response.json(), indent=2)))
-
             return response.json()
