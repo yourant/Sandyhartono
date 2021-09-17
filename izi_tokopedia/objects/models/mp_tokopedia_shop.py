@@ -8,6 +8,7 @@ class MPTokopediaShop(models.Model):
     _name = 'mp.tokopedia.shop'
     _inherit = 'mp.base'
     _description = 'Marketplace Tokopedia Shop'
+    _rec_name = 'shop_name'
     _rec_mp_external_id = 'shop_id'
 
     shop_id = fields.Integer(string="Shop ID", readonly=True, mp_raw=True)

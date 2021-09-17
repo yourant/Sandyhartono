@@ -10,6 +10,7 @@ class TokopediaEndpoint(object):
     ENDPOINTS = {
         'token': ('POST', '/token?grant_type=client_credentials'),
         'shop_info': ('GET', '/v1/shop/fs/{fs_id}/shop-info'),
+        'product_info': ('GET', '/inventory/v1/fs/{fs_id}/product/info')
     }
 
     def __init__(self, tp_account, host="base"):
