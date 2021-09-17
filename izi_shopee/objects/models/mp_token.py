@@ -31,6 +31,6 @@ class MarketplaceToken(models.Model):
     def shopee_validate_current_token(self):
         self.ensure_one()
         if self.state != 'valid':
-            self.mp_account_id.action_authenticate()
+            self.mp_account_id.shopee_renew_token()
             return self.mp_account_id.mp_token_ids.sorted('expired_date', reverse=True)[0]
         return self
