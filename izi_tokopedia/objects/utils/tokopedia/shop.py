@@ -2,15 +2,11 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import requests
 
+from .api import TokopediaAPI
 from .tools import process_response
-from .endpoint import TokopediaEndpoint
 
 
-class TokopediaShop(object):
-
-    def __init__(self, tp_account):
-        self.tp_account = tp_account
-        self.endpoints = TokopediaEndpoint(tp_account)
+class TokopediaShop(TokopediaAPI):
 
     def get_shop_info(self, shop_id=None):
         params = {}

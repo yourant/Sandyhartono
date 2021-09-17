@@ -3,6 +3,7 @@
 
 from odoo import api, fields, models
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.product import TokopediaProduct
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.shop import TokopediaShop
 
 
@@ -18,6 +19,8 @@ class MarketplaceAccount(models.Model):
     tp_client_id = fields.Char(string="Client ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_client_secret = fields.Char(string="Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
+    tp_shop_ids = fields.One2many(comodel_name="mp.tokopedia.shop", inverse_name="mp_account_id", string="Shop(s)")
+    tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop")
 
     @api.model
     def tokopedia_get_account(self):
@@ -43,11 +46,6 @@ class MarketplaceAccount(models.Model):
         self.write({'state': 'authenticated'})
 
     @api.multi
-    def tokopedia_get_dependencies(self):
-        self.ensure_one()
-        self.tokopedia_get_shop()
-
-    @api.multi
     def tokopedia_get_shop(self):
         mp_tokopedia_shop_obj = self.env['mp.tokopedia.shop']
 
@@ -57,3 +55,21 @@ class MarketplaceAccount(models.Model):
         tp_shop = TokopediaShop(tp_account)
         tp_data = tp_shop.get_shop_info()
         mp_tokopedia_shop_obj.with_context({'mp_account_id': self.id}).create_shop(tp_data, isinstance(tp_data, list))
+
+    @api.multi
+    def tokopedia_get_dependencies(self):
+        self.ensure_one()
+        self.tokopedia_get_shop()
+
+    @api.multi
+    def tokopedia_get_product_staging(self):
+        self.ensure_one()
+
+        tp_account = self.tokopedia_get_account()
+        tp_product = TokopediaProduct(tp_account)
+        tp_product.get_product_info(self.tp_shop_id.shop_id)
+
+    @api.multi
+    def tokopedia_get_products(self):
+        self.ensure_one()
+        self.tokopedia_get_product_staging()
