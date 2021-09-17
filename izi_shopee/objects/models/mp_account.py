@@ -35,19 +35,21 @@ class MarketplaceAccount(models.Model):
     def shopee_authenticate(self):
         self.ensure_one()
         sp_account = self.shopee_get_account()
+        return {
+            'type': 'ir.actions.act_url',
+            'target': 'new',
+            'url': sp_account.get_auth_url_v2()
+        }
+
+    def shopee_renew_token(self):
+        self.ensure_one()
         current_token = False
         if self.mp_token_ids:
             current_token = self.mp_token_ids.sorted('expired_date', reverse=True)[0]
-        if current_token and current_token.state == 'valid':
-            if current_token.sp_refresh_token:
-                self.get_token_shopee(**{'refresh_token': current_token.refresh_token,
+        if current_token:
+            if current_token.refresh_token:
+                self.shopee_get_token(**{'refresh_token': current_token.refresh_token,
                                          'shop_id': current_token.sp_shop_id})
-        else:
-            return {
-                'type': 'ir.actions.act_url',
-                'target': 'new',
-                'url': sp_account.get_auth_url_v2()
-            }
 
     @api.multi
     def shopee_get_token(self, **kwargs):
