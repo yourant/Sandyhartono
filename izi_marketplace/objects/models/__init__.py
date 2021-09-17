@@ -4,3 +4,4 @@
 from . import mp_account
 from . import mp_base
 from . import mp_token
+from . import product_staging
