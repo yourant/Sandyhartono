@@ -62,14 +62,17 @@ class MarketplaceAccount(models.Model):
         self.tokopedia_get_shop()
 
     @api.multi
-    def tokopedia_get_product_staging(self):
+    def tokopedia_get_mp_product(self):
+        mp_product_obj = self.env['mp.product']
+
         self.ensure_one()
 
         tp_account = self.tokopedia_get_account()
-        tp_product = TokopediaProduct(tp_account)
-        tp_product.get_product_info(self.tp_shop_id.shop_id)
+        tp_product = TokopediaProduct(tp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
+        tp_data = tp_product.get_product_info(self.tp_shop_id.shop_id)
+        mp_product_obj.with_context({'mp_account_id': self.id}).create_records(tp_data, isinstance(tp_data, list))
 
     @api.multi
     def tokopedia_get_products(self):
         self.ensure_one()
-        self.tokopedia_get_product_staging()
+        self.tokopedia_get_mp_product()
