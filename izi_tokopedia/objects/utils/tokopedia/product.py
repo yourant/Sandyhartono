@@ -6,8 +6,8 @@ from .api import TokopediaAPI
 
 class TokopediaProduct(TokopediaAPI):
 
-    def __init__(self, tp_account):
-        super(TokopediaProduct, self).__init__(tp_account)
+    def __init__(self, tp_account, **kwargs):
+        super(TokopediaProduct, self).__init__(tp_account, **kwargs)
         self.product_data = []
 
     def get_product_info(self, shop_id, limit=0, per_page=50):
@@ -22,10 +22,10 @@ class TokopediaProduct(TokopediaAPI):
                     'page': page,
                     'per_page': per_page
                 })
-                prepared_request = self.endpoints.build_request('product_info', **{
+                prepared_request = self.build_request('product_info', **{
                     'params': params
                 })
-                tp_data = self.process_response(self.request(**prepared_request))
+                tp_data = self.process_response('product_info', self.request(**prepared_request))
                 if tp_data:
                     self.product_data.extend(tp_data)
                     page += 1
@@ -38,14 +38,11 @@ class TokopediaProduct(TokopediaAPI):
                     'page': pagination_page[0],
                     'per_page': pagination_page[1]
                 })
-                prepared_request = self.endpoints.build_request('product_info', **{
+                prepared_request = self.build_request('product_info', **{
                     'params': params
                 })
-                tp_data = self.process_response(self.request(**prepared_request))
+                tp_data = self.process_response('product_info', self.request(**prepared_request))
                 if tp_data:
                     self.product_data.extend(tp_data)
 
         return self.product_data
-
-
-
