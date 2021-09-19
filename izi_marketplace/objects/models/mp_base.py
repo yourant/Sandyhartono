@@ -121,19 +121,22 @@ class MarketplaceBase(models.AbstractModel):
             return raw
 
     @api.model
-    def get_default_sanitizer(self, mp_field_mapping, keys):
+    def get_default_sanitizer(self, mp_field_mapping):
         def sanitize(response):
-            tp_data = dict((key, json_digger(response.json(), mp_field_mapping[key][0])) for key in keys)
-            return self.remap_raw_data(tp_data)
+            if mp_field_mapping:
+                keys = mp_field_mapping.keys()
+                tp_data = dict((key, json_digger(response.json(), mp_field_mapping[key][0])) for key in keys)
+                return self.remap_raw_data(tp_data)
+            else:
+                return response.json()
         return sanitize
 
     @api.model
     def get_sanitizers(self, marketplace):
         mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
-        keys = mp_field_mapping.keys()
 
         if hasattr(self, '%s_get_sanitizers' % marketplace):
-            return getattr(self, '%s_get_sanitizers' % marketplace)(mp_field_mapping, keys)
+            return getattr(self, '%s_get_sanitizers' % marketplace)(mp_field_mapping)
         return {}
 
     @api.model
