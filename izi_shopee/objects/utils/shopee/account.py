@@ -24,6 +24,7 @@ class ShopeeAccount(object):
         self.shop_id = kwargs.get('shop_id', None)
         self.code = kwargs.get('code', None)
         self.refresh_token = kwargs.get('refresh_token', None)
+        self.access_token = kwargs.get('access_token', None)
         self.endpoints = ShopeeEndpoint(self, host="base")
 
     def get_redirect_url(self):
