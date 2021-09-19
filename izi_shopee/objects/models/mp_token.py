@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
-import json
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -31,6 +30,9 @@ class MarketplaceToken(models.Model):
     def shopee_validate_current_token(self):
         self.ensure_one()
         if self.state != 'valid':
-            self.mp_account_id.shopee_renew_token()
+            try:
+                self.mp_account_id.shopee_renew_token()
+            except Exception as e:
+                self.mp_account_id.write({'state': 'authenticating', 'sp_reason': str(e.args[0])})
             return self.mp_account_id.mp_token_ids.sorted('expired_date', reverse=True)[0]
         return self
