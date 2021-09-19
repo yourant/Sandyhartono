@@ -14,7 +14,8 @@ class ShopeeEndpoint(object):
     ENDPOINTS = {
         'auth': ('POST', '/api/v2/shop/auth_partner'),
         'token_renew': ('POST', '/api/v2/auth/access_token/get'),
-        'token_get': ('POST', '/api/v2/auth/token/get')
+        'token_get': ('POST', '/api/v2/auth/token/get'),
+        'logistic_list': ('GET', '/api/v2/logistics/get_channel_list')
     }
 
     def __init__(self, sp_account, host="base"):
@@ -36,7 +37,7 @@ class ShopeeEndpoint(object):
         if not access_token:
             base_string = '%s%s%s%s' % (partner_id, self.ENDPOINTS[endpoint][1], timeest, shop_id)
         else:
-            base_string = '%s%s%s%s' % (partner_id, self.ENDPOINTS[endpoint][1], timeest, shop_id, access_token)
+            base_string = '%s%s%s%s%s' % (partner_id, self.ENDPOINTS[endpoint][1], timeest, access_token, shop_id)
         sign = hmac.new(partner_key.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
         return sign
@@ -44,22 +45,30 @@ class ShopeeEndpoint(object):
     def build_request(self, endpoint, partner_id, partner_key, shop_id, access_token=False, **kwargs):
         headers = dict({
             'Content-Length': '0',
-            'User-Agent': 'PostmanRuntime/7.17.1'
+            'User-Agent': 'PostmanRuntime/7.17.1',
+            'Content-Type': 'application/json'
         }, **kwargs.get('headers', {}))
 
         timeest = self.timestamp()
         if not access_token:
             sign = self.sign(endpoint, partner_id, partner_key, shop_id, timeest)
+            params = dict({
+                'partner_id': partner_id,
+                'shop_id': shop_id,
+                'timestamp': timeest,
+                'sign': sign
+
+            }, **kwargs.get('params', {}))
         else:
             sign = self.sign(endpoint, partner_id, partner_key, shop_id, timeest, access_token)
+            params = dict({
+                'partner_id': partner_id,
+                'shop_id': shop_id,
+                'timestamp': timeest,
+                'sign': sign,
+                'access_token': access_token
 
-        params = dict({
-            'partner_id': partner_id,
-            'shop_id': shop_id,
-            'timestamp': timeest,
-            'sign': sign
-
-        }, **kwargs.get('params', {}))
+            }, **kwargs.get('params', {}))
 
         prepared_request = {
             'method': self.ENDPOINTS[endpoint][0],
