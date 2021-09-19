@@ -17,7 +17,7 @@ class MarketplaceBase(models.AbstractModel):
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     marketplace = fields.Selection(related="mp_account_id.marketplace", readonly=True)
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
-    mp_external_id = fields.Integer(string="Marketplace External ID", compute="_compute_mp_external_id")
+    mp_external_id = fields.Char(string="Marketplace External ID", compute="_compute_mp_external_id")
 
     @classmethod
     def _build_model_attributes(cls, pool):
@@ -36,12 +36,14 @@ class MarketplaceBase(models.AbstractModel):
     @api.multi
     def _compute_mp_external_id(self):
         for rec in self:
+            mp_external_id = False
             if isinstance(rec._rec_mp_external_id, str):
-                rec.mp_external_id = getattr(rec, rec._rec_mp_external_id, False)
+                mp_external_id = getattr(rec, rec._rec_mp_external_id, False)
             elif isinstance(rec._rec_mp_external_id, dict):
-                rec.mp_external_id = getattr(rec, rec._rec_mp_external_id.get(rec.marketplace), False)
-            else:
-                rec.mp_external_id = False
+                mp_external_id = getattr(rec, rec._rec_mp_external_id.get(rec.marketplace), False)
+            if mp_external_id:
+                mp_external_id = str(mp_external_id)
+            rec.mp_external_id = mp_external_id
 
     @api.model
     def _get_mp_raw_fields(self, marketplace=None):
