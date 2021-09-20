@@ -74,10 +74,10 @@ class MarketplaceAccount(models.Model):
         if self.mp_token_id.state == 'valid':
             params = {'access_token': self.mp_token_id.name}
         sp_account = self.shopee_get_account(**params)
-        sp_logistic = ShopeeLogistic(sp_account)
-        sp_data = sp_logistic.get_logsitic_list()
-        mp_shopee_logistic_obj.with_context({'mp_account_id': self.id}).create_logistic(
-            sp_data, isinstance(sp_data, list))
+        sp_logistic = ShopeeLogistic(sp_account, sanitizers=mp_shopee_logistic_obj.get_sanitizers(self.marketplace))
+        sp_data_raw, sp_data_sanitized = sp_logistic.get_logsitic_list()
+        mp_shopee_logistic_obj.with_context({'mp_account_id': self.id}).create_records(
+            sp_data_raw, sp_data_sanitized, isinstance(sp_data_sanitized, list))
 
     @api.multi
     def shopee_get_dependencies(self):

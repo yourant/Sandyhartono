@@ -61,12 +61,12 @@ class MarketplaceBase(models.AbstractModel):
         return raw_data_fields
 
     @api.model
-    def mapping_raw_data(self, raw_data=None, values=None):
+    def mapping_raw_data(self, raw_data=None, sanitized_data=None, values=None):
         """Please inherit this method for each marketplace data model to define data handling method!"""
 
         mp_account_obj = self.env['mp.account']
 
-        if not isinstance(raw_data, dict):
+        if not isinstance(sanitized_data, dict):
             raise ValidationError(
                 "raw_data should be in dictionary format! You may need iteration to handling multiple data.")
 
@@ -76,8 +76,8 @@ class MarketplaceBase(models.AbstractModel):
 
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
 
-        if not raw_data:
-            raw_data = {}
+        if not sanitized_data:
+            sanitized_data = {}
 
         if not values:
             values = {}
@@ -86,16 +86,16 @@ class MarketplaceBase(models.AbstractModel):
         for raw_data_field in raw_data_fields:
             field_name, mp_raw_handler = raw_data_field
             if not mp_raw_handler:
-                values[field_name] = raw_data[field_name]
+                values[field_name] = sanitized_data[field_name]
                 continue
-            values[field_name] = mp_raw_handler(raw_data[field_name])
+            values[field_name] = mp_raw_handler(sanitized_data[field_name])
 
         values.update({
             'mp_account_id': mp_account.id,
             'raw': self.format_raw_data(raw_data)
         })
 
-        return raw_data, values
+        return sanitized_data, values
 
     @api.model
     def format_raw_data(self, raw, indent=4):
@@ -123,14 +123,17 @@ class MarketplaceBase(models.AbstractModel):
             return raw
 
     @api.model
-    def get_default_sanitizer(self, mp_field_mapping):
+    def get_default_sanitizer(self, mp_field_mapping, root_path=None):
         def sanitize(response):
+            response_data = response.json()
+            if root_path:
+                response_data = response_data[root_path]
             if mp_field_mapping:
                 keys = mp_field_mapping.keys()
-                tp_data = dict((key, json_digger(response.json(), mp_field_mapping[key][0])) for key in keys)
-                return self.remap_raw_data(tp_data)
+                mp_data = dict((key, json_digger(response_data, mp_field_mapping[key][0])) for key in keys)
+                return response_data, self.remap_raw_data(mp_data)
             else:
-                return response.json()
+                return response_data, None
         return sanitize
 
     @api.model
@@ -142,7 +145,7 @@ class MarketplaceBase(models.AbstractModel):
         return {}
 
     @api.model
-    def create_records(self, mp_data, multi=False):
+    def create_records(self, raw_data, mp_data, multi=False):
         record_obj = self.env[self._name]
 
         if multi:
@@ -150,9 +153,9 @@ class MarketplaceBase(models.AbstractModel):
             records = record_obj
 
             for mp_data in mp_datas:
-                records |= self.create_records(mp_data)
+                records |= self.create_records(raw_data, mp_data)
 
             return records
 
-        raw_data, values = self.mapping_raw_data(raw_data=mp_data)
+        raw_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
         return record_obj.create(values)

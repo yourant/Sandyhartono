@@ -6,8 +6,6 @@ from .exception import ShopeeAPIError
 
 def validate_response(response):
     if response.status_code != 200:
-        # if response.status_code != 500:
-        #     response.raise_for_status()
         raise ShopeeAPIError(response.json())
     else:
         if 'error' in response.json():

@@ -3,7 +3,6 @@
 import requests
 
 from .api import ShopeeAPI
-from .tools import process_response
 
 
 class ShopeeLogistic(ShopeeAPI):
@@ -14,4 +13,4 @@ class ShopeeLogistic(ShopeeAPI):
                                                         self.sp_account.partner_key,
                                                         self.sp_account.shop_id,
                                                         self.sp_account.access_token)
-        return process_response(requests.request(**prepared_request))
+        return self.process_response('logistic_list', self.request(**prepared_request))
