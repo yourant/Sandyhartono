@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
-import uuid
 import requests
+from base64 import b64encode
 from requests.auth import HTTPBasicAuth
 from .tools import validate_response
-# from .endpoint import BlibliEndpoint
+from .endpoint import BlibliEndpoint
 
 
 class BlibliAccount(object):
@@ -17,25 +17,22 @@ class BlibliAccount(object):
         self.store_id = kwargs.get('store_id', None)
         self.client_id = kwargs.get('client_id', None)
         self.client_secret = kwargs.get('client_secret', None)
+        self.endpoints = BlibliEndpoint(self)
+
+    def get_auth(self):
+        auth = 'Basic %s' % b64encode('{}:{}'.format(self.client_id, self.client_secret).encode()).decode()
+        return auth
 
     def authenticate(self):
         # Test with API if credential is True
         params = {
-            'requestId': 'IZI-' + str(uuid.uuid4()),
             'storeCode': self.shop_code,
             'channelId': self.shop_name,
             'username': self.usermail,
-            'storeId': int(self.store_id)
+            'storeId': str(self.store_id)
         }
-        res = requests.get(
-            'https://api.blibli.com/v2/proxy/seller/v1/logistics',
-            auth=HTTPBasicAuth(self.client_id, self.client_secret),
-            params=params,
-            headers={
-                'Api-Seller-Key': self.seller_key,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        )
-        response = validate_response(res)
-        return response
+        prepared_request = self.endpoints.build_request('logistic', **{
+            'params': params
+        })
+        response = validate_response(requests.request(**prepared_request))
+        return response.json()
