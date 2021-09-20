@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+import hashlib
 import json
+import logging
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
@@ -17,6 +19,8 @@ class MarketplaceBase(models.AbstractModel):
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     marketplace = fields.Selection(related="mp_account_id.marketplace", readonly=True)
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
+    signature = fields.Char(string="Signature", readonly=True, required=True, default="",
+                            help="MD5 hash of the marketplace data.")
     mp_external_id = fields.Char(string="Marketplace External ID", compute="_compute_mp_external_id")
 
     @classmethod
@@ -28,6 +32,14 @@ class MarketplaceBase(models.AbstractModel):
     def _validate_rec_mp_field_mapping(cls):
         """You can add validation for _rec_mp_field_mapping here!"""
         pass
+
+    @api.model
+    def _logger(self, marketplace, message, level="info"):
+        logger = logging.getLogger(__name__)
+
+        log_message = "[%s] %s" % (marketplace.upper(), message)
+
+        getattr(logger, level)(log_message)
 
     @api.model
     def _get_rec_mp_field_mapping(self, marketplace):
@@ -68,13 +80,16 @@ class MarketplaceBase(models.AbstractModel):
 
         if not isinstance(sanitized_data, dict):
             raise ValidationError(
-                "raw_data should be in dictionary format! You may need iteration to handling multiple data.")
+                "sanitized_data should be in dictionary format! You may need iteration to handling multiple data.")
 
         context = self._context
         if not context.get('mp_account_id'):
             raise ValidationError("Please define mp_account_id in context!")
 
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+
+        if not raw_data:
+            raw_data = {}
 
         if not sanitized_data:
             sanitized_data = {}
@@ -92,7 +107,8 @@ class MarketplaceBase(models.AbstractModel):
 
         values.update({
             'mp_account_id': mp_account.id,
-            'raw': self.format_raw_data(raw_data)
+            'raw': self.format_raw_data(raw_data),
+            'signature': self.generate_signature(sanitized_data)
         })
 
         return sanitized_data, values
@@ -100,6 +116,10 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def format_raw_data(self, raw, indent=4):
         return json.dumps(raw, indent=indent)
+
+    @api.model
+    def generate_signature(self, raw):
+        return hashlib.md5(json.dumps(raw).encode()).hexdigest()
 
     @api.model
     def remap_raw_data(self, raw):
@@ -125,15 +145,18 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def get_default_sanitizer(self, mp_field_mapping, root_path=None):
         def sanitize(response):
-            response_data = response.json()
+            raw_data = response.json()
             if root_path:
-                response_data = response_data[root_path]
+                raw_data = raw_data[root_path]
             if mp_field_mapping:
                 keys = mp_field_mapping.keys()
-                mp_data = dict((key, json_digger(response_data, mp_field_mapping[key][0])) for key in keys)
-                return response_data, self.remap_raw_data(mp_data)
+                mp_data = dict((key, json_digger(raw_data, mp_field_mapping[key][0])) for key in keys)
+                # return: (raw_data, sanitized_data)
+                return raw_data, self.remap_raw_data(mp_data)
             else:
-                return response_data, None
+                # return: (raw_data, None)
+                return raw_data, None
+
         return sanitize
 
     @api.model
@@ -146,16 +169,35 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def create_records(self, raw_data, mp_data, multi=False):
+        mp_account_obj = self.env['mp.account']
         record_obj = self.env[self._name]
+
+        context = self._context
+        if not context.get('mp_account_id'):
+            raise ValidationError("Please define mp_account_id in context!")
+
+        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+        marketplace = mp_account.marketplace
+
+        log_message = "Creating {model_name} with ID {rec_id}: {rec_name}"
 
         if multi:
             mp_datas = mp_data
             records = record_obj
+            self._logger(marketplace, "Creating %d record(s) of %s started!" % (len(mp_datas), record_obj._name))
 
             for mp_data in mp_datas:
                 records |= self.create_records(raw_data, mp_data)
+                self._logger(marketplace,
+                             "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
 
             return records
 
         raw_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
-        return record_obj.create(values)
+        record = record_obj.create(values)
+        self._logger(marketplace, log_message.format(**{
+            'model_name': record_obj._name,
+            'rec_id': record.id,
+            'rec_name': record.display_name
+        }))
+        return record
