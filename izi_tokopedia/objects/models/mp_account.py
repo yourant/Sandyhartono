@@ -69,8 +69,9 @@ class MarketplaceAccount(models.Model):
 
         tp_account = self.tokopedia_get_account()
         tp_product = TokopediaProduct(tp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
-        tp_data = tp_product.get_product_info(self.tp_shop_id.shop_id)
-        mp_product_obj.with_context({'mp_account_id': self.id}).create_records(tp_data, isinstance(tp_data, list))
+        tp_data_raw, tp_data_sanitized = tp_product.get_product_info(self.tp_shop_id.shop_id)
+        mp_product_obj.with_context({'mp_account_id': self.id}).create_records(tp_data_raw, tp_data_sanitized,
+                                                                               isinstance(tp_data_sanitized, list))
 
     @api.multi
     def tokopedia_get_products(self):
