@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 from odoo import api, fields, models
 from odoo.addons.izi_blibli.objects.utils.blibli.account import BlibliAccount
+from odoo.addons.izi_blibli.objects.utils.blibli.logistic import BlibliLogistic
 
 
 class MarketplaceAccount(models.Model):
@@ -41,3 +42,20 @@ class MarketplaceAccount(models.Model):
         result = bli_account.authenticate()
         if result:
             self.write({'state': 'authenticated'})
+
+    @api.multi
+    def blibli_get_logistic(self):
+        mp_blibli_logistic_obj = self.env['mp.blibli.logistic']
+
+        self.ensure_one()
+        params = {}
+        bli_account = self.blibli_get_account(**params)
+        bli_logistic = BlibliLogistic(bli_account, sanitizers=mp_blibli_logistic_obj.get_sanitizers(self.marketplace))
+        bli_data_raw, bli_data_sanitized = bli_logistic.get_logsitic_list()
+        mp_blibli_logistic_obj.with_context({'mp_account_id': self.id}).create_records(
+            bli_data_raw, bli_data_sanitized, isinstance(bli_data_sanitized, list))
+
+    @api.multi
+    def blibli_get_dependencies(self):
+        self.ensure_one()
+        self.blibli_get_logistic()

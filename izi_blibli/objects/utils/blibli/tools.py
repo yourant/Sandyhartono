@@ -13,8 +13,28 @@ def validate_response(response):
 
 
 def sanitize_response(response):
-    return response.json()['data']
+    return response.json()['content']
 
 
 def process_response(response):
     return sanitize_response(validate_response(response))
+
+
+def pagination_get_pages(limit=0, per_page=50):
+    pages = []  # tuple of page number and total item per page
+    page = 1
+
+    if 0 < limit <= per_page:
+        pages.append((page, limit))
+    elif limit > per_page:
+        total_page = limit // per_page
+        remainder = limit % per_page
+
+        while page <= total_page:
+            pages.append((page, per_page))
+            page += 1
+
+        if remainder > 0:
+            pages.append((total_page + 1, remainder))
+
+    return pages
