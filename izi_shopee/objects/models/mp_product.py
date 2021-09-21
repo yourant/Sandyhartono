@@ -20,9 +20,7 @@ class MarketplaceProduct(models.Model):
                 return None
 
         cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **{
-            'shopee': {
-                'mp_external_id': 'sp_product_id'
-            }
+                'shopee': 'sp_product_id'
         })
 
         cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
