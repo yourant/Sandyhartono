@@ -44,6 +44,8 @@ class MarketplaceProduct(models.Model):
                                            string="Marketplace Product Images")
     mp_product_image_id = fields.Many2one(comodel_name="mp.product.image",
                                           string="Marketplace Product Image", compute="_compute_mp_product_image")
+    mp_product_variant_ids = fields.One2many(comodel_name="mp.product.variant", inverse_name="mp_product_id",
+                                             string="Marketplace Product Variant")
 
     @api.multi
     def _compute_mp_product_image(self):

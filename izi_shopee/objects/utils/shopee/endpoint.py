@@ -17,7 +17,8 @@ class ShopeeEndpoint(object):
         'token_get': ('POST', '/api/v2/auth/token/get'),
         'logistic_list': ('GET', '/api/v2/logistics/get_channel_list'),
         'product_list': ('GET', '/api/v2/product/get_item_list'),
-        'product_info': ('GET', '/api/v2/product/get_item_base_info')
+        'product_info': ('GET', '/api/v2/product/get_item_base_info'),
+        'product_variant_list': ('GET', '/api/v2/product/get_model_list')
     }
 
     def __init__(self, sp_account, host="base"):
