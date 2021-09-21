@@ -17,10 +17,10 @@ class MarketplaceProduct(models.Model):
 
         cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
             'tokopedia': {
-                'tp_product_id': ('basic/productID', lambda r: str(r)),
+                'tp_product_id': ('basic/productID', lambda env, r: str(r)),
                 'name': ('basic/name', None),
                 'description_sale': ('basic/shortDesc', None),
-                'default_code': ('other/sku', lambda r: r if r else False),
+                'default_code': ('other/sku', lambda env, r: r if r else False),
                 'list_price': ('price/value', None),
                 'weight': ('weight/value', None),
                 'length': ('volume/length', None),

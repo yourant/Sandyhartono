@@ -118,7 +118,7 @@ class MarketplaceBase(models.AbstractModel):
             if not mp_raw_handler:
                 values[field_name] = sanitized_data[field_name]
                 continue
-            values[field_name] = mp_raw_handler(sanitized_data[field_name])
+            values[field_name] = mp_raw_handler(self.env, sanitized_data[field_name])
 
         values.update({
             'mp_account_id': mp_account.id,

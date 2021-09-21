@@ -15,7 +15,7 @@ class MPTokopediaShop(models.Model):
     user_id = fields.Integer(string="User ID", readonly=True, mp_raw=True)
     shop_name = fields.Char(string="Shop Name", readonly=True, mp_raw=True)
     shop_url = fields.Char(string="Shop URL", readonly=True, mp_raw=True)
-    is_open = fields.Boolean(string="Is Open?", readonly=True, mp_raw=True, mp_raw_handler=lambda r: bool(r))
+    is_open = fields.Boolean(string="Is Open?", readonly=True, mp_raw=True, mp_raw_handler=lambda env, r: bool(r))
     status = fields.Integer(string="Status", readonly=True, mp_raw=True)
     date_shop_created = fields.Date(string="Date Shop Created", readonly=True, mp_raw=True)
     domain = fields.Char(string="Domain", readonly=True, mp_raw=True)
