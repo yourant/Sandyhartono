@@ -4,6 +4,7 @@
 from odoo import api, fields, models
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
+from odoo.addons.izi_shopee.objects.utils.shopee.product import ShopeeProduct
 
 
 class MarketplaceAccount(models.Model):
@@ -83,3 +84,22 @@ class MarketplaceAccount(models.Model):
     def shopee_get_dependencies(self):
         self.ensure_one()
         self.shopee_get_logistic()
+
+    @api.multi
+    def shopee_get_mp_product(self):
+        mp_product_obj = self.env['mp.product']
+
+        self.ensure_one()
+        params = {}
+        if self.mp_token_id.state == 'valid':
+            params = {'access_token': self.mp_token_id.name}
+        sp_account = self.shopee_get_account(**params)
+        sp_product = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
+        sp_data_raw, sp_data_sanitized = sp_product.get_product_list()
+        mp_product_obj.with_context({'mp_account_id': self.id}).create_records(
+            sp_data_raw, sp_data_sanitized, isinstance(sp_data_sanitized, list))
+
+    @api.multi
+    def shopee_get_products(self):
+        self.ensure_one()
+        self.shopee_get_mp_product()
