@@ -17,7 +17,7 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_field_mapping = {}
 
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
-    marketplace = fields.Selection(string="Marketplace",
+    marketplace = fields.Selection(string="Marketplace", readonly=True,
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
                                    related="mp_account_id.marketplace", store=True)
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
@@ -124,6 +124,12 @@ class MarketplaceBase(models.AbstractModel):
         return hashlib.md5(json.dumps(raw).encode()).hexdigest()
 
     @api.model
+    def enable_currencies(self, xml_ids):
+        for xml_id in xml_ids:
+            currency = self.env.ref(xml_id)
+            currency.write({'active': True})
+
+    @api.model
     def remap_raw_data(self, raw):
         datas = []
         # check if all values are list object
@@ -188,8 +194,8 @@ class MarketplaceBase(models.AbstractModel):
             records = record_obj
             self._logger(marketplace, "Creating %d record(s) of %s started!" % (len(mp_datas), record_obj._name))
 
-            for mp_data in mp_datas:
-                records |= self.create_records(raw_data, mp_data)
+            for index, mp_data in enumerate(mp_datas):
+                records |= self.create_records(raw_data[index], mp_data)
                 self._logger(marketplace,
                              "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
 

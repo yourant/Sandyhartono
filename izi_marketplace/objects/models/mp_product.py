@@ -10,8 +10,12 @@ class MarketplaceProduct(models.Model):
     _name = 'mp.product'
     _inherit = 'mp.base'
     _description = 'Marketplace Product'
+    _rec_mp_external_id = {}
 
     name = fields.Char(string="Name", index=True, required=True)
+    active = fields.Boolean(default=True)
+    currency_id = fields.Many2one(related="mp_account_id.currency_id")
+    company_id = fields.Many2one(related="mp_account_id.company_id")
     description_sale = fields.Text(string="Sale Description",
                                    help="A description of the Product that you want to communicate to your customers. "
                                         "This description will be copied to every Sales Order, Delivery Order and "
