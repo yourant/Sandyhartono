@@ -194,8 +194,8 @@ class MarketplaceBase(models.AbstractModel):
             records = record_obj
             self._logger(marketplace, "Creating %d record(s) of %s started!" % (len(mp_datas), record_obj._name))
 
-            for mp_data in mp_datas:
-                records |= self.create_records(raw_data, mp_data)
+            for index, mp_data in enumerate(mp_datas):
+                records |= self.create_records(raw_data[index], mp_data)
                 self._logger(marketplace,
                              "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
 
