@@ -29,14 +29,14 @@ class MPShopeeLogistic(models.Model):
     @classmethod
     def _build_model_attributes(cls, pool):
 
-        def _set_logistic_parent(data):
+        def _set_logistic_parent(env, data):
             parent_logistic_id = [8000, 8001, 8002, 8003, 8004, 8005, 80024, 80008]
             is_parent = True if data in parent_logistic_id else False
             return is_parent
 
         cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
             'shopee': {
-                'logistics_channel_id': ('logistics_channel_list/logistics_channel_id', lambda r: str(r)),
+                'logistics_channel_id': ('logistics_channel_list/logistics_channel_id', lambda env, r: str(r)),
                 'logistics_channel_name': ('logistics_channel_list/logistics_channel_name', None),
                 'logistics_description': ('logistics_channel_list/logistics_description', None),
                 'enabled': ('logistics_channel_list/enabled', None),

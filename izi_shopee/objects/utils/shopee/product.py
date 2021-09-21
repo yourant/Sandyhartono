@@ -38,7 +38,7 @@ class ShopeeProduct(ShopeeAPI):
                 params.update({
                     'offset': offset,
                     'page_size': per_page,
-                    'item_status': 'NORMAL'
+                    'item_status': ['NORMAL', 'BANNED', 'DELETED', 'UNLIST']
                 })
                 prepared_request = self.build_request('product_list',
                                                       self.sp_account.partner_id,
@@ -54,9 +54,10 @@ class ShopeeProduct(ShopeeAPI):
                     self.product_data.extend(sp_data)
                     self.product_data_raw.extend(raw_data)
                     self.logger.info("Product: Imported %d of unlimited." % len(self.product_data))
-                    offset += per_page
                     if not sp_data_list['has_next_page']:
                         unlimited = False
+                    else:
+                        offset = sp_data_list['next_offset']
                 else:
                     unlimited = False
         else:
