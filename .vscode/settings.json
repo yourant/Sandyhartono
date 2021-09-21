@@ -3,6 +3,7 @@
   "editor.formatOnType": true,
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
+  "python.linting.enabled": true,
   "python.linting.pycodestyleEnabled": true,
   "python.linting.pycodestyleArgs": [
     "--max-line-length=120"
@@ -10,6 +11,5 @@
   "python.formatting.provider": "autopep8",
   "python.formatting.autopep8Args": [
     "--max-line-length=120"
-  ],
-  "python.linting.enabled": true
+  ]
 }

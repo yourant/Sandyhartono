@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
-from odoo import api, fields, models
+from odoo import api, fields, models, tools
 
 from odoo.addons import decimal_precision as dp
 
@@ -42,16 +42,36 @@ class MarketplaceProduct(models.Model):
                                      "Use this field anywhere a small image is required.")
     mp_product_image_ids = fields.One2many(comodel_name="mp.product.image", inverse_name="mp_product_id",
                                            string="Marketplace Product Images")
-    mp_product_image_id = fields.Many2one(comodel_name="mp.product.image",
-                                          string="Marketplace Product Image", compute="_compute_mp_product_image")
     mp_product_variant_ids = fields.One2many(comodel_name="mp.product.variant", inverse_name="mp_product_id",
                                              string="Marketplace Product Variant")
 
+    @api.model
+    def create(self, values):
+        tools.image_resize_images(values)
+        mp_product = super(MarketplaceProduct, self).create(values)
+        if mp_product.mp_product_image_ids:
+            mp_product_image = mp_product.mp_product_image_ids.sorted('sequence')[0]
+            mp_product.write({'image': mp_product_image.image})
+        return mp_product
+
     @api.multi
-    def _compute_mp_product_image(self):
+    def write(self, values):
+        tools.image_resize_images(values)
+        res = super(MarketplaceProduct, self).write(values)
         for mp_product in self:
             if mp_product.mp_product_image_ids:
-                mp_product_image = mp_product.mp_product_image_ids.sorted('name', reverse=True)[0]
-                mp_product.mp_product_image_id = mp_product_image.id
+                mp_product_image = mp_product.mp_product_image_ids.sorted('sequence')[0]
+                if mp_product_image.id != self._context.get('latest_mp_product_image_id'):
+                    mp_product.with_context({'latest_mp_product_image_id': mp_product_image.id}).write(
+                        {'image': mp_product_image.image})
             else:
-                mp_product.mp_product_image_id = False
+                if not self._context.get('mp_product_image_id_cleaned'):
+                    mp_product.with_context({'mp_product_image_id_cleaned': True}).write({'image': False})
+        return res
+
+    @api.onchange('mp_product_image_ids')
+    def onchange_mp_product_image_ids(self):
+        if self.mp_product_image_ids:
+            mp_product_image = self.mp_product_image_ids.filtered(lambda s: not isinstance(s.id, int))
+            if mp_product_image.exists():
+                mp_product_image.sequence -= len(self.mp_product_image_ids)

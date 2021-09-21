@@ -10,6 +10,7 @@ class MarketplaceProductImage(models.Model):
     _description = 'Marketplace Product Image'
     _rec_mp_external_id = {}
 
-    name = fields.Char(string="Product Image URL", readonly=True)
+    sequence = fields.Integer(string="Sequence", default=1)
+    name = fields.Char(string="Image URL", readonly=True)
     image = fields.Binary('Image', attachment=True)
     mp_product_id = fields.Many2one(comodel_name="mp.product", string="Marketplace Product", readonly=True)

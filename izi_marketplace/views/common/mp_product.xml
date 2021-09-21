@@ -15,7 +15,7 @@
                 <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
               </button>
             </div>
-            <field name="image_medium" widget="image" class="oe_avatar"/>
+            <field name="image_medium" widget="image" class="oe_avatar" readonly="1"/>
             <div class="oe_title">
               <label class="oe_edit_only" for="name" string="Product Name"/>
               <h1>
@@ -29,11 +29,14 @@
                     <!--suppress PyUnresolvedReferences -->
                     <field name="marketplace" attrs="{'readonly': [('id', '!=', False)]}"/>
                     <!--suppress PyUnresolvedReferences -->
-                    <field name="mp_account_id" domain="[('marketplace', '=', marketplace)]" attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <field name="mp_account_id" domain="[('marketplace', '=', marketplace)]"
+                           attrs="{'readonly': [('id', '!=', False)]}"/>
                     <field name="default_code"/>
+                    <field name="mp_product_image_id"/>
                   </group>
                   <group name="group_standard_price">
-                    <field name="list_price" widget='monetary' options="{'currency_field': 'currency_id', 'field_digits': True}"/>
+                    <field name="list_price" widget='monetary'
+                           options="{'currency_field': 'currency_id', 'field_digits': True}"/>
                     <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                   </group>
                 </group>
@@ -80,16 +83,19 @@
               </page>
               <page string="Images" name="images">
                 <group string="Product Images">
-                  <field name="mp_product_image_ids" nolabel="1" class="o_website_sale_image_list" view_mode='tree,form'>
+                  <field name="mp_product_image_ids" nolabel="1" class="o_website_sale_image_list" view_mode='tree,form'
+                         context="{'default_mp_account_id': mp_account_id}">
                     <tree string="Upload or remove image">
-                      <field name="image" widget='image'/>
+                      <field name="sequence" widget="handle"/>
+                      <field name="image" widget="image" class="oe_avatar"/>
                       <field name="name" readonly="1"/>
                     </tree>
                     <form string="Upload or remove image">
                       <group>
                         <group>
+                          <field name="mp_account_id" invisible="1"/>
                           <field name="name" readonly="1"/>
-                          <field name='image' widget='image'/>
+                          <field name="image" widget="image"/>
                         </group>
                       </group>
                     </form>
