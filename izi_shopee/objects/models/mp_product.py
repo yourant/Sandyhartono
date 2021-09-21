@@ -13,7 +13,7 @@ class MarketplaceProduct(models.Model):
     @classmethod
     def _build_model_attributes(cls, pool):
 
-        def _handle_price_info(data):
+        def _handle_price_info(env, data):
             if data:
                 return data[0].get('original_price')
             else:
@@ -27,12 +27,12 @@ class MarketplaceProduct(models.Model):
             'shopee': {
                 'name': ('item_list/item_name', None),
                 'description_sale': ('item_list/description', None),
-                'default_code': ('item_list/item_sku', lambda r: r if r else False),
+                'default_code': ('item_list/item_sku', lambda env, r: r if r else False),
                 'list_price': ('item_list/price_info', _handle_price_info),
-                'weight': ('item_list/weight', lambda r: float(r)),
-                'length': ('item_list/dimension/package_length', lambda r: float(r)),
-                'width': ('item_list/dimension/package_width', lambda r: float(r)),
-                'height': ('item_list/dimension/package_height', lambda r: float(r)),
+                'weight': ('item_list/weight', lambda env, r: float(r)),
+                'length': ('item_list/dimension/package_length', lambda env, r: float(r)),
+                'width': ('item_list/dimension/package_width', lambda env, r: float(r)),
+                'height': ('item_list/dimension/package_height', lambda env, r: float(r)),
                 'sp_product_id': ('item_list/item_id', None),
                 'sp_item_status': ('item_list/item_status', None)
             }
