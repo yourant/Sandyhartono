@@ -3,15 +3,18 @@
 import requests
 
 from .api import BlibliAPI
-from .tools import process_response
 
 
-class ShopeeLogistic(BlibliAPI):
+class BlibliLogistic(BlibliAPI):
 
     def get_logsitic_list(self):
-        prepared_request = self.endpoints.build_request('logistic_list',
-                                                        self.sp_account.partner_id,
-                                                        self.sp_account.partner_key,
-                                                        self.sp_account.shop_id,
-                                                        self.sp_account.access_token)
-        return process_response(requests.request(**prepared_request))
+        params = {
+            'storeCode': self.bli_account.shop_code,
+            'channelId': self.bli_account.shop_name,
+            'username': self.bli_account.usermail,
+            'storeId': str(self.bli_account.store_id)
+        }
+        prepared_request = self.endpoints.build_request('logistic', **{
+            'params': params
+        })
+        return self.process_response('logistic', self.request(**prepared_request))
