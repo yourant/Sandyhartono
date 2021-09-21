@@ -69,9 +69,21 @@ class MarketplaceAccount(models.Model):
 
         tp_account = self.tokopedia_get_account()
         tp_product = TokopediaProduct(tp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
-        tp_data_raw, tp_data_sanitized = tp_product.get_product_info(self.tp_shop_id.shop_id)
-        mp_product_obj.with_context({'mp_account_id': self.id}).create_records(tp_data_raw, tp_data_sanitized,
-                                                                               isinstance(tp_data_sanitized, list))
+        tp_data_raw, tp_data_sanitized = tp_product.get_product_info(self.tp_shop_id.shop_id, limit=10)
+        check_existing_records = mp_product_obj.with_context({'mp_account_id': self.id}).check_existing_records(
+            'tp_product_id', tp_data_raw, tp_data_sanitized, isinstance(tp_data_sanitized, list))
+        if check_existing_records['need_update_records']:
+            mp_product_obj.with_context({'mp_account_id': self.id}).update_records(
+                check_existing_records['need_update_records'])
+
+        if check_existing_records['need_create_records']:
+            tp_data_raw, tp_data_sanitized = mp_product_obj._prepare_create_records(
+                check_existing_records['need_create_records'])
+            mp_product_obj.with_context({'mp_account_id': self.id}).create_records(tp_data_raw, tp_data_sanitized,
+                                                                                   isinstance(tp_data_sanitized, list))
+
+        if check_existing_records['need_skip_records']:
+            mp_product_obj.log_skip(self.marketplace, check_existing_records['need_skip_records'])
 
     @api.multi
     def tokopedia_get_products(self):
