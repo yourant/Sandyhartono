@@ -17,7 +17,7 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_field_mapping = {}
 
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
-    marketplace = fields.Selection(string="Marketplace",
+    marketplace = fields.Selection(string="Marketplace", readonly=True,
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
                                    related="mp_account_id.marketplace", store=True)
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
@@ -122,6 +122,12 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def generate_signature(self, raw):
         return hashlib.md5(json.dumps(raw).encode()).hexdigest()
+
+    @api.model
+    def enable_currencies(self, xml_ids):
+        for xml_id in xml_ids:
+            currency = self.env.ref(xml_id)
+            currency.write({'active': True})
 
     @api.model
     def remap_raw_data(self, raw):

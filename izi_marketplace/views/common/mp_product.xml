@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.form_mp_product" model="ir.ui.view">
+      <field name="name">Marketplace Product Form View</field>
+      <field name="model">mp.product</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Product">
+          <sheet>
+            <field name="currency_id" invisible="1"/>
+            <!--suppress OdooXml -->
+            <field name="id" invisible="1"/>
+            <div class="oe_button_box" name="button_box">
+              <button name="toggle_active" type="object"
+                      class="oe_stat_button" icon="fa-archive">
+                <field name="active" widget="boolean_button"
+                       options='{"terminology": "archive"}'/>
+              </button>
+            </div>
+            <field name="image_medium" widget="image" class="oe_avatar"/>
+            <div class="oe_title">
+              <label class="oe_edit_only" for="name" string="Product Name"/>
+              <h1><field name="name" placeholder="Product Name"/></h1>
+            </div>
+            <notebook>
+              <page string="General Information" name="general_information">
+                <group>
+                  <group>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="marketplace" attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="mp_account_id" domain="[('marketplace', '=', marketplace)]"
+                           attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <field name="default_code"/>
+                  </group>
+                  <group name="group_standard_price">
+                    <field name="list_price" widget='monetary'
+                           options="{'currency_field': 'currency_id', 'field_digits': True}"/>
+                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                  </group>
+                </group>
+              </page>
+              <page string="Inventory" name="inventory">
+                <group>
+                  <group string="Logistics" name="weight_and_volume">
+                    <label for="weight"/>
+                    <div class="o_row" name="weight">
+                      <field name="weight"/>
+                      <span>kg</span>
+                    </div>
+                    <label for="volume"/>
+                    <div class="o_row" name="volume">
+                      <field name="volume" string="Volume"/>
+                      <span>m³</span>
+                    </div>
+                  </group>
+                  <group string="Dimention" name="dimention">
+                    <label for="length"/>
+                    <div class="o_row" name="length">
+                      <field name="length"/>
+                      <span>cm</span>
+                    </div>
+                    <label for="width"/>
+                    <div class="o_row" name="width">
+                      <field name="width"/>
+                      <span>cm</span>
+                    </div>
+                    <label for="height"/>
+                    <div class="o_row" name="height">
+                      <field name="height"/>
+                      <span>cm</span>
+                    </div>
+                  </group>
+                </group>
+              </page>
+              <page string="Notes" name="notes">
+                <group name="description">
+                  <group string="Description for Customers">
+                    <field name="description_sale" nolabel="1" placeholder="This note will show up on sales orders."/>
+                  </group>
+                </group>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="signature"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

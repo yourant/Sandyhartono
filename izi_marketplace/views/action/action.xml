@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <data noupdate="0">
-
-
+    <record id="izi_marketplace.action_window_mp_product_view_per_marketplace" model="ir.actions.act_window">
+      <field name="name">Marketplace Product(s)</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.product</field>
+      <field name="view_mode">tree,form</field>
+    </record>
   </data>
 </odoo>
