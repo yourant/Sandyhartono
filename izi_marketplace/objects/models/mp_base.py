@@ -21,7 +21,7 @@ class MarketplaceBase(models.AbstractModel):
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
                                    related="mp_account_id.marketplace", store=True)
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
-    signature = fields.Char(string="Signature", readonly=True, required=True, default="",
+    signature = fields.Char(string="Signature", readonly=True, required=False, default="",
                             help="MD5 hash of the marketplace data.")
     mp_external_id = fields.Char(string="Marketplace External ID", compute="_compute_mp_external_id")
 
@@ -44,6 +44,12 @@ class MarketplaceBase(models.AbstractModel):
         getattr(logger, level)(log_message)
 
     @api.model
+    def log_skip(self, marketplace, need_skip_records):
+        num_skip = len(need_skip_records)
+        log_message = "Skipping {num_skip} existing {model_name} record(s)"
+        self._logger(marketplace, log_message.format(**{'num_skip': num_skip, 'model_name': self._name}))
+
+    @api.model
     def _get_rec_mp_field_mapping(self, marketplace):
         return self._rec_mp_field_mapping.get(marketplace, None)
 
@@ -54,10 +60,17 @@ class MarketplaceBase(models.AbstractModel):
             if isinstance(rec._rec_mp_external_id, str):
                 mp_external_id = getattr(rec, rec._rec_mp_external_id, False)
             elif isinstance(rec._rec_mp_external_id, dict):
-                mp_external_id = getattr(rec, rec._rec_mp_external_id.get(rec.marketplace), False)
+                mp_external_id = getattr(rec, rec._rec_mp_external_id.get(rec.marketplace, ''), False)
             if mp_external_id:
                 mp_external_id = str(mp_external_id)
             rec.mp_external_id = mp_external_id
+
+    @api.model
+    def _field_lookup_mp_external_id(self, marketplace):
+        if isinstance(self._rec_mp_external_id, str):
+            return self._rec_mp_external_id
+        elif isinstance(self._rec_mp_external_id, dict):
+            return self._rec_mp_external_id.get(marketplace)
 
     @api.model
     def _get_mp_raw_fields(self, marketplace=None):
@@ -176,6 +189,50 @@ class MarketplaceBase(models.AbstractModel):
         return {}
 
     @api.model
+    def check_existing_records(self, identifier_field, raw_data, mp_data, multi=False):
+        mp_account_obj = self.env['mp.account']
+        record_obj = self.env[self._name]
+
+        context = self._context
+        if not context.get('mp_account_id'):
+            raise ValidationError("Please define mp_account_id in context!")
+
+        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+        marketplace = mp_account.marketplace
+
+        if multi:
+            raw_datas = raw_data
+            mp_datas = mp_data
+            check_existing_records = {
+                'need_update_records': [],
+                'need_create_records': [],
+                'need_skip_records': []
+            }
+
+            for index, mp_data in enumerate(mp_datas):
+                existing_record = self.check_existing_records(identifier_field, raw_datas[index], mp_data)
+                for key in existing_record.keys():
+                    check_existing_records[key].append(existing_record[key])
+
+            return check_existing_records
+
+        sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
+        mp_external_id_field = self._field_lookup_mp_external_id(marketplace)
+        record = record_obj.search([(mp_external_id_field, '=', values[identifier_field])])
+        if record.exists():
+            current_signature = self.generate_signature(sanitized_data)
+            if current_signature != record.signature:
+                return {'need_update_records': (record, values, raw_data, sanitized_data)}
+            return {'need_skip_records': (record, {})}
+        return {'need_create_records': (raw_data, sanitized_data)}
+
+    @api.model
+    def _prepare_create_records(self, need_create_records):
+        raw_data = [need_create_record[0] for need_create_record in need_create_records]
+        sanitized_data = [need_create_record[1] for need_create_record in need_create_records]
+        return raw_data, sanitized_data
+
+    @api.model
     def create_records(self, raw_data, mp_data, multi=False):
         mp_account_obj = self.env['mp.account']
         record_obj = self.env[self._name]
@@ -190,18 +247,19 @@ class MarketplaceBase(models.AbstractModel):
         log_message = "Creating {model_name} with ID {rec_id}: {rec_name}"
 
         if multi:
+            raw_datas = raw_data
             mp_datas = mp_data
             records = record_obj
             self._logger(marketplace, "Creating %d record(s) of %s started!" % (len(mp_datas), record_obj._name))
 
             for index, mp_data in enumerate(mp_datas):
-                records |= self.create_records(raw_data[index], mp_data)
+                records |= self.create_records(raw_datas[index], mp_data)
                 self._logger(marketplace,
                              "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
 
             return records
 
-        raw_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
+        sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
         record = record_obj.create(values)
         self._logger(marketplace, log_message.format(**{
             'model_name': record_obj._name,
@@ -209,3 +267,14 @@ class MarketplaceBase(models.AbstractModel):
             'rec_name': record.display_name
         }))
         return record
+
+    @api.model
+    def update_records(self, need_update_records):
+        record_obj = self.env[self._name]
+        records = record_obj
+        for need_update_record in need_update_records:
+            record, values, raw_data, sanitized_data = need_update_record
+            record.write(values)
+            records |= record
+        return records
+
