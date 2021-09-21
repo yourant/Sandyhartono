@@ -9,6 +9,7 @@ class ShopeeProduct(ShopeeAPI):
     def __init__(self, sp_account, **kwargs):
         super(ShopeeProduct, self).__init__(sp_account, **kwargs)
         self.product_data = []
+        self.product_data_raw = []
 
     def get_product_info(self, pd_data):
         item_id_list = []
@@ -25,8 +26,8 @@ class ShopeeProduct(ShopeeAPI):
                                               ** {
                                                   'params': params
                                               })
-        sp_data = self.process_response('product_info', self.request(**prepared_request))
-        return sp_data['item_list']
+        raw_data, sp_data = self.process_response('product_info', self.request(**prepared_request))
+        return raw_data['item_list'], sp_data
 
     def get_product_list(self, limit=0, per_page=50):
         params = {}
@@ -47,12 +48,14 @@ class ShopeeProduct(ShopeeAPI):
                                                       ** {
                                                           'params': params
                                                       })
-                sp_data = self.process_response('product_list', self.request(**prepared_request))
-                if sp_data:
-                    sp_product = self.get_product_info(sp_data['item'])
-                    self.product_data.extend(sp_product)
+                sp_data_list = self.process_response('product_list', self.request(**prepared_request))
+                if sp_data_list:
+                    raw_data, sp_data = self.get_product_info(sp_data_list['item'])
+                    self.product_data.extend(sp_data)
+                    self.product_data_raw.extend(raw_data)
+                    self.logger.info("Product: Imported %d of unlimited." % len(self.product_data))
                     offset += per_page
-                    if not sp_data['has_next_page']:
+                    if not sp_data_list['has_next_page']:
                         unlimited = False
                 else:
                     unlimited = False
@@ -72,8 +75,12 @@ class ShopeeProduct(ShopeeAPI):
                                                       ** {
                                                           'params': params
                                                       })
-                sp_data = self.process_response('product_list', self.request(**prepared_request))
-                if sp_data:
+                sp_data_list = self.process_response('product_list', self.request(**prepared_request))
+                if sp_data_list:
+                    raw_data, sp_data = self.get_product_info(sp_data_list['item'])
                     self.product_data.extend(sp_data)
+                    self.product_data_raw.extend(raw_data)
+                    self.logger.info("Product: Imported %d of %d." % (len(self.product_data), limit))
 
-        return self.product_data
+        self.logger.info("Product: Finished %d imported." % len(self.product_data))
+        return self.product_data_raw, self.product_data
