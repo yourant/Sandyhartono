@@ -9,6 +9,7 @@ class TokopediaProduct(TokopediaAPI):
     def __init__(self, tp_account, **kwargs):
         super(TokopediaProduct, self).__init__(tp_account, **kwargs)
         self.product_data = []
+        self.product_data_raw = []
 
     def get_product_info(self, shop_id, limit=0, per_page=50):
         params = {
@@ -25,9 +26,11 @@ class TokopediaProduct(TokopediaAPI):
                 prepared_request = self.build_request('product_info', **{
                     'params': params
                 })
-                tp_data = self.process_response('product_info', self.request(**prepared_request))
-                if tp_data:
+                raw_data, tp_data = self.process_response('product_info', self.request(**prepared_request))
+                if raw_data:
                     self.product_data.extend(tp_data)
+                    self.product_data_raw.extend(raw_data)
+                    self.logger.info("Product: Imported %d of unlimited." % len(self.product_data))
                     page += 1
                 else:
                     unlimited = False
@@ -41,8 +44,11 @@ class TokopediaProduct(TokopediaAPI):
                 prepared_request = self.build_request('product_info', **{
                     'params': params
                 })
-                tp_data = self.process_response('product_info', self.request(**prepared_request))
-                if tp_data:
+                raw_data, tp_data = self.process_response('product_info', self.request(**prepared_request))
+                if raw_data:
                     self.product_data.extend(tp_data)
+                    self.product_data_raw.extend(raw_data)
+                    self.logger.info("Product: Imported %d of %d." % (len(self.product_data), limit))
 
-        return self.product_data
+        self.logger.info("Product: Finished %d imported." % len(self.product_data))
+        return self.product_data_raw, self.product_data

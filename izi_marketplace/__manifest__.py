@@ -36,13 +36,15 @@
         # 'security/res_groups.xml',
 
         # data
+        'data/functions.xml',
 
         # global action
-        # 'views/action/action.xml',
+        'views/action/action.xml',
 
         # view
         'views/common/mp_account.xml',
         'views/common/mp_token.xml',
+        'views/common/mp_product.xml',
 
         # wizard
 
