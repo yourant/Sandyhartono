@@ -17,7 +17,9 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_field_mapping = {}
 
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
-    marketplace = fields.Char(string="Marketplace", compute="_compute_marketplace", store=True)
+    marketplace = fields.Selection(string="Marketplace",
+                                   selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
+                                   related="mp_account_id.marketplace", store=True)
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
     signature = fields.Char(string="Signature", readonly=True, required=True, default="",
                             help="MD5 hash of the marketplace data.")
@@ -44,12 +46,6 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def _get_rec_mp_field_mapping(self, marketplace):
         return self._rec_mp_field_mapping.get(marketplace, None)
-
-    @api.multi
-    @api.depends('mp_account_id.marketplace')
-    def _compute_marketplace(self):
-        for rec in self:
-            rec.marketplace = rec.mp_account_id.marketplace
 
     @api.multi
     def _compute_mp_external_id(self):
