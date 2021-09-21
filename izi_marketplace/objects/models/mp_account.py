@@ -44,6 +44,8 @@ class MarketplaceAccount(models.Model):
     company_id = fields.Many2one(comodel_name="res.company", string="Company", index=1, readonly=False, required=True,
                                  default=lambda self: self.env['res.company']._company_default_get(),
                                  states=READONLY_STATES)
+    currency_id = fields.Many2one(comodel_name="res.currency", string="Currency", required=True,
+                                  default=lambda s: s.env.ref('base.IDR'))
     state = fields.Selection(string="Status", selection=MP_ACCOUNT_STATES, required=True, default="new",
                              states=READONLY_STATES)
     mp_token_ids = fields.One2many(comodel_name="mp.token", inverse_name="mp_account_id", string="Marketplace Tokens",
@@ -85,3 +87,16 @@ class MarketplaceAccount(models.Model):
         self.ensure_one()
         if hasattr(self, '%s_get_products' % self.marketplace):
             getattr(self, '%s_get_products' % self.marketplace)()
+
+    @api.multi
+    def action_view_mp_product(self):
+        self.ensure_one()
+        action = self.env.ref('izi_marketplace.action_window_mp_product_view_per_marketplace').read()[0]
+        action.update({
+            'domain': [('mp_account_id', '=', self.id)],
+            'context': {
+                'default_marketplace': self.marketplace,
+                'default_mp_account_id': self.id
+            }
+        })
+        return action
