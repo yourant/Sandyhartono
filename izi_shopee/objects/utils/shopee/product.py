@@ -11,8 +11,24 @@ class ShopeeProduct(ShopeeAPI):
         self.product_data = []
         self.product_data_raw = []
 
+    def get_product_variant(self, item_id):
+        params = {
+            'item_id': item_id
+        }
+        prepared_request = self.build_request('product_variant_list',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'params': params
+                                              })
+        sp_data_list = self.process_response('product_variant_list', self.request(**prepared_request))
+        return sp_data_list
+
     def get_product_info(self, pd_data):
         item_id_list = []
+
         for data in pd_data:
             item_id_list.append(data['item_id'])
         params = {
@@ -27,6 +43,13 @@ class ShopeeProduct(ShopeeAPI):
                                                   'params': params
                                               })
         raw_data, sp_data = self.process_response('product_info', self.request(**prepared_request))
+        temp_raw_data = raw_data['item_list']
+        for index, data in enumerate(temp_raw_data):
+            if data['has_model']:
+                pd_variant_data = self.get_product_variant(data['item_id'])
+                raw_data['item_list'][index].update({
+                    'variants': pd_variant_data
+                })
         return raw_data['item_list'], sp_data
 
     def get_product_list(self, limit=0, per_page=50):

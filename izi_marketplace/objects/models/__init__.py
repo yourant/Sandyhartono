@@ -6,3 +6,4 @@ from . import mp_base
 from . import mp_token
 from . import mp_product
 from . import mp_product_image
+from . import mp_product_variant
