@@ -5,3 +5,4 @@ from . import mp_account
 from . import mp_token
 from . import mp_shopee_logistic
 from . import mp_product
+from . import mp_product_image

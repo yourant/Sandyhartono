@@ -40,3 +40,16 @@ class MarketplaceProduct(models.Model):
                                 help="Small-sized image of the product. It is automatically "
                                      "resized as a 64x64px image, with aspect ratio preserved. "
                                      "Use this field anywhere a small image is required.")
+    mp_product_image_ids = fields.One2many(comodel_name="mp.product.image", inverse_name="mp_product_id",
+                                           string="Marketplace Product Images")
+    mp_product_image_id = fields.Many2one(comodel_name="mp.product.image",
+                                          string="Marketplace Product Image", compute="_compute_mp_product_image")
+
+    @api.multi
+    def _compute_mp_product_image(self):
+        for mp_product in self:
+            if mp_product.mp_product_image_ids:
+                mp_product_image = mp_product.mp_product_image_ids.sorted('name', reverse=True)[0]
+                mp_product.mp_product_image_id = mp_product_image.id
+            else:
+                mp_product.mp_product_image_id = False
