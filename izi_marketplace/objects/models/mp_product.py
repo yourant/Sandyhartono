@@ -9,7 +9,7 @@ from odoo.addons import decimal_precision as dp
 class MarketplaceProduct(models.Model):
     _name = 'mp.product'
     _inherit = 'mp.base'
-    _description = 'Marketplace Product Representation'
+    _description = 'Marketplace Product'
     _rec_mp_external_id = {}
 
     name = fields.Char(string="Name", index=True, required=True)
