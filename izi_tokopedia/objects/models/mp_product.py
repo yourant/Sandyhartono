@@ -7,10 +7,17 @@ from odoo import api, fields, models
 class MarketplaceProduct(models.Model):
     _inherit = 'mp.product'
 
+    tp_product_id = fields.Char(string="Tokopedia Product ID", readonly=True)
+
     @classmethod
     def _build_model_attributes(cls, pool):
+        cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **{
+            'tokopedia': 'tp_product_id'
+        })
+
         cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
             'tokopedia': {
+                'tp_product_id': ('basic/productID', lambda r: str(r)),
                 'name': ('basic/name', None),
                 'description_sale': ('basic/shortDesc', None),
                 'default_code': ('other/sku', lambda r: r if r else False),
