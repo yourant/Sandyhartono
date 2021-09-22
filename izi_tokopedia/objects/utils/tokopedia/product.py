@@ -8,16 +8,25 @@ class TokopediaProduct(TokopediaAPI):
 
     def __init__(self, tp_account, **kwargs):
         super(TokopediaProduct, self).__init__(tp_account, **kwargs)
-        self.product_data = []
-        self.product_data_raw = []
 
     def get_product_info(self, *args, **kwargs):
         return getattr(self, '%s_get_product_info' % self.api_version)(*args, **kwargs)
 
-    def v1_get_product_info(self, shop_id, limit=0, per_page=50):
-        params = {
-            'shop_id': shop_id
-        }
+    def v1_get_product_info(self, shop_id=None, product_id=None, limit=0, per_page=50):
+        product_data, product_data_raw = [], []
+        params = {}
+
+        if shop_id:
+            params.update({
+                'shop_id': shop_id
+            })
+
+        if product_id:
+            limit = 1
+            params.update({
+                'product_id': product_id
+            })
+
         unlimited = not limit
         if unlimited:
             page = 1
@@ -31,9 +40,9 @@ class TokopediaProduct(TokopediaAPI):
                 })
                 raw_data, tp_data = self.process_response('product_info', self.request(**prepared_request))
                 if raw_data:
-                    self.product_data.extend(tp_data)
-                    self.product_data_raw.extend(raw_data)
-                    self.logger.info("Product: Imported %d of unlimited." % len(self.product_data))
+                    product_data.extend(tp_data)
+                    product_data_raw.extend(raw_data)
+                    self._logger.info("Product: Imported %d record(s) of unlimited." % len(self.product_data))
                     page += 1
                 else:
                     unlimited = False
@@ -49,9 +58,12 @@ class TokopediaProduct(TokopediaAPI):
                 })
                 raw_data, tp_data = self.process_response('product_info', self.request(**prepared_request))
                 if raw_data:
-                    self.product_data.extend(tp_data)
-                    self.product_data_raw.extend(raw_data)
-                    self.logger.info("Product: Imported %d of %d." % (len(self.product_data), limit))
+                    product_data.extend(tp_data)
+                    product_data_raw.extend(raw_data)
+                    if limit == 1:
+                        self._logger.info("Product: Imported 1 record.")
+                    else:
+                        self._logger.info("Product: Imported %d record(s) of %d." % (len(product_data), limit))
 
-        self.logger.info("Product: Finished %d imported." % len(self.product_data))
-        return self.product_data_raw, self.product_data
+        self._logger.info("Product: Finished %d record(s) imported." % len(product_data))
+        return product_data_raw, product_data

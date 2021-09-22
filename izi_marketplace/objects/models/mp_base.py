@@ -28,7 +28,19 @@ class MarketplaceBase(models.AbstractModel):
     @classmethod
     def _build_model_attributes(cls, pool):
         super(MarketplaceBase, cls)._build_model_attributes(pool)
+        cls._add_rec_mp_external_id()
+        cls._add_rec_mp_field_mapping()
         cls._validate_rec_mp_field_mapping()
+
+    @classmethod
+    def _add_rec_mp_external_id(cls, marketplace=None, mp_external_id_field=None):
+        if marketplace and mp_external_id_field:
+            cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **dict([(marketplace, mp_external_id_field)]))
+
+    @classmethod
+    def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
+        if marketplace and mp_field_mapping:
+            cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **dict([(marketplace, mp_field_mapping)]))
 
     @classmethod
     def _validate_rec_mp_field_mapping(cls):
@@ -229,6 +241,11 @@ class MarketplaceBase(models.AbstractModel):
         return {}
 
     @api.model
+    def search_mp_records(self, marketplace, mp_external_id, operator="="):
+        mp_external_id_field = self._field_lookup_mp_external_id(marketplace)
+        return self.search([(mp_external_id_field, operator, mp_external_id)])
+
+    @api.model
     def check_existing_records(self, identifier_field, raw_data, mp_data, multi=False):
         mp_account_obj = self.env['mp.account']
         record_obj = self.env[self._name]
@@ -240,6 +257,10 @@ class MarketplaceBase(models.AbstractModel):
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
 
+        log_message_updating = "{model_name}: Found existing record with {rec_id} need to be updated: {rec_name}"
+        log_message_skipping = "{model_name}: Found existing record with {rec_id} need to be skipped: {rec_name}"
+        log_message_creating = "{model_name}: Found data need to be created!"
+
         if multi:
             raw_datas = raw_data
             mp_datas = mp_data
@@ -249,11 +270,32 @@ class MarketplaceBase(models.AbstractModel):
                 'need_skip_records': []
             }
 
+            self._logger(marketplace, "Looking for existing records of %s started... Please wait!" % self._name)
+
             for index, mp_data in enumerate(mp_datas):
                 existing_record = self.check_existing_records(identifier_field, raw_datas[index], mp_data)
                 for key in existing_record.keys():
                     check_existing_records[key].append(existing_record[key])
 
+            log_msg_data = {
+                'log_msg': '%s: {num} record(s) need to be {action}!' % self._name,
+                'need_update': {
+                    'num': len(check_existing_records['need_update_records']),
+                    'action': 'updated'
+                },
+                'need_create': {
+                    'num': len(check_existing_records['need_create_records']),
+                    'action': 'created'
+                },
+                'need_skip': {
+                    'num': len(check_existing_records['need_skip_records']),
+                    'action': 'skipped'
+                },
+            }
+            self._logger(marketplace, "Looking for existing records of %s finished!" % self._name)
+            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_update']))
+            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_create']))
+            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_skip']))
             return check_existing_records
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
@@ -262,9 +304,44 @@ class MarketplaceBase(models.AbstractModel):
         if record.exists():
             current_signature = self.generate_signature(sanitized_data)
             if current_signature != record.signature:
+                self._logger(marketplace, log_message_updating.format(**{
+                    'model_name': self._name,
+                    'rec_id': record.id,
+                    'rec_name': record.display_name
+                }))
                 return {'need_update_records': (record, values, raw_data, sanitized_data)}
+            if context.get('force_update_raw'):
+                values = {'raw': values.get('raw')}
+                return {'need_update_records': (record, values, raw_data, sanitized_data)}
+            self._logger(marketplace, log_message_skipping.format(**{
+                'model_name': self._name,
+                'rec_id': record.id,
+                'rec_name': record.display_name
+            }))
             return {'need_skip_records': (record, {})}
+        self._logger(marketplace, log_message_creating.format(model_name=self._name))
         return {'need_create_records': (raw_data, sanitized_data)}
+
+    @api.model
+    def handle_result_check_existing_records(self, result):
+        context = self._context.copy()
+        if not context.get('mp_account_id'):
+            raise ValidationError("Please define mp_account_id in context!")
+
+        if result['need_update_records']:
+            self.with_context(context).update_records(result['need_update_records'])
+
+        if result['need_create_records']:
+            tp_data_raw, tp_data_sanitized = self._prepare_create_records(result['need_create_records'])
+            create_records_params = {
+                'raw_data': tp_data_raw,
+                'mp_data': tp_data_sanitized,
+                'multi': isinstance(tp_data_sanitized, list)
+            }
+            self.with_context(context).create_records(**create_records_params)
+
+        if result['need_skip_records']:
+            self.log_skip(self.marketplace, result['need_skip_records'])
 
     @api.model
     def _prepare_create_records(self, need_create_records):
@@ -290,7 +367,8 @@ class MarketplaceBase(models.AbstractModel):
             raw_datas = raw_data
             mp_datas = mp_data
             records = record_obj
-            self._logger(marketplace, "Creating %d record(s) of %s started!" % (len(mp_datas), record_obj._name))
+            self._logger(marketplace,
+                         "Creating %d record(s) of %s started... Please wait!" % (len(mp_datas), record_obj._name))
 
             for index, mp_data in enumerate(mp_datas):
                 records |= self.create_records(raw_datas[index], mp_data)
@@ -321,7 +399,8 @@ class MarketplaceBase(models.AbstractModel):
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
 
-        self._logger(marketplace, "Updating %d record(s) of %s started!" % (len(need_update_records), record_obj._name))
+        self._logger(marketplace, "Updating %d record(s) of %s started... Please wait!" % (
+            len(need_update_records), record_obj._name))
         for need_update_record in need_update_records:
             record, values, raw_data, sanitized_data = need_update_record
             record.write(values)

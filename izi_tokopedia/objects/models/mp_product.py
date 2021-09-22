@@ -8,9 +8,30 @@ class MarketplaceProduct(models.Model):
     _inherit = 'mp.product'
 
     tp_product_id = fields.Char(string="Tokopedia Product ID", readonly=True)
+    tp_has_variant = fields.Boolean(string="Tokopedia Product has Variant", readonly=True)
 
     @classmethod
-    def _build_model_attributes(cls, pool):
+    def _add_rec_mp_external_id(cls, marketplace=None, mp_external_id_field=None):
+        marketplace, mp_external_id_field = 'tokopedia', 'tp_product_id'
+        super(MarketplaceProduct, cls)._add_rec_mp_external_id(marketplace, mp_external_id_field)
+
+    @classmethod
+    def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
+        marketplace = 'tokopedia'
+
+        mp_field_mapping = {
+            'tp_product_id': ('basic/productID', lambda env, r: str(r)),
+            'tp_has_variant': ('variant/isParent', lambda env, r: r if r else False),
+            'name': ('basic/name', None),
+            'description_sale': ('basic/shortDesc', None),
+            'default_code': ('other/sku', lambda env, r: r if r else False),
+            'list_price': ('price/value', None),
+            'weight': ('weight/value', None),
+            'length': ('volume/length', None),
+            'width': ('volume/width', None),
+            'height': ('volume/height', None),
+        }
+
         def _handle_pictures(env, data):
             mp_product_image_obj = env['mp.product.image']
 
@@ -25,25 +46,11 @@ class MarketplaceProduct(models.Model):
 
             return mp_product_image_data
 
-        cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **{
-            'tokopedia': 'tp_product_id'
+        mp_field_mapping.update({
+            'mp_product_image_ids': ('pictures', _handle_pictures)
         })
 
-        cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
-            'tokopedia': {
-                'tp_product_id': ('basic/productID', lambda env, r: str(r)),
-                'name': ('basic/name', None),
-                'description_sale': ('basic/shortDesc', None),
-                'default_code': ('other/sku', lambda env, r: r if r else False),
-                'list_price': ('price/value', None),
-                'weight': ('weight/value', None),
-                'length': ('volume/length', None),
-                'width': ('volume/width', None),
-                'height': ('volume/height', None),
-                'mp_product_image_ids': ('pictures', _handle_pictures)
-            }
-        })
-        super(MarketplaceProduct, cls)._build_model_attributes(pool)
+        super(MarketplaceProduct, cls)._add_rec_mp_field_mapping(marketplace, mp_field_mapping)
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):
