@@ -8,24 +8,33 @@ class TokopediaEndpoint(object):
     }
 
     ENDPOINTS = {
-        # endpoint_key: (http_method, endpoint_url)
-        'token': ('POST', '/token?grant_type=client_credentials'),
-        'shop_info': ('GET', '/v1/shop/fs/{fs_id}/shop-info'),
-        'product_info': ('GET', '/inventory/v1/fs/{fs_id}/product/info')
+        # api_version: {endpoint_key: (http_method, endpoint_url)}
+        'v1': {
+            'token': ('POST', '/token?grant_type=client_credentials'),
+            'shop_info': ('GET', '/v1/shop/fs/{fs_id}/shop-info'),
+            'product_info': ('GET', '/inventory/v1/fs/{fs_id}/product/info')
+        }
     }
 
-    def __init__(self, tp_account, host="base"):
+    def __init__(self, tp_account, host="base", api_version="v1"):
         self.tp_account = tp_account
         self.host = host
+        self.api_version = api_version
 
-    def get_url(self, endpoint):
+    def get_endpoints(self, endpoint_key=None):
+        endpoints = self.ENDPOINTS.get(self.api_version)
+        if endpoint_key:
+            return endpoints.get(endpoint_key)
+        return endpoints
+
+    def get_url(self, endpoint_key):
         data = {
             'host': self.HOSTS[self.host],
-            'endpoint': self.ENDPOINTS[endpoint][1].format(**vars(self.tp_account))
+            'endpoint': self.get_endpoints(endpoint_key)[1].format(**vars(self.tp_account))
         }
         return "{host}{endpoint}".format(**data)
 
-    def build_request(self, endpoint, **kwargs):
+    def build_request(self, endpoint_key, **kwargs):
         headers = dict({
             'Authorization': self.tp_account.get_auth(),
             'Content-Length': '0',
@@ -37,8 +46,8 @@ class TokopediaEndpoint(object):
         }, **kwargs.get('params', {}))
 
         prepared_request = {
-            'method': self.ENDPOINTS[endpoint][0],
-            'url': self.get_url(endpoint),
+            'method': self.get_endpoints(endpoint_key)[0],
+            'url': self.get_url(endpoint_key),
             'params': params,
             'headers': headers
         }

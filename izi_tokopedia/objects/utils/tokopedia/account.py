@@ -9,14 +9,15 @@ from .endpoint import TokopediaEndpoint
 
 class TokopediaAccount(object):
 
-    def __init__(self, client_id, client_secret, **kwargs):
+    def __init__(self, client_id, client_secret, api_version="v1", **kwargs):
         self.client_id = client_id
         self.client_secret = client_secret
         self.fs_id = kwargs.get('fs_id', None)
         self.access_token = kwargs.get('access_token', None)
         self.expired_date = kwargs.get('expired_date', None)
         self.token_type = kwargs.get('token_type', None)
-        self.endpoints = TokopediaEndpoint(self, host="accounts")
+        self.api_version = api_version
+        self.endpoints = TokopediaEndpoint(self, host="accounts", api_version=api_version)
 
     def get_auth(self, token=False):
         if token:
