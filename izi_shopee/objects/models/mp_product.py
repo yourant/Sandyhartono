@@ -65,7 +65,7 @@ class MarketplaceProduct(models.Model):
                     tier_key = str(attr['tier_index'])
                     variants.append((0, 0, {
                         'mp_account_id': env.context['mp_account_id'],
-                        'name': product_name+' (%s)' % (','.join(tier_dict[tier_key])),
+                        'name': product_name+' - %s' % (','.join(tier_dict[tier_key])),
                         'default_code': attr['model_sku'] if 'model_sku' in attr else False,
                         'list_price': attr['price_info'][0]['original_price'],
                         'sp_variant_id': attr['model_id'],
