@@ -10,9 +10,10 @@ from .endpoint import TokopediaEndpoint
 
 class TokopediaAPI(object):
 
-    def __init__(self, tp_account, **kwargs):
+    def __init__(self, tp_account, api_version="v1", **kwargs):
         self.tp_account = tp_account
-        self.endpoints = TokopediaEndpoint(tp_account)
+        self.api_version = api_version
+        self.endpoints = TokopediaEndpoint(tp_account, api_version=api_version)
         self.build_request = self.endpoints.build_request
         self.request = requests.request
         self.validators = dict({
