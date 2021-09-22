@@ -50,7 +50,7 @@ class MarketplaceProduct(models.Model):
         tools.image_resize_images(values)
         mp_product = super(MarketplaceProduct, self).create(values)
         if mp_product.mp_product_image_ids:
-            mp_product_image = mp_product.mp_product_image_ids.sorted('sequence')[0]
+            mp_product_image = mp_product.get_main_image()
             mp_product.write({'image': mp_product_image.image})
         return mp_product
 
@@ -60,7 +60,7 @@ class MarketplaceProduct(models.Model):
         res = super(MarketplaceProduct, self).write(values)
         for mp_product in self:
             if mp_product.mp_product_image_ids:
-                mp_product_image = mp_product.mp_product_image_ids.sorted('sequence')[0]
+                mp_product_image = mp_product.get_main_image()
                 if mp_product_image.id != self._context.get('latest_mp_product_image_id'):
                     mp_product.with_context({'latest_mp_product_image_id': mp_product_image.id}).write(
                         {'image': mp_product_image.image})
@@ -75,3 +75,8 @@ class MarketplaceProduct(models.Model):
             mp_product_image = self.mp_product_image_ids.filtered(lambda s: not isinstance(s.id, int))
             if mp_product_image.exists():
                 mp_product_image.sequence -= len(self.mp_product_image_ids)
+
+    @api.multi
+    def get_main_image(self):
+        self.ensure_one()
+        return self.mp_product_image_ids.sorted('sequence')[0]
