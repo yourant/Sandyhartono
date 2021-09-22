@@ -72,6 +72,7 @@
                     <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                   </group>
                 </group>
+                <group name="mp_product_fields" string="Marketplace Product Fields"></group>
               </page>
               <page string="Inventory" name="inventory">
                 <group>
