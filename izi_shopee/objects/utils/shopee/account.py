@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 
 class ShopeeAccount(object):
 
-    def __init__(self, partner_id, partner_key, **kwargs):
+    def __init__(self, partner_id, partner_key, api_version="v2", ** kwargs):
         self.partner_id = partner_id
         self.partner_key = partner_key
         self.base_url = kwargs.get('base_url', None)
@@ -25,18 +25,20 @@ class ShopeeAccount(object):
         self.code = kwargs.get('code', None)
         self.refresh_token = kwargs.get('refresh_token', None)
         self.access_token = kwargs.get('access_token', None)
-        self.endpoints = ShopeeEndpoint(self, host="base")
+        self.api_version = api_version
+        self.endpoints = ShopeeEndpoint(self, host="base", api_version=api_version)
 
     def get_redirect_url(self):
         return '%s/api/user/auth/shopee/%s' % (self.base_url, self.mp_id)
 
     def get_auth_url_v2(self):
         timeest = int(time.time())
-        base_string = '%s%s%s' % (self.partner_id, ShopeeEndpoint.ENDPOINTS.get('auth')[1], timeest)
+        base_string = '%s%s%s' % (self.partner_id, ShopeeEndpoint.ENDPOINTS.get(
+            self.api_version).get('auth')[1], timeest)
         sign = hmac.new(self.partner_key.encode(), base_string.encode(), hashlib.sha256).hexdigest()
         return '%(host)s%(path)s?partner_id=%(partner_id)s&redirect=%(redirect)s&timestamp=%(timestamp)s&sign=%(sign)s' % {
             'host': ShopeeEndpoint.HOSTS.get('base'),
-            'path': ShopeeEndpoint.ENDPOINTS.get('auth')[1],
+            'path': ShopeeEndpoint.ENDPOINTS.get(self.api_version).get('auth')[1],
             'partner_id': self.partner_id,
             'redirect': urllib.parse.quote(self.get_redirect_url()),
             'timestamp': timeest,
