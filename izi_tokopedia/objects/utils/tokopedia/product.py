@@ -11,7 +11,10 @@ class TokopediaProduct(TokopediaAPI):
         self.product_data = []
         self.product_data_raw = []
 
-    def get_product_info(self, shop_id, limit=0, per_page=50):
+    def get_product_info(self, *args, **kwargs):
+        return getattr(self, '%s_get_product_info' % self.api_version)(*args, **kwargs)
+
+    def v1_get_product_info(self, shop_id, limit=0, per_page=50):
         params = {
             'shop_id': shop_id
         }
