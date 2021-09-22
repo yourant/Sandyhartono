@@ -22,7 +22,7 @@ class TokopediaAPI(object):
         self.sanitizers = dict({
             'default': sanitize_response
         }, **kwargs.get('sanitizers', {}))
-        self.logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger(__name__)
         self.pagination_get_pages = pagination_get_pages
 
     def process_response(self, endpoint_key, response):

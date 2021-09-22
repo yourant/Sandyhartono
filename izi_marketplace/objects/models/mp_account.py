@@ -54,6 +54,7 @@ class MarketplaceAccount(models.Model):
     access_token = fields.Char(string="Access Token", related="mp_token_id.name", readonly=True)
     access_token_expired_date = fields.Datetime(string="Expired Date", related="mp_token_id.expired_date",
                                                 readonly=True)
+    debug_force_update_raw = fields.Boolean(string="Force Update Raw", default=False, help="Force update raw field.")
 
     @api.multi
     def _compute_mp_token(self):
@@ -64,6 +65,16 @@ class MarketplaceAccount(models.Model):
                 mp_account.mp_token_id = mp_token.id
             else:
                 mp_account.mp_token_id = False
+
+    @api.multi
+    def generate_context(self):
+        self.ensure_one()
+        context = self._context.copy()
+        context.update({
+            'mp_account_id': self.id,
+            'force_update_raw': self.debug_force_update_raw
+        })
+        return context
 
     @api.multi
     def action_reauth(self):

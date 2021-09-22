@@ -73,6 +73,11 @@
                   <field name="access_token_expired_date"/>
                 </group>
               </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="debug_force_update_raw" widget="boolean_toggle"/>
+                </group>
+              </page>
             </notebook>
           </sheet>
         </form>
