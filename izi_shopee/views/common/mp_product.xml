@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="izi_marketplace.form_mp_product"/>
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='mp_product_fields']" position="inside">
-                    <group attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+                    <group string="Shopee Data" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
                         <field name="sp_item_status"/>
                         <field name="sp_has_variant"/>
                     </group>
