@@ -5,7 +5,7 @@
       <field name="name">Marketplace Product(s)</field>
       <field name="type">ir.actions.act_window</field>
       <field name="res_model">mp.product</field>
-      <field name="view_mode">tree,form</field>
+      <field name="view_mode">kanban,tree,form</field>
     </record>
   </data>
 </odoo>

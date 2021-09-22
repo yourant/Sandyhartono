@@ -7,7 +7,7 @@ import logging
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
-from odoo.addons.izi_tokopedia.objects.utils.tokopedia.tools import json_digger
+from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 
 
 class MarketplaceBase(models.AbstractModel):
@@ -46,7 +46,7 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def log_skip(self, marketplace, need_skip_records):
         num_skip = len(need_skip_records)
-        log_message = "Skipping {num_skip} existing {model_name} record(s)"
+        log_message = "Skipping {num_skip} existing  record(s) of {model_name}"
         self._logger(marketplace, log_message.format(**{'num_skip': num_skip, 'model_name': self._name}))
 
     @api.model
@@ -86,6 +86,22 @@ class MarketplaceBase(models.AbstractModel):
             if mp_field_mapping and field_name in mp_field_mapping:
                 raw_data_fields.append((field_name, mp_field_mapping[field_name][1]))
         return raw_data_fields
+
+    @api.model
+    def _prepare_mapping_raw_data(self, response=None, raw_data=None):
+        mp_account_obj = self.env['mp.account']
+
+        if response:
+            raw_data = response.json()
+
+        context = self._context
+
+        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+        marketplace = mp_account.marketplace
+
+        mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
+        sanitizer = self.get_default_sanitizer(mp_field_mapping)
+        return sanitizer(raw_data=raw_data)  # return (raw_data, sanitized_data)
 
     @api.model
     def mapping_raw_data(self, raw_data=None, sanitized_data=None, values=None):
@@ -129,6 +145,29 @@ class MarketplaceBase(models.AbstractModel):
         return sanitized_data, values
 
     @api.model
+    def _run_mapping_raw_data(self, raw_data=None, sanitized_data=None, multi=False):
+        context = self._context.copy()
+        if multi:
+            raw_datas = raw_data
+            sanitized_datas = sanitized_data
+            values_list = []
+
+            for index, sanitized_data in enumerate(sanitized_datas):
+                context['index'] = index
+                sanitized_data, values = self._run_mapping_raw_data(raw_data=raw_datas[index],
+                                                                    sanitized_data=sanitized_data)
+                values = self.with_context(context)._finish_mapping_raw_data(sanitized_data, values)[1]
+                values_list.append(values)
+
+            return sanitized_datas, values_list
+        sanitized_data, values = self.mapping_raw_data(raw_data, sanitized_data)
+        return self.with_context(context)._finish_mapping_raw_data(sanitized_data, values)
+
+    @api.model
+    def _finish_mapping_raw_data(self, sanitized_data, values):
+        return sanitized_data, values
+
+    @api.model
     def format_raw_data(self, raw, indent=4):
         return json.dumps(raw, indent=indent)
 
@@ -165,8 +204,9 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def get_default_sanitizer(self, mp_field_mapping, root_path=None):
-        def sanitize(response):
-            raw_data = response.json()
+        def sanitize(response=None, raw_data=None):
+            if response:
+                raw_data = response.json()
             if root_path:
                 raw_data = raw_data[root_path]
             if mp_field_mapping:
@@ -270,11 +310,28 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def update_records(self, need_update_records):
+        mp_account_obj = self.env['mp.account']
         record_obj = self.env[self._name]
         records = record_obj
+
+        context = self._context
+        if not context.get('mp_account_id'):
+            raise ValidationError("Please define mp_account_id in context!")
+
+        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+        marketplace = mp_account.marketplace
+
+        self._logger(marketplace, "Updating %d record(s) of %s started!" % (len(need_update_records), record_obj._name))
         for need_update_record in need_update_records:
             record, values, raw_data, sanitized_data = need_update_record
             record.write(values)
+            log_message = "Updating {model_name} with ID {rec_id}: {rec_name}"
+            self._logger(marketplace, log_message.format(**{
+                'model_name': record_obj._name,
+                'rec_id': record.id,
+                'rec_name': record.display_name
+            }))
             records |= record
+            self._logger(marketplace,
+                         "%s: Updated %d of %d" % (record_obj._name, len(records), len(need_update_records)))
         return records
-
