@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+import json
 
 from odoo import api, fields, models
+
+from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
 from odoo.addons.izi_shopee.objects.utils.shopee.product import ShopeeProduct
@@ -111,6 +114,38 @@ class MarketplaceAccount(models.Model):
             mp_product_obj.log_skip(self.marketplace, check_existing_records['need_skip_records'])
 
     @api.multi
+    def shopee_get_mp_product_variant(self):
+        mp_product_obj = self.env['mp.product']
+        mp_product_variant_obj = self.env['mp.product.variant']
+        self.ensure_one()
+
+        mp_account_ctx = self.generate_context()
+
+        params = {}
+        if self.mp_token_id.state == 'valid':
+            params = {'access_token': self.mp_token_id.name}
+        sp_account = self.shopee_get_account(**params)
+        sp_product_variant = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
+        mp_products = mp_product_obj.search([('sp_has_variant', '=', True)])
+        for mp_product in mp_products:
+            mp_product_raw = json.loads(mp_product.raw, strict=False)
+            mp_product_variant_raw = mp_product_variant_obj.generate_variant_data(mp_product_raw)
+            sp_data_raw, sp_data_sanitized = mp_product_variant_obj.with_context(
+                mp_account_ctx)._prepare_mapping_raw_data(raw_data=mp_product_variant_raw)
+
+            check_existing_records_params = {
+                'identifier_field': 'sp_variant_id',
+                'raw_data': sp_data_raw,
+                'mp_data': sp_data_sanitized,
+                'multi': isinstance(sp_data_sanitized, list)
+            }
+            check_existing_records = mp_product_variant_obj.with_context(mp_account_ctx).check_existing_records(
+                **check_existing_records_params)
+            mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
+                check_existing_records)
+
+    @api.multi
     def shopee_get_products(self):
         self.ensure_one()
         self.shopee_get_mp_product()
+        self.shopee_get_mp_product_variant()
