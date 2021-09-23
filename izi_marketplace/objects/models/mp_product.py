@@ -44,6 +44,8 @@ class MarketplaceProduct(models.Model):
                                            string="Marketplace Product Images")
     mp_product_variant_ids = fields.One2many(comodel_name="mp.product.variant", inverse_name="mp_product_id",
                                              string="Marketplace Product Variant")
+    mp_product_variant_count = fields.Integer(
+        '# Product Variants', compute='_compute_product_variant_count')
 
     @api.model
     def create(self, values):
@@ -80,3 +82,22 @@ class MarketplaceProduct(models.Model):
     def get_main_image(self):
         self.ensure_one()
         return self.mp_product_image_ids.sorted('sequence')[0]
+
+    @api.one
+    @api.depends('mp_product_variant_ids.mp_product_id')
+    def _compute_product_variant_count(self):
+        # do not pollute variants to be prefetched when counting variants
+        self.mp_product_variant_count = len(self.with_prefetch().mp_product_variant_ids)
+
+    @api.multi
+    def action_view_mp_product_variant(self):
+        self.ensure_one()
+        action = self.env.ref('izi_marketplace.action_window_mp_product_variant_view_per_mp_product').read()[0]
+        action.update({
+            'domain': [('mp_product_id', '=', self.id)],
+            'context': {
+                'default_marketplace': self.marketplace,
+                'default_mp_product_id': self.id
+            }
+        })
+        return action
