@@ -26,11 +26,15 @@ class ShopeeProduct(ShopeeAPI):
         sp_data_list = self.process_response('product_variant_list', self.request(**prepared_request))
         return sp_data_list
 
-    def get_product_info(self, pd_data):
+    def get_product_info(self, pd_data=None, product_id=None):
         item_id_list = []
 
-        for data in pd_data:
-            item_id_list.append(data['item_id'])
+        if pd_data:
+            for data in pd_data:
+                item_id_list.append(data['item_id'])
+        elif product_id:
+            item_id_list.append(product_id)
+
         params = {
             'item_id_list': item_id_list
         }
@@ -61,7 +65,7 @@ class ShopeeProduct(ShopeeAPI):
                 params.update({
                     'offset': offset,
                     'page_size': per_page,
-                    'item_status': ['NORMAL', 'BANNED', 'DELETED', 'UNLIST']
+                    'item_status': ['NORMAL', 'UNLIST']
                 })
                 prepared_request = self.build_request('product_list',
                                                       self.sp_account.partner_id,
@@ -89,7 +93,7 @@ class ShopeeProduct(ShopeeAPI):
                 params.update({
                     'offset': pagination_page[0],
                     'page_size': pagination_page[1],
-                    'item_status ': 'NORMAL'
+                    'item_status ': ['NORMAL', 'UNLIST']
                 })
                 prepared_request = self.build_request('product_list',
                                                       self.sp_account.partner_id,

@@ -14,4 +14,12 @@ class MPProductImage(models.Model):
         cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **{
             'shopee': 'sp_image_id'
         })
+
         super(MPProductImage, cls)._build_model_attributes(pool)
+
+    @api.model
+    def shopee_get_sanitizers(self, mp_field_mapping):
+        default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='response')
+        return {
+            'product_info': default_sanitizer
+        }

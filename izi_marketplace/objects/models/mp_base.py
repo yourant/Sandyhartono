@@ -100,7 +100,7 @@ class MarketplaceBase(models.AbstractModel):
         return raw_data_fields
 
     @api.model
-    def _prepare_mapping_raw_data(self, response=None, raw_data=None):
+    def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None):
         mp_account_obj = self.env['mp.account']
 
         if response:
@@ -113,6 +113,10 @@ class MarketplaceBase(models.AbstractModel):
 
         mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
         sanitizer = self.get_default_sanitizer(mp_field_mapping)
+        if not sanitizer:
+            sanitizer = self.get_sanitizers(marketplace)
+            if not sanitizer:
+                sanitizer = self.get_default_sanitizer(mp_field_mapping)
         return sanitizer(raw_data=raw_data)  # return (raw_data, sanitized_data)
 
     @api.model
@@ -332,11 +336,11 @@ class MarketplaceBase(models.AbstractModel):
             self.with_context(context).update_records(result['need_update_records'])
 
         if result['need_create_records']:
-            tp_data_raw, tp_data_sanitized = self._prepare_create_records(result['need_create_records'])
+            mp_data_raw, mp_data_sanitized = self._prepare_create_records(result['need_create_records'])
             create_records_params = {
-                'raw_data': tp_data_raw,
-                'mp_data': tp_data_sanitized,
-                'multi': isinstance(tp_data_sanitized, list)
+                'raw_data': mp_data_raw,
+                'mp_data': mp_data_sanitized,
+                'multi': isinstance(mp_data_sanitized, list)
             }
             self.with_context(context).create_records(**create_records_params)
 
