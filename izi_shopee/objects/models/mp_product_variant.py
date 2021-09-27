@@ -20,14 +20,12 @@ class MPProductVariant(models.Model):
     @classmethod
     def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
         marketplace = 'shopee'
-
         mp_field_mapping = {
             'sp_variant_id': ('sp_variant_id', lambda env, r: str(r)),
             'name': ('name', None),
             'default_code': ('default_code', lambda env, r: r if r else False),
             'list_price': ('list_price', None),
             'weight': ('weight', lambda env, r: float(r)),
-            'image': ('image', lambda env, r: get_mp_asset(r) if r else None),
             'sp_variant_image_id': ('image_id', None)
         }
 
@@ -38,7 +36,16 @@ class MPProductVariant(models.Model):
                 return mp_product.id
             return None
 
+        def _handle_product_images(env, data):
+            mp_account_obj = env['mp.account']
+            mp_account = mp_account_obj.browse(env.context.get('mp_account_id'))
+            if mp_account.debug_image_convert:
+                return get_mp_asset(data)
+            else:
+                return None
+
         mp_field_mapping.update({
+            'image': ('image', _handle_product_images),
             'mp_product_id': ('mp_product_id', _handle_parent_id),
         })
 
