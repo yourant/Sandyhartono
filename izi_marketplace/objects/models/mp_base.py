@@ -112,11 +112,8 @@ class MarketplaceBase(models.AbstractModel):
         marketplace = mp_account.marketplace
 
         mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
-        sanitizer = self.get_default_sanitizer(mp_field_mapping)
         if not sanitizer:
-            sanitizer = self.get_sanitizers(marketplace)
-            if not sanitizer:
-                sanitizer = self.get_default_sanitizer(mp_field_mapping)
+            sanitizer = self.get_sanitizers(marketplace) or self.get_default_sanitizer(mp_field_mapping)
         return sanitizer(raw_data=raw_data)  # return (raw_data, sanitized_data)
 
     @api.model
@@ -382,7 +379,7 @@ class MarketplaceBase(models.AbstractModel):
                 self._logger(marketplace,
                              "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
 
-            return records
+            return self.with_context(context)._finish_create_records(records)
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
         record = record_obj.create(values)
@@ -391,7 +388,11 @@ class MarketplaceBase(models.AbstractModel):
             'rec_id': record.id,
             'rec_name': record.display_name
         }))
-        return record
+        return self.with_context(context)._finish_create_records(record)
+
+    @api.model
+    def _finish_create_records(self, records):
+        return records
 
     @api.model
     def update_records(self, need_update_records):

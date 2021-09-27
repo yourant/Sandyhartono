@@ -53,14 +53,22 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     def tokopedia_get_shop(self):
-        mp_tokopedia_shop_obj = self.env['mp.tokopedia.shop']
+        mp_account_ctx = self.generate_context()
+        mp_tokopedia_shop_obj = self.env['mp.tokopedia.shop'].with_context(mp_account_ctx)
 
         self.ensure_one()
 
         tp_account = self.tokopedia_get_account()
-        tp_shop = TokopediaShop(tp_account)
-        tp_data = tp_shop.get_shop_info()
-        mp_tokopedia_shop_obj.with_context({'mp_account_id': self.id}).create_shop(tp_data, isinstance(tp_data, list))
+        tp_shop = TokopediaShop(tp_account, sanitizers=mp_tokopedia_shop_obj.get_sanitizers(self.marketplace))
+        tp_data_raw, tp_data_sanitized = tp_shop.get_shop_info()
+        check_existing_records_params = {
+            'identifier_field': 'shop_id',
+            'raw_data': tp_data_raw,
+            'mp_data': tp_data_raw,
+            'multi': isinstance(tp_data_raw, list)
+        }
+        check_existing_records = mp_tokopedia_shop_obj.check_existing_records(**check_existing_records_params)
+        mp_tokopedia_shop_obj.handle_result_check_existing_records(check_existing_records)
 
     @api.multi
     def tokopedia_get_dependencies(self):

@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class MPTokopediaShop(models.Model):
@@ -21,18 +22,22 @@ class MPTokopediaShop(models.Model):
     domain = fields.Char(string="Domain", readonly=True, mp_raw=True)
 
     @api.model
-    def create_shop(self, tp_data, multi=False):
-        mp_tokopedia_shop_obj = self.env['mp.tokopedia.shop']
+    def tokopedia_get_sanitizers(self, mp_field_mapping):
+        default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='data')
+        return {
+            'shop_info': default_sanitizer
+        }
 
-        if multi:
-            tp_datas = tp_data
-            mp_tokopedia_shops = mp_tokopedia_shop_obj
+    @api.model
+    def _finish_create_records(self, records):
+        mp_account_obj = self.env['mp.account']
 
-            for tp_data in tp_datas:
-                mp_tokopedia_shops |= self.create_shop(tp_data)
+        context = self._context
+        if not context.get('mp_account_id'):
+            raise ValidationError("Please define mp_account_id in context!")
 
-            return mp_tokopedia_shops
+        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
 
-        raw_data, values = self.mapping_raw_data(raw_data=tp_data)
-        return mp_tokopedia_shop_obj.create(values)
-
+        records = super(MPTokopediaShop, self)._finish_create_records(records)
+        mp_account.write({'tp_shop_id': records[0].id})
+        return records
