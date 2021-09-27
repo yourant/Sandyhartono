@@ -42,7 +42,7 @@ class TokopediaProduct(TokopediaAPI):
                 if raw_data:
                     product_data.extend(tp_data)
                     product_data_raw.extend(raw_data)
-                    self._logger.info("Product: Imported %d record(s) of unlimited." % len(self.product_data))
+                    self._logger.info("Product: Imported %d record(s) of unlimited." % len(product_data))
                     page += 1
                 else:
                     unlimited = False
