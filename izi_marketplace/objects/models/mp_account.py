@@ -54,6 +54,8 @@ class MarketplaceAccount(models.Model):
     access_token = fields.Char(string="Access Token", related="mp_token_id.name", readonly=True)
     access_token_expired_date = fields.Datetime(string="Expired Date", related="mp_token_id.expired_date",
                                                 readonly=True)
+    mp_product_ids = fields.One2many(comodel_name="mp.product", inverse_name="mp_account_id",
+                                     string="Marketplace Product(s)")
     debug_force_update_raw = fields.Boolean(string="Force Update Raw", default=False, help="Force update raw field.")
 
     @api.multi
