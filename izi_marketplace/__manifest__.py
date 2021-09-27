@@ -45,6 +45,8 @@
         'views/common/mp_account.xml',
         'views/common/mp_token.xml',
         'views/common/mp_product.xml',
+        'views/common/mp_map_product.xml',
+        'views/common/mp_map_product_line.xml',
 
         # wizard
 

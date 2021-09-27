@@ -14,9 +14,27 @@
               parent="izi_marketplace.menu_separator_mp_account"
               action="izi_marketplace.action_window_mp_account" sequence="0"/>
 
+    <!-- Marketplace / Data Mapping -->
+    <menuitem id="izi_marketplace.menu_separator_data_map" name="Data Mapping"
+              parent="izi_marketplace.menu_root_marketplace" sequence="10"/>
+
+    <!-- Marketplace / Data Mapping / Product Mapping -->
+    <menuitem id="izi_marketplace.menu_separator_mp_product_map" name="Product Mapping"
+              parent="izi_marketplace.menu_separator_data_map" sequence="10"/>
+
+    <!-- Marketplace / Data Mapping / Product Mapping / Product Mapping -->
+    <menuitem id="izi_marketplace.menu_item_mp_product_map" name="Product Mapping"
+              parent="izi_marketplace.menu_separator_mp_product_map"
+              action="izi_marketplace.action_window_mp_map_product" sequence="1"/>
+
+    <!-- Marketplace / Data Mapping / Product Mapping / Product Mapping Line -->
+    <menuitem id="izi_marketplace.menu_item_mp_product_map_line" name="Product Mapping Lines"
+              parent="izi_marketplace.menu_separator_mp_product_map"
+              action="izi_marketplace.action_window_mp_map_product_line_readonly" sequence="2"/>
+
     <!-- Marketplace / Configuration -->
     <menuitem id="izi_marketplace.menu_separator_mp_account_config" name="Configuration"
-              parent="izi_marketplace.menu_root_marketplace" sequence="10"/>
+              parent="izi_marketplace.menu_root_marketplace" sequence="100"/>
 
     <!-- Marketplace / Configuration / Access Token -->
     <menuitem id="izi_marketplace.menu_item_mp_token" name="Access Token"
