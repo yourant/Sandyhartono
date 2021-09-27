@@ -21,7 +21,7 @@ class MarketplaceAccount(models.Model):
     marketplace = fields.Selection(selection_add=[('shopee', 'Shopee')])
     sp_partner_id = fields.Char(string="Partner ID", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_partner_key = fields.Char(string="Partner Key", required_if_marketplace="shopee", states=READONLY_STATES)
-    sp_reason = fields.Char(string="Shopee Reason", readonly=True, states=READONLY_STATES)
+    # sp_reason = fields.Char(string="Shopee Reason", readonly=True, states=READONLY_STATES)
 
     @api.model
     def shopee_get_account(self, **kwargs):
@@ -67,7 +67,8 @@ class MarketplaceAccount(models.Model):
         if shop_id:
             raw_token['shop_id'] = shop_id
         mp_token_obj.create_token(self, raw_token)
-        self.write({'state': 'authenticated', 'sp_reason': False})
+        self.write({'state': 'authenticated',
+                    'auth_message': 'Congratulations, you have been successfully authenticated!'})
 
     @api.multi
     def shopee_get_logistic(self):
