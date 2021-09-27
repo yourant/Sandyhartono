@@ -328,11 +328,13 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def handle_result_check_existing_records(self, result):
+        mp_account_obj = self.env['mp.account']
         context = self._context.copy()
         if not context.get('mp_account_id'):
             raise ValidationError("Please define mp_account_id in context!")
 
-        marketplace = self.mp_account_id.search([('id', '=', context.get('mp_account_id'))]).marketplace
+        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+        marketplace = mp_account.marketplace
         if result['need_update_records']:
             self.with_context(context).update_records(result['need_update_records'])
 
