@@ -23,12 +23,5 @@
         'create': False
       }</field>
     </record>
-
-    <record id="izi_marketplace.action_view_tree_mp_map_product_line" model="ir.actions.act_window.view">
-      <field name="sequence" eval="1"/>
-      <field name="view_mode">tree</field>
-      <field name="view_id" ref="izi_marketplace.tree_mp_map_product_line"/>
-      <field name="act_window_id" ref="izi_marketplace.action_window_mp_map_product_line"/>
-    </record>
   </data>
 </odoo>
