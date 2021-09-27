@@ -40,6 +40,20 @@
             <field name="state" widget="statusbar" statusbar_visible="new,authenticated"/>
           </header>
           <sheet>
+            <div attrs="{'invisible': ['|', ('auth_message', '=', False), ('auth_message', '=', '')]}">
+              <div class="alert alert-warning text-center o_form_header" states="authenticating">
+                <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
+                <div>
+                  <strong><field name="auth_message"/></strong>
+                </div>
+              </div>
+              <div class="alert alert-success text-center o_form_header" states="authenticated">
+                <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
+                <div>
+                  <strong><field name="auth_message"/></strong>
+                </div>
+              </div>
+            </div>
             <div class="oe_button_box" name="button_box">
               <button name="toggle_active"
                       type="object"
@@ -48,7 +62,7 @@
                 <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
               </button>
               <button name="action_view_mp_product" string="MP Products" class="oe_stat_button" icon="fa-bars"
-                      type="object"/>
+                      type="object" states="authenticating,authenticated"/>
             </div>
             <div class="oe_title">
               <label for="name" class="oe_edit_only"/>
@@ -67,7 +81,8 @@
             </group>
             <notebook>
               <page name="mp_credential" string="Credential">
-                <group name="mp_credential" string="Marketplace Account"></group>
+                <group name="mp_credential" string="Marketplace Account"
+                       attrs="{'invisible': [('marketplace', '=', False)]}"></group>
                 <group name="mp_token" string="Marketplace Token" states="authenticated">
                   <field name="access_token"/>
                   <field name="access_token_expired_date"/>

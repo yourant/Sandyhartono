@@ -46,7 +46,10 @@ class MarketplaceAccount(models.Model):
         tp_account = self.tokopedia_get_account()
         raw_token = tp_account.authenticate()
         mp_token_obj.create_token(self, raw_token)
-        self.write({'state': 'authenticated'})
+        self.write({
+            'state': 'authenticated',
+            'auth_message': 'Congratulations, you have been successfully authenticated!'
+        })
 
     @api.multi
     def tokopedia_get_shop(self):
