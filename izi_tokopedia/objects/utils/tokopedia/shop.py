@@ -14,4 +14,4 @@ class TokopediaShop(TokopediaAPI):
         prepared_request = self.build_request('shop_info', **{
             'params': params
         })
-        return self.process_response(self.request(**prepared_request))
+        return self.process_response('shop_info', self.request(**prepared_request))
