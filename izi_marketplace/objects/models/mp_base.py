@@ -332,6 +332,7 @@ class MarketplaceBase(models.AbstractModel):
         if not context.get('mp_account_id'):
             raise ValidationError("Please define mp_account_id in context!")
 
+        marketplace = self.mp_account_id.search([('id', '=', context.get('mp_account_id'))]).marketplace
         if result['need_update_records']:
             self.with_context(context).update_records(result['need_update_records'])
 
@@ -345,7 +346,7 @@ class MarketplaceBase(models.AbstractModel):
             self.with_context(context).create_records(**create_records_params)
 
         if result['need_skip_records']:
-            self.log_skip(self.marketplace, result['need_skip_records'])
+            self.log_skip(marketplace, result['need_skip_records'])
 
     @api.model
     def _prepare_create_records(self, need_create_records):
