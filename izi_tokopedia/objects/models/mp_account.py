@@ -6,6 +6,7 @@ from odoo import api, fields, models
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.logistic import TokopediaLogistic
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.product import TokopediaProduct
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.shop import TokopediaShop
 
@@ -71,9 +72,30 @@ class MarketplaceAccount(models.Model):
         mp_tokopedia_shop_obj.handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    def tokopedia_get_logistics(self):
+        mp_account_ctx = self.generate_context()
+        mp_tokopedia_logistic_obj = self.env['mp.tokopedia.logistic'].with_context(mp_account_ctx)
+
+        self.ensure_one()
+
+        tp_account = self.tokopedia_get_account()
+        tp_logistic = TokopediaLogistic(tp_account, api_version="v2",
+                                        sanitizers=mp_tokopedia_logistic_obj.get_sanitizers(self.marketplace))
+        tp_data_raw, tp_data_sanitized = tp_logistic.get_logistic_info(shop_id=self.tp_shop_id.shop_id)
+        check_existing_records_params = {
+            'identifier_field': 'shipper_id',
+            'raw_data': tp_data_raw,
+            'mp_data': tp_data_sanitized,
+            'multi': isinstance(tp_data_sanitized, list)
+        }
+        check_existing_records = mp_tokopedia_logistic_obj.check_existing_records(**check_existing_records_params)
+        mp_tokopedia_logistic_obj.handle_result_check_existing_records(check_existing_records)
+
+    @api.multi
     def tokopedia_get_dependencies(self):
         self.ensure_one()
         self.tokopedia_get_shop()
+        self.tokopedia_get_logistics()
 
     @api.multi
     def tokopedia_get_mp_product(self):

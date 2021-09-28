@@ -7,4 +7,5 @@ from . import exception
 from . import endpoint
 from . import account
 from . import shop
+from . import logistic
 from . import product
