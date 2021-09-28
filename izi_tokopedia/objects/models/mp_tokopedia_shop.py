@@ -34,6 +34,8 @@ class MPTokopediaShop(models.Model):
                               mp_raw_handler=lambda env, r: str(r))
     date_shop_created = fields.Date(string="Date Shop Created", readonly=True, mp_raw=True)
     domain = fields.Char(string="Domain", readonly=True, mp_raw=True)
+    logistic_ids = fields.One2many(comodel_name="mp.tokopedia.logistic", inverse_name="shop_id", string="Logistics",
+                                   required=False)
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):

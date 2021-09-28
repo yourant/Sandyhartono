@@ -4,6 +4,7 @@
 from . import mp_account
 from . import mp_token
 from . import mp_tokopedia_shop
+from . import mp_tokopedia_logistic
 from . import mp_product
 from . import mp_product_image
 from . import mp_product_variant

@@ -29,6 +29,34 @@
                 <field name="date_shop_created"/>
               </group>
             </group>
+            <notebook>
+              <page string="Logistics">
+                <field name="logistic_ids">
+                  <kanban create="false">
+                    <field name="shipper_name"/>
+                    <templates>
+                      <t t-name="kanban-box">
+                        <div>
+                          <div class="o_kanban_image">
+                            <field name="logo" widget="image_url" class="oe_avatar"/>
+                          </div>
+                          <div class="oe_kanban_details">
+                            <field name="shipper_name"/>
+                          </div>
+                        </div>
+                      </t>
+                    </templates>
+                  </kanban>
+                </field>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="signature"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
           </sheet>
         </form>
       </field>
