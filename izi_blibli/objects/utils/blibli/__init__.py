@@ -7,3 +7,4 @@ from . import exception
 from . import tools
 from . import logistic
 from . import api
+from . import product

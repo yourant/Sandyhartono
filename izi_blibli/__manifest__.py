@@ -39,6 +39,7 @@
 
         # global action
         'views/common/mp_account.xml',
+        'views/common/mp_product.xml',
 
         # view
 
