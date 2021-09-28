@@ -28,6 +28,7 @@
         'base',
         'sale_management',
         # third party addons
+        'web_widget_image_url',
 
         # developed addons
     ],
