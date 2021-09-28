@@ -37,9 +37,7 @@ class MPProductVariant(models.Model):
             return None
 
         def _handle_product_images(env, data):
-            mp_account_obj = env['mp.account']
-            mp_account = mp_account_obj.browse(env.context.get('mp_account_id'))
-            if mp_account.debug_image_convert:
+            if env.context.get('debug_store_product_img'):
                 return get_mp_asset(data)
             else:
                 return None
