@@ -100,7 +100,7 @@ class MarketplaceBase(models.AbstractModel):
         return raw_data_fields
 
     @api.model
-    def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None):
+    def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None, endpoint_key=None):
         mp_account_obj = self.env['mp.account']
 
         if response:
@@ -113,7 +113,10 @@ class MarketplaceBase(models.AbstractModel):
 
         mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
         if not sanitizer:
-            sanitizer = self.get_sanitizers(marketplace) or self.get_default_sanitizer(mp_field_mapping)
+            if endpoint_key:
+                sanitizer = self.get_sanitizers(marketplace).get(endpoint_key)
+            if not sanitizer:
+                sanitizer = self.get_default_sanitizer(mp_field_mapping)
         return sanitizer(raw_data=raw_data)  # return (raw_data, sanitized_data)
 
     @api.model
