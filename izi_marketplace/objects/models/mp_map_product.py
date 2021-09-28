@@ -236,10 +236,10 @@ class MarketplaceMapProductLine(models.Model):
     @api.onchange('product_id')
     def onchange_product_id(self):
         if self.product_id:
-            map_lines = self.map_id.map_line_ids
-            existing_map_line = map_lines.filtered(
-                lambda ml: ml.product_id.id == self.product_id.id and ml.mp_account_id.id == self.mp_account_id.id) \
-                .filtered(lambda ml: ml.id != self.id)
-            if existing_map_line.exists():
-                raise ValidationError('You can only make one mapping per marketplace account!')
+            # map_lines = self.map_id.map_line_ids
+            # existing_map_line = map_lines.filtered(
+            #     lambda ml: ml.product_id.id == self.product_id.id and ml.mp_account_id.id == self.mp_account_id.id) \
+            #     .filtered(lambda ml: ml.id != self.id)
+            # if existing_map_line.exists():
+            #     raise ValidationError('You can only make one mapping per marketplace account!')
             self.state = 'mapped'
