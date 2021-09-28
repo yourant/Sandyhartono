@@ -100,7 +100,7 @@ class MarketplaceBase(models.AbstractModel):
         return raw_data_fields
 
     @api.model
-    def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None):
+    def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None, endpoint_key=None):
         mp_account_obj = self.env['mp.account']
 
         if response:
@@ -112,9 +112,9 @@ class MarketplaceBase(models.AbstractModel):
         marketplace = mp_account.marketplace
 
         mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
-        sanitizer = self.get_default_sanitizer(mp_field_mapping)
         if not sanitizer:
-            sanitizer = self.get_sanitizers(marketplace)
+            if endpoint_key:
+                sanitizer = self.get_sanitizers(marketplace).get(endpoint_key)
             if not sanitizer:
                 sanitizer = self.get_default_sanitizer(mp_field_mapping)
         return sanitizer(raw_data=raw_data)  # return (raw_data, sanitized_data)
@@ -382,7 +382,7 @@ class MarketplaceBase(models.AbstractModel):
                 self._logger(marketplace,
                              "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
 
-            return records
+            return self.with_context(context)._finish_create_records(records)
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
         record = record_obj.create(values)
@@ -391,7 +391,11 @@ class MarketplaceBase(models.AbstractModel):
             'rec_id': record.id,
             'rec_name': record.display_name
         }))
-        return record
+        return self.with_context(context)._finish_create_records(record)
+
+    @api.model
+    def _finish_create_records(self, records):
+        return records
 
     @api.model
     def update_records(self, need_update_records):
