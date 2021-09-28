@@ -261,8 +261,8 @@ class MarketplaceBase(models.AbstractModel):
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
 
-        log_message_updating = "{model_name}: Found existing record with {rec_id} need to be updated: {rec_name}"
-        log_message_skipping = "{model_name}: Found existing record with {rec_id} need to be skipped: {rec_name}"
+        log_message_updating = "{model_name}: Found existing record with ID {rec_id} is need to be updated: {rec_name}"
+        log_message_skipping = "{model_name}: Found existing record with ID {rec_id} is need to be skipped: {rec_name}"
         log_message_creating = "{model_name}: Found data need to be created!"
 
         if multi:
@@ -307,7 +307,7 @@ class MarketplaceBase(models.AbstractModel):
         record = record_obj.search([(mp_external_id_field, '=', values[identifier_field])])
         if record.exists():
             current_signature = self.generate_signature(sanitized_data)
-            if current_signature != record.signature:
+            if current_signature != record.signature or context.get('force_update'):
                 self._logger(marketplace, log_message_updating.format(**{
                     'model_name': self._name,
                     'rec_id': record.id,

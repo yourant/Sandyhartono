@@ -90,6 +90,7 @@
               </page>
               <page string="Debug" groups="base.group_no_one">
                 <group>
+                  <field name="debug_force_update" widget="boolean_toggle"/>
                   <field name="debug_force_update_raw" widget="boolean_toggle"/>
                   <field name="debug_image_convert" widget="boolean_toggle"/>
                 </group>
