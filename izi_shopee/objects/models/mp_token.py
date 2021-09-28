@@ -33,6 +33,6 @@ class MarketplaceToken(models.Model):
             try:
                 self.mp_account_id.shopee_renew_token()
             except Exception as e:
-                self.mp_account_id.write({'state': 'authenticating', 'sp_reason': str(e.args[0])})
+                self.mp_account_id.write({'state': 'authenticating', 'auth_message': str(e.args[0])})
             return self.mp_account_id.mp_token_ids.sorted('expired_date', reverse=True)[0]
         return self

@@ -58,6 +58,8 @@ class MarketplaceAccount(models.Model):
     mp_product_ids = fields.One2many(comodel_name="mp.product", inverse_name="mp_account_id",
                                      string="Marketplace Product(s)")
     debug_force_update_raw = fields.Boolean(string="Force Update Raw", default=False, help="Force update raw field.")
+    debug_image_convert = fields.Boolean(string="Image Binary Convert",
+                                         default=False, help="Image URL Convert to Binary")
 
     @api.multi
     def _compute_mp_token(self):
