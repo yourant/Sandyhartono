@@ -13,7 +13,7 @@ def validate_response(response):
 
 
 def sanitize_response(response):
-    return response.json()['content']
+    return response.json()
 
 
 def process_response(response):
