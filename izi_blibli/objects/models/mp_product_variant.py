@@ -20,27 +20,80 @@ class MarketplaceProductVariant(models.Model):
     def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
         marketplace = 'blibli'
 
-        mp_field_mapping = {
-            # 'name': ('items', _handle_name),
-            # 'image': ('items', _handle_image),
-            # 'list_price': ('items', _handle_price_info),
-            # 'default_code': ('items', _handle_default_code),
-            # 'weight': ('items', _handle_weight),
-            # 'length': ('items', _handle_length),
-            # 'width': ('items', _handle_width),
-            # 'height': ('items', _handle_height),
-            # 'bli_product_id': ('items', _handle_product_id)
-        }
+        mp_field_mapping = {}
+
+        def _handle_price_info(env, data):
+            if data:
+                return data['prices'][0]['price']
+            else:
+                return None
+
+        def _handle_default_code(env, data):
+            if data:
+                return data.get('merchantSku')
+            else:
+                return None
+
+        def _handle_weight(env, data):
+            if data:
+                return data.get('weight')
+            else:
+                return None
+
+        def _handle_length(env, data):
+            if data:
+                return data.get('length')
+            else:
+                return None
+
+        def _handle_height(env, data):
+            if data:
+                return data.get('height')
+            else:
+                return None
+
+        def _handle_width(env, data):
+            if data:
+                return data.get('width')
+            else:
+                return None
+
+        def _handle_product_id(env, data):
+            if data:
+                return data.get('itemSku')
+            else:
+                return None
+
+        def _handle_name(env, data):
+            if data:
+                return data.get('itemName')
+            else:
+                return None
+
+        def _handle_image(env, data):
+            if data:
+                return get_mp_asset(data['images'][0]['locationPath'])
+            else:
+                return None
 
         def _handle_parent_id(env, data):
             mp_product_obj = env['mp.product']
-            mp_product = mp_product_obj.search_mp_records('blibli', data)
+            mp_product = mp_product_obj.search_mp_records('blibli', data['itemSku'][:16]+'00001')
             if mp_product:
                 return mp_product.id
             return None
 
         mp_field_mapping.update({
-            'mp_product_id': ('variant/parentID', _handle_parent_id),
+            'name': ('items', _handle_name),
+            'image': ('items', _handle_image),
+            'list_price': ('items', _handle_price_info),
+            'default_code': ('items', _handle_default_code),
+            'mp_product_id': ('items', _handle_parent_id),
+            'weight': ('items', _handle_weight),
+            'length': ('items', _handle_length),
+            'width': ('items', _handle_width),
+            'height': ('items', _handle_height),
+            'bli_variant_id': ('items', _handle_product_id)
         })
 
         super(MarketplaceProductVariant, cls)._add_rec_mp_field_mapping(marketplace, mp_field_mapping)

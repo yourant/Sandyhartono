@@ -11,39 +11,29 @@ class BlibliProduct(BlibliAPI):
         self.product_data = []
         self.product_data_raw = []
 
-    # def get_product_info(self, *args, **kwargs):
-    #     return getattr(self, 'get_product_list')(*args, **kwargs)
-
     def get_product_info(self, pd_data):
         raw_data = []
         bli_data = []
-        for data in pd_data:
-            raw_data_temp = {}
-            for detail in pd_data[data]:
-                params = {
-                    'businessPartnerCode': self.bli_account.shop_code,
-                    'channelId': self.bli_account.shop_name,
-                    'gdnSku': detail['gdnSku']
-                }
-                prepared_request = self.build_request('product_info', ** {
-                    'params': params
-                })
-                raw_datas, bli_data_temp = self.process_response('product_info', self.request(**prepared_request))
-                if len(pd_data[data]) > 1:
-                    if raw_data_temp:
-                        raw_data_temp[data]['items'].append(raw_datas['items'][0])
-                    else:
-                        raw_datas['bli_has_variant'] = True
-                        raw_data_temp[data] = raw_datas
-                        bli_data.append(bli_data_temp)
-                else:
-                    raw_datas['bli_has_variant'] = False
-                    raw_data_temp[data] = raw_datas
-                    bli_data.append(bli_data_temp)
-            raw_data.append(raw_data_temp[data])
-            # self.product_data.extend(bli_data)
-            # self.product_data_raw.extend(raw_data)
-            # self.logger.info("Product: Imported %d of unlimited." % len(self.product_data))
+        for key, data in pd_data.items():
+            params = {
+                'businessPartnerCode': self.bli_account.shop_code,
+                'channelId': self.bli_account.shop_name,
+                'gdnSku': data[0]
+            }
+            prepared_request = self.build_request('product_info', ** {
+                'params': params
+            })
+            raw_datas, bli_data_temp = self.process_response('product_info', self.request(**prepared_request))
+            if len(data) > 1:
+                raw_datas['bli_has_variant'] = True
+                raw_datas['bli_variant_ids'] = data
+                bli_data_temp['bli_has_variant'] = raw_datas['bli_has_variant']
+                bli_data.append(bli_data_temp)
+            else:
+                raw_datas['bli_has_variant'] = False
+                bli_data_temp['bli_has_variant'] = raw_datas['bli_has_variant']
+                bli_data.append(bli_data_temp)
+            raw_data.append(raw_datas)
 
         return raw_data, bli_data
 
@@ -72,9 +62,9 @@ class BlibliProduct(BlibliAPI):
                     bli_product_by_sku = {}
                     for product_bli in bli_data_list['content']:
                         if product_bli['productSku'] in bli_product_by_sku:
-                            bli_product_by_sku[product_bli['productSku']].append(product_bli)
+                            bli_product_by_sku[product_bli['productSku']].append(product_bli['gdnSku'])
                         else:
-                            bli_product_by_sku[product_bli['productSku']] = [product_bli]
+                            bli_product_by_sku[product_bli['productSku']] = [product_bli['gdnSku']]
 
                 raw_data, bli_data = self.get_product_info(bli_product_by_sku)
                 self.product_data.extend(bli_data)
@@ -106,3 +96,16 @@ class BlibliProduct(BlibliAPI):
 
         self.logger.info("Product: Finished %d imported." % len(self.product_data))
         return self.product_data_raw, self.product_data
+
+    def get_product_variant(self, product_id):
+        params = {
+            'businessPartnerCode': self.bli_account.shop_code,
+            'channelId': self.bli_account.shop_name,
+            'gdnSku': product_id
+        }
+        prepared_request = self.build_request('product_info', ** {
+            'params': params
+        })
+        raw_datas, bli_data = self.process_response('product_info', self.request(**prepared_request))
+        raw_data = [raw_datas]
+        return raw_data, bli_data
