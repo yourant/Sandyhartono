@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+import json
+
 from odoo import api, fields, models
+
 from odoo.addons.izi_blibli.objects.utils.blibli.account import BlibliAccount
 from odoo.addons.izi_blibli.objects.utils.blibli.logistic import BlibliLogistic
+from odoo.addons.izi_blibli.objects.utils.blibli.product import BlibliProduct
+from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 
 
 class MarketplaceAccount(models.Model):
@@ -59,3 +64,65 @@ class MarketplaceAccount(models.Model):
     def blibli_get_dependencies(self):
         self.ensure_one()
         self.blibli_get_logistic()
+
+    @api.multi
+    def blibli_get_mp_product(self):
+        mp_product_obj = self.env['mp.product']
+
+        self.ensure_one()
+
+        mp_account_ctx = self.generate_context()
+
+        bli_account = self.blibli_get_account()
+        bli_product = BlibliProduct(bli_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
+        bli_data_raw, bli_data_sanitized = bli_product.get_product_list()
+        check_existing_records = mp_product_obj.with_context(mp_account_ctx). \
+            check_existing_records('bli_product_id', bli_data_raw, bli_data_sanitized,
+                                   isinstance(bli_data_sanitized, list))
+        if check_existing_records['need_update_records']:
+            mp_product_obj.with_context({'mp_account_id': self.id}).update_records(
+                check_existing_records['need_update_records'])
+
+        if check_existing_records['need_create_records']:
+            bli_data_raw, bli_data_sanitized = mp_product_obj._prepare_create_records(
+                check_existing_records['need_create_records'])
+            mp_product_obj.with_context({'mp_account_id': self.id}).create_records(bli_data_raw, bli_data_sanitized,
+                                                                                   isinstance(bli_data_sanitized, list))
+
+        if check_existing_records['need_skip_records']:
+            mp_product_obj.log_skip(self.marketplace, check_existing_records['need_skip_records'])
+
+    @api.multi
+    def blibli_get_mp_product_variant(self):
+        mp_product_obj = self.env['mp.product']
+        mp_product_variant_obj = self.env['mp.product.variant']
+        self.ensure_one()
+
+        mp_account_ctx = self.generate_context()
+
+        bli_account = self.blibli_get_account()
+        bli_product_variant = BlibliProduct(bli_account,
+                                            sanitizers=mp_product_variant_obj.get_sanitizers(self.marketplace))
+
+        mp_products = mp_product_obj.search([('bli_has_variant', '=', True)])
+        for mp_product in mp_products:
+            mp_product_raw = json.loads(mp_product.raw, strict=False)
+            bli_variant_ids = json_digger(mp_product_raw, 'variant/childrenID')
+            for bli_variant_id in bli_variant_ids:
+                bli_data_raw, bli_data_sanitized = bli_product_variant.get_product_info(product_id=bli_variant_id)
+                check_existing_records_params = {
+                    'identifier_field': 'bli_variant_id',
+                    'raw_data': bli_data_raw,
+                    'mp_data': bli_data_sanitized,
+                    'multi': isinstance(bli_data_sanitized, list)
+                }
+                check_existing_records = mp_product_variant_obj.with_context(mp_account_ctx).check_existing_records(
+                    **check_existing_records_params)
+                mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
+                    check_existing_records)
+
+    @api.multi
+    def blibli_get_products(self):
+        self.ensure_one()
+        self.blibli_get_mp_product()
+        # self.blibli_get_mp_product_variant()
