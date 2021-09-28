@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from .api import ShopeeAPI
+from datetime import datetime, timedelta
 
 
 class ShopeeProduct(ShopeeAPI):
@@ -60,7 +61,7 @@ class ShopeeProduct(ShopeeAPI):
         params = {}
         unlimited = not limit
         if unlimited:
-            offset = 1
+            offset = 0
             while unlimited:
                 params.update({
                     'offset': offset,
@@ -84,7 +85,7 @@ class ShopeeProduct(ShopeeAPI):
                     if not sp_data_list['has_next_page']:
                         unlimited = False
                     else:
-                        offset = sp_data_list['next_offset']
+                        offset += len(sp_data_list['item'])
                 else:
                     unlimited = False
         else:
