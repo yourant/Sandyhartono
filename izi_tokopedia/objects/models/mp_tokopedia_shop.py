@@ -12,12 +12,26 @@ class MPTokopediaShop(models.Model):
     _rec_name = 'shop_name'
     _rec_mp_external_id = 'shop_id'
 
-    shop_id = fields.Integer(string="Shop ID", readonly=True, mp_raw=True)
-    user_id = fields.Integer(string="User ID", readonly=True, mp_raw=True)
+    SHOP_STATES = [
+        ('0', 'Deleted'),
+        ('1', 'Open'),
+        ('2', 'Closed'),
+        ('3', 'Moderated'),
+        ('4', 'Inactive'),
+        ('5', 'Moderated Permanently'),
+        ('6', 'Incubate'),
+        ('7', 'Schedule Active'),
+    ]
+
+    mp_account_id = fields.Many2one(readonly=True)
+    shop_id = fields.Char(string="Shop ID", readonly=True, mp_raw=True, mp_raw_handler=lambda env, r: str(r))
+    user_id = fields.Char(string="User ID", readonly=True, mp_raw=True, mp_raw_handler=lambda env, r: str(r))
     shop_name = fields.Char(string="Shop Name", readonly=True, mp_raw=True)
     shop_url = fields.Char(string="Shop URL", readonly=True, mp_raw=True)
+    logo = fields.Char(string="Logo", readonly=True, mp_raw=True)
     is_open = fields.Boolean(string="Is Open?", readonly=True, mp_raw=True, mp_raw_handler=lambda env, r: bool(r))
-    status = fields.Integer(string="Status", readonly=True, mp_raw=True)
+    status = fields.Selection(string="Status", selection=SHOP_STATES, readonly=True, mp_raw=True,
+                              mp_raw_handler=lambda env, r: str(r))
     date_shop_created = fields.Date(string="Date Shop Created", readonly=True, mp_raw=True)
     domain = fields.Char(string="Domain", readonly=True, mp_raw=True)
 

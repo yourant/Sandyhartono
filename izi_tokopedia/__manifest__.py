@@ -43,6 +43,7 @@
         # view
         'views/common/mp_account.xml',
         'views/common/mp_token.xml',
+        'views/common/mp_tokopedia_shop.xml',
 
         # wizard
 
@@ -62,13 +63,13 @@
         # 'views/action/action_onboarding.xml',
 
         # action menu
-        # 'views/action/action_menu.xml',
+        'views/action/action_menu.xml',
 
         # action onboarding
         # 'views/action/action_onboarding.xml',
 
         # menu
-        # 'views/menu.xml',
+        'views/menu.xml',
 
         # security
         # 'security/ir.model.access.csv',

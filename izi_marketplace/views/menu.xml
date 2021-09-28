@@ -32,6 +32,10 @@
               parent="izi_marketplace.menu_separator_mp_product_map"
               action="izi_marketplace.action_window_mp_map_product_line_readonly" sequence="2"/>
 
+    <!-- Marketplace / Marketplace Data -->
+    <menuitem id="izi_marketplace.menu_separator_mp_data" name="Marketplace Data"
+              parent="izi_marketplace.menu_root_marketplace" sequence="20"/>
+
     <!-- Marketplace / Configuration -->
     <menuitem id="izi_marketplace.menu_separator_mp_account_config" name="Configuration"
               parent="izi_marketplace.menu_root_marketplace" sequence="100"/>
