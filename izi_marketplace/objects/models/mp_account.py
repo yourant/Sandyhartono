@@ -57,9 +57,12 @@ class MarketplaceAccount(models.Model):
     auth_message = fields.Char(string="Authentication Message", readonly=True)
     mp_product_ids = fields.One2many(comodel_name="mp.product", inverse_name="mp_account_id",
                                      string="Marketplace Product(s)")
-    debug_force_update_raw = fields.Boolean(string="Force Update Raw", default=False, help="Force update raw field.")
-    debug_image_convert = fields.Boolean(string="Image Binary Convert",
-                                         default=False, help="Image URL Convert to Binary")
+    debug_force_update = fields.Boolean(string="Force Update", default=False,
+                                        help="Force update even there is no changes from marketplace")
+    debug_force_update_raw = fields.Boolean(string="Force Update Raw Only", default=False,
+                                            help="Force update raw field only")
+    debug_store_product_img = fields.Boolean(string="Store Product Image",
+                                             default=False, help="Store product image as binary into the database")
 
     @api.multi
     def _compute_mp_token(self):
@@ -77,7 +80,9 @@ class MarketplaceAccount(models.Model):
         context = self._context.copy()
         context.update({
             'mp_account_id': self.id,
-            'force_update_raw': self.debug_force_update_raw
+            'force_update': self.debug_force_update,
+            'force_update_raw': self.debug_force_update_raw,
+            'debug_store_product_img': self.debug_store_product_img
         })
         return context
 

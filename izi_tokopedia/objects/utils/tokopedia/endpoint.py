@@ -13,7 +13,9 @@ class TokopediaEndpoint(object):
             'token': ('POST', '/token?grant_type=client_credentials'),
             'shop_info': ('GET', '/v1/shop/fs/{fs_id}/shop-info'),
             'product_info': ('GET', '/inventory/v1/fs/{fs_id}/product/info'),
-            # 'product_variant': ('GET', '/inventory/v1/fs/{fs_id}/product/variant/{product_id}')
+        },
+        'v2': {
+            'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info')
         }
     }
 

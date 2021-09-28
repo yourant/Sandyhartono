@@ -100,6 +100,16 @@ class MarketplaceBase(models.AbstractModel):
         return raw_data_fields
 
     @api.model
+    def get_mp_account_from_context(self):
+        mp_account_obj = self.env['mp.account']
+
+        context = self._context
+        if not context.get('mp_account_id'):
+            raise ValidationError("Please define mp_account_id in context!")
+
+        return mp_account_obj.browse(context.get('mp_account_id'))
+
+    @api.model
     def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None, endpoint_key=None):
         mp_account_obj = self.env['mp.account']
 
@@ -158,6 +168,10 @@ class MarketplaceBase(models.AbstractModel):
             'signature': self.generate_signature(sanitized_data)
         })
 
+        return self.with_context(context)._finish_mapping_raw_data(sanitized_data, values)
+
+    @api.model
+    def _finish_mapping_raw_data(self, sanitized_data, values):
         return sanitized_data, values
 
     @api.model
@@ -172,15 +186,10 @@ class MarketplaceBase(models.AbstractModel):
                 context['index'] = index
                 sanitized_data, values = self._run_mapping_raw_data(raw_data=raw_datas[index],
                                                                     sanitized_data=sanitized_data)
-                values = self.with_context(context)._finish_mapping_raw_data(sanitized_data, values)[1]
                 values_list.append(values)
 
             return sanitized_datas, values_list
         sanitized_data, values = self.mapping_raw_data(raw_data, sanitized_data)
-        return self.with_context(context)._finish_mapping_raw_data(sanitized_data, values)
-
-    @api.model
-    def _finish_mapping_raw_data(self, sanitized_data, values):
         return sanitized_data, values
 
     @api.model
@@ -261,8 +270,8 @@ class MarketplaceBase(models.AbstractModel):
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
 
-        log_message_updating = "{model_name}: Found existing record with {rec_id} need to be updated: {rec_name}"
-        log_message_skipping = "{model_name}: Found existing record with {rec_id} need to be skipped: {rec_name}"
+        log_message_updating = "{model_name}: Found existing record with ID {rec_id} is need to be updated: {rec_name}"
+        log_message_skipping = "{model_name}: Found existing record with ID {rec_id} is need to be skipped: {rec_name}"
         log_message_creating = "{model_name}: Found data need to be created!"
 
         if multi:
@@ -307,7 +316,7 @@ class MarketplaceBase(models.AbstractModel):
         record = record_obj.search([(mp_external_id_field, '=', values[identifier_field])])
         if record.exists():
             current_signature = self.generate_signature(sanitized_data)
-            if current_signature != record.signature:
+            if current_signature != record.signature or context.get('force_update'):
                 self._logger(marketplace, log_message_updating.format(**{
                     'model_name': self._name,
                     'rec_id': record.id,
