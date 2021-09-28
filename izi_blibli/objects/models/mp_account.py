@@ -107,9 +107,9 @@ class MarketplaceAccount(models.Model):
         mp_products = mp_product_obj.search([('bli_has_variant', '=', True)])
         for mp_product in mp_products:
             mp_product_raw = json.loads(mp_product.raw, strict=False)
-            bli_variant_ids = json_digger(mp_product_raw, 'variant/childrenID')
+            bli_variant_ids = json_digger(mp_product_raw, 'bli_variant_ids')
             for bli_variant_id in bli_variant_ids:
-                bli_data_raw, bli_data_sanitized = bli_product_variant.get_product_info(product_id=bli_variant_id)
+                bli_data_raw, bli_data_sanitized = bli_product_variant.get_product_variant(product_id=bli_variant_id)
                 check_existing_records_params = {
                     'identifier_field': 'bli_variant_id',
                     'raw_data': bli_data_raw,
@@ -125,4 +125,4 @@ class MarketplaceAccount(models.Model):
     def blibli_get_products(self):
         self.ensure_one()
         self.blibli_get_mp_product()
-        # self.blibli_get_mp_product_variant()
+        self.blibli_get_mp_product_variant()

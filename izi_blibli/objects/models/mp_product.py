@@ -22,7 +22,8 @@ class MarketplaceProduct(models.Model):
 
         mp_field_mapping = {
             'name': ('productName', None),
-            'description_sale': ('description', None)
+            'description_sale': ('description', None),
+            'bli_has_variant': ('bli_has_variant', None),
         }
 
         def _handle_price_info(env, data):
@@ -39,7 +40,7 @@ class MarketplaceProduct(models.Model):
 
         def _handle_weight(env, data):
             if data:
-                return data[0].get('weight')
+                return data[0].get('shippingWeight')
             else:
                 return None
 
