@@ -17,6 +17,8 @@ class ShopeeEndpoint(object):
             'auth': ('POST', '/api/v2/shop/auth_partner'),
             'token_renew': ('POST', '/api/v2/auth/access_token/get'),
             'token_get': ('POST', '/api/v2/auth/token/get'),
+            'shop_info': ('GET', '/api/v2/shop/get_shop_info'),
+            'profile_info': ('GET', '/api/v2/shop/get_profile'),
             'logistic_list': ('GET', '/api/v2/logistics/get_channel_list'),
             'product_list': ('GET', '/api/v2/product/get_item_list'),
             'product_info': ('GET', '/api/v2/product/get_item_base_info'),

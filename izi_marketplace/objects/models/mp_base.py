@@ -344,10 +344,10 @@ class MarketplaceBase(models.AbstractModel):
 
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
-        if result['need_update_records']:
+        if 'need_update_records' in result and result['need_update_records']:
             self.with_context(context).update_records(result['need_update_records'])
 
-        if result['need_create_records']:
+        if 'need_create_records' in result and result['need_create_records']:
             mp_data_raw, mp_data_sanitized = self._prepare_create_records(result['need_create_records'])
             create_records_params = {
                 'raw_data': mp_data_raw,
@@ -356,13 +356,17 @@ class MarketplaceBase(models.AbstractModel):
             }
             self.with_context(context).create_records(**create_records_params)
 
-        if result['need_skip_records']:
+        if 'need_skip_records' in result and result['need_skip_records']:
             self.log_skip(marketplace, result['need_skip_records'])
 
     @api.model
     def _prepare_create_records(self, need_create_records):
-        raw_data = [need_create_record[0] for need_create_record in need_create_records]
-        sanitized_data = [need_create_record[1] for need_create_record in need_create_records]
+        if isinstance(need_create_records, list):
+            raw_data = [need_create_record[0] for need_create_record in need_create_records]
+            sanitized_data = [need_create_record[1] for need_create_record in need_create_records]
+        else:
+            raw_data = need_create_records[0]
+            sanitized_data = need_create_records[1]
         return raw_data, sanitized_data
 
     @api.model
