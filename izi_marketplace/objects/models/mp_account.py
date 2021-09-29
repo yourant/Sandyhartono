@@ -116,7 +116,7 @@ class MarketplaceAccount(models.Model):
         return {
             'name': 'Get Orders',
             'view_mode': 'form',
-            'res_model': 'mp.get.order.wizard',
+            'res_model': 'wiz.mp.get.order',
             'view_id': form_view.id,
             'type': 'ir.actions.act_window',
             'target': 'new',
