@@ -13,21 +13,29 @@ class MarketplaceProductImage(models.Model):
     tp_filename = fields.Char(string="Tokopedia Product Image File Name", readonly=True)
 
     @classmethod
-    def _build_model_attributes(cls, pool):
-        cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **{
-            'tokopedia': 'tp_image_id'
-        })
+    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+        if not mp_external_id_fields:
+            mp_external_id_fields = []
 
-        cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
-            'tokopedia': {
-                'name': ('OriginalURL', None),
-                'image': ('OriginalURL', lambda env, r: get_mp_asset(r)),
-                'tp_image_id': ('picID', lambda env, r: str(r)),
-                'tp_filename': ('fileName', None),
-            }
-        })
+        mp_external_id_fields.append(('tokopedia', 'tp_image_id'))
+        super(MarketplaceProductImage, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
-        super(MarketplaceProductImage, cls)._build_model_attributes(pool)
+    @classmethod
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
+
+        marketplace = 'tokopedia'
+        mp_field_mapping = {
+            'name': ('OriginalURL', None),
+            'image': ('OriginalURL',
+                      lambda env, r: get_mp_asset(r) if env.context.get('store_product_img') else None),
+            'tp_image_id': ('picID', lambda env, r: str(r)),
+            'tp_filename': ('fileName', None),
+        }
+
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MarketplaceProductImage, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):
