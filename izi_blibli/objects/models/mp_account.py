@@ -46,7 +46,10 @@ class MarketplaceAccount(models.Model):
         bli_account = self.blibli_get_account()
         result = bli_account.authenticate()
         if result:
-            self.write({'state': 'authenticated'})
+            self.write({
+                'state': 'authenticated',
+                'auth_message': 'Congratulations, you have been successfully authenticated!'
+            })
 
     @api.multi
     def blibli_get_logistic(self):
