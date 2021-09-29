@@ -21,6 +21,7 @@ class IZIShopee(http.Controller):
             <body>
                 <script type="text/javascript">
                     /* alert('Auth Success.'); */
+                    window.onunload = function() {window.opener.location.reload()}
                     window.close();
                 </script>
             </body>
