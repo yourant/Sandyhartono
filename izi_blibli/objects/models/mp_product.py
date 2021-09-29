@@ -72,14 +72,16 @@ class MarketplaceProduct(models.Model):
             if data:
                 pictures = [(5, 0, 0)]
                 for index, pic in enumerate(data[0]['images']):
-                    pictures.append(
-                        (0, 0, {
+                    base_data_image = {
                             'mp_account_id': env.context['mp_account_id'],
                             'bli_image_id': data[0]['merchantSku']+str(index),
-                            'name': pic['locationPath'],
-                            'image': get_mp_asset(pic['locationPath'])}
-                         )
-                    )
+                            'name': pic['locationPath']
+                            }
+                    if env.context.get('debug_store_product_img'):
+                        base_data_image.update({
+                            'image': get_mp_asset(pic['locationPath'])
+                        })
+                    pictures.append((0, 0, base_data_image))
                 return pictures
             else:
                 return None
