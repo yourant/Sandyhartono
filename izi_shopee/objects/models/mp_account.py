@@ -69,6 +69,10 @@ class MarketplaceAccount(models.Model):
         mp_token_obj.create_token(self, raw_token)
         self.write({'state': 'authenticated',
                     'auth_message': 'Congratulations, you have been successfully authenticated!'})
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
 
     @api.multi
     def shopee_get_logistic(self):

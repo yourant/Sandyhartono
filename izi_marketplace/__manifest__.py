@@ -50,7 +50,7 @@
         'views/common/mp_map_product_line.xml',
 
         # wizard
-
+        'views/wizard/mp_order_wizard.xml',
         # report paperformat
         # 'data/report_paperformat.xml',
 
