@@ -34,7 +34,8 @@ class MarketplaceProductVariant(models.Model):
             'length': ('volume/length', None),
             'width': ('volume/width', None),
             'height': ('volume/height', None),
-            'image': ('pictures/OriginalURL', lambda env, r: get_mp_asset(r[0])),
+            'image': ('pictures/OriginalURL',
+                      lambda env, r: get_mp_asset(r[0]) if env.context.get('store_product_img') else None),
         }
 
         def _handle_parent_id(env, data):
