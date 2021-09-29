@@ -25,10 +25,6 @@ class MarketplaceAccount(models.Model):
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_ids = fields.One2many(comodel_name="mp.tokopedia.shop", inverse_name="mp_account_id", string="Shop(s)")
     tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop")
-    partner_id = fields.Many2one(default=lambda self:
-    self.env.ref('izi_tokopedia.res_partner_tokopedia',
-                 raise_if_not_found=False).id
-                                 )
 
     @api.model
     def tokopedia_get_account(self, **kwargs):
