@@ -9,7 +9,7 @@
                 <xpath expr="//group[@name='mp_product_fields']" position="inside">
                     <group string="Blibli Data" attrs="{'invisible': [('marketplace', '!=', 'blibli')]}">
                         <!-- <field name="bli_item_status"/> -->
-                        <!-- <field name="bli_has_variant"/> -->
+                        <field name="bli_has_variant"/>
                     </group>
                 </xpath>
             </field>
