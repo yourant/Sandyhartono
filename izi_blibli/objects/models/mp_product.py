@@ -82,7 +82,7 @@ class MarketplaceProduct(models.Model):
                             'bli_image_id': data[0]['merchantSku']+str(index),
                             'name': pic['locationPath']
                             }
-                    if env.context.get('debug_store_product_img'):
+                    if env.context.get('store_product_img'):
                         base_data_image.update({
                             'image': get_mp_asset(pic['locationPath'])
                         })

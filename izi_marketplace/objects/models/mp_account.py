@@ -83,7 +83,7 @@ class MarketplaceAccount(models.Model):
             'mp_account_id': self.id,
             'force_update': self.debug_force_update,
             'force_update_raw': self.debug_force_update_raw,
-            'debug_store_product_img': self.debug_store_product_img
+            'store_product_img': self.debug_store_product_img
         })
         return context
 
