@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_shopee.form_mp_shopee_shop" model="ir.ui.view">
+      <field name="name">Marketplace Shopee Shop Form View</field>
+      <field name="model">mp.shopee.shop</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Shopee Shop">
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+              <img class="mp-account-img" src="/izi_shopee/static/src/img/sp.png"/>
+            </div>
+            <div class="oe_title">
+              <label for="shop_name" class="oe_edit_only"/>
+              <h1>
+                <field name="shop_name"/>
+              </h1>
+            </div>
+            <group>
+              <group>
+                <field name="shop_id"/>
+                <field name="mp_account_id"/>
+                <field name="shop_logo" widget="url"/>
+                <field name="shop_description"/>
+                <field name="shop_region"/>
+                <field name="shop_status"/>
+              </group>
+              <group>
+                <field name="is_cb"/>
+                <field name="is_cnsc"/>
+                <field name="auth_time"/>
+                <field name="expire_time"/>
+              </group>
+            </group>
+            <notebook>
+              <page string="Logistics">
+                <field name="logistic_ids">
+                  <kanban create="false">
+                    <field name="logistics_channel_name"/>
+                    <templates>
+                      <t t-name="kanban-box">
+                        <div>
+                          <div class="oe_kanban_details">
+                            <field name="logistics_channel_name"/>
+                          </div>
+                        </div>
+                      </t>
+                    </templates>
+                  </kanban>
+                </field>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="signature"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

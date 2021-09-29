@@ -25,6 +25,7 @@ class MPShopeeLogistic(models.Model):
     item_max_width = fields.Float(string="Item Max Width", readonly=True)
     item_max_length = fields.Float(string="Item Max Length", readonly=True)
     item_max_unit = fields.Char(string="Item Max Unit", readonly=True)
+    shop_id = fields.Many2one(comodel_name="mp.shopee   .shop", string="Shop", required=True)
 
     @classmethod
     def _build_model_attributes(cls, pool):
@@ -60,3 +61,12 @@ class MPShopeeLogistic(models.Model):
         return {
             'logistic_list': default_sanitizer
         }
+
+    @api.model
+    def _finish_mapping_raw_data(self, sanitized_data, values):
+        sanitized_data, values = super(MPShopeeLogistic, self)._finish_mapping_raw_data(sanitized_data, values)
+        mp_account = self.get_mp_account_from_context()
+        values.update({
+            'shop_id': mp_account.sp_shop_id.id
+        })
+        return sanitized_data, values

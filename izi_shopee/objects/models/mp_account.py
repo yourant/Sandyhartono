@@ -7,6 +7,7 @@ from odoo import api, fields, models
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
+from odoo.addons.izi_shopee.objects.utils.shopee.shop import ShopeeShop
 from odoo.addons.izi_shopee.objects.utils.shopee.product import ShopeeProduct
 
 
@@ -25,6 +26,7 @@ class MarketplaceAccount(models.Model):
                                  self.env.ref('izi_shopee.res_partner_shopee',
                                               raise_if_not_found=False).id
                                  )
+    sp_shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Current Shop")
     # sp_reason = fields.Char(string="Shopee Reason", readonly=True, states=READONLY_STATES)
 
     @api.model
@@ -73,10 +75,29 @@ class MarketplaceAccount(models.Model):
         mp_token_obj.create_token(self, raw_token)
         self.write({'state': 'authenticated',
                     'auth_message': 'Congratulations, you have been successfully authenticated!'})
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
+
+    @api.multi
+    def shopee_get_shop(self):
+        self.ensure_one()
+        mp_account_ctx = self.generate_context()
+        mp_shopee_shop_obj = self.env['mp.shopee.shop'].with_context(mp_account_ctx)
+        params = {}
+        if self.mp_token_id.state == 'valid':
+            params = {'access_token': self.mp_token_id.name}
+        sp_account = self.shopee_get_account(**params)
+        sp_shop = ShopeeShop(sp_account, sanitizers=mp_shopee_shop_obj.get_sanitizers(self.marketplace))
+        sp_shop_raw = sp_shop.get_shop_info()
+        sp_data_raw, sp_data_sanitized = mp_shopee_shop_obj.with_context(
+            mp_account_ctx)._prepare_mapping_raw_data(raw_data=sp_shop_raw)
+        check_existing_records_params = {
+            'identifier_field': 'shop_id',
+            'raw_data': sp_data_raw,
+            'mp_data': sp_data_sanitized,
+            'multi': isinstance(sp_data_sanitized, list)
         }
+        check_existing_records = mp_shopee_shop_obj.with_context(
+            mp_account_ctx).check_existing_records(**check_existing_records_params)
+        mp_shopee_shop_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
     def shopee_get_logistic(self):
@@ -95,12 +116,14 @@ class MarketplaceAccount(models.Model):
             'mp_data': sp_data_sanitized,
             'multi': isinstance(sp_data_sanitized, list)
         }
-        check_existing_records = mp_shopee_logistic_obj.check_existing_records(**check_existing_records_params)
-        mp_shopee_logistic_obj.handle_result_check_existing_records(check_existing_records)
+        check_existing_records = mp_shopee_logistic_obj.with_context(
+            mp_account_ctx).check_existing_records(**check_existing_records_params)
+        mp_shopee_logistic_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
     def shopee_get_dependencies(self):
         self.ensure_one()
+        self.shopee_get_shop()
         self.shopee_get_logistic()
 
     @api.multi

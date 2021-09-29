@@ -54,14 +54,14 @@ class MarketplaceProduct(models.Model):
                     'sequence': index,
                     'name': pic,
                 }
-                
+
                 pictures.append((0, 0, base_data_image))
             return pictures
 
         mp_field_mapping.update({
             'list_price': ('item_list/price_info', _handle_price_info),
             'mp_product_image_ids': ('item_list/image', _handle_product_images),
-            })
+        })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(MarketplaceProduct, cls)._add_rec_mp_field_mapping(mp_field_mappings)
