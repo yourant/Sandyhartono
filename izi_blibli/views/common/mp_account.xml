@@ -20,10 +20,6 @@
             <field name="bli_client_secret" password="True" attrs="{'required': [('marketplace', '=', 'blibli')]}"/>
           </group>
         </xpath>
-        <xpath expr="//group[@name='mp_token']" position="replace">
-          <group attrs="{'invisible': [('marketplace', '=', 'blibli')]}">
-          </group>
-        </xpath>
       </field>
     </record>
   </data>
