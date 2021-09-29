@@ -18,7 +18,10 @@ class MPProductVariant(models.Model):
         super(MPProductVariant, cls)._add_rec_mp_external_id(marketplace, mp_external_id_field)
 
     @classmethod
-    def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
+
         marketplace = 'shopee'
         mp_field_mapping = {
             'sp_variant_id': ('sp_variant_id', lambda env, r: str(r)),
@@ -47,7 +50,8 @@ class MPProductVariant(models.Model):
             'mp_product_id': ('mp_product_id', _handle_parent_id),
         })
 
-        super(MPProductVariant, cls)._add_rec_mp_field_mapping(marketplace, mp_field_mapping)
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MPProductVariant, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
     @api.model
     def generate_variant_data(self, mp_product_raw):

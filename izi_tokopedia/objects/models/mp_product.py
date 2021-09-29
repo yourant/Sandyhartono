@@ -16,9 +16,11 @@ class MarketplaceProduct(models.Model):
         super(MarketplaceProduct, cls)._add_rec_mp_external_id(marketplace, mp_external_id_field)
 
     @classmethod
-    def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
-        marketplace = 'tokopedia'
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
 
+        marketplace = 'tokopedia'
         mp_field_mapping = {
             'tp_product_id': ('basic/productID', lambda env, r: str(r)),
             'tp_has_variant': ('variant/isParent', lambda env, r: r if r else False),
@@ -50,7 +52,8 @@ class MarketplaceProduct(models.Model):
             'mp_product_image_ids': ('pictures', _handle_pictures)
         })
 
-        super(MarketplaceProduct, cls)._add_rec_mp_field_mapping(marketplace, mp_field_mapping)
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MarketplaceProduct, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):

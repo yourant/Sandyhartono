@@ -38,9 +38,9 @@ class MarketplaceBase(models.AbstractModel):
             cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **dict([(marketplace, mp_external_id_field)]))
 
     @classmethod
-    def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
-        if marketplace and mp_field_mapping:
-            cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **dict([(marketplace, mp_field_mapping)]))
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if mp_field_mappings:
+            cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **dict(mp_field_mappings))
 
     @classmethod
     def _validate_rec_mp_field_mapping(cls):
