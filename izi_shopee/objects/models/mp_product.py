@@ -18,9 +18,11 @@ class MarketplaceProduct(models.Model):
         super(MarketplaceProduct, cls)._add_rec_mp_external_id(marketplace, mp_external_id_field)
 
     @classmethod
-    def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
-        marketplace = 'shopee'
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
 
+        marketplace = 'shopee'
         mp_field_mapping = {
             'name': ('item_list/item_name', None),
             'description_sale': ('item_list/description', None),
@@ -61,7 +63,8 @@ class MarketplaceProduct(models.Model):
             'mp_product_image_ids': ('item_list/image', _handle_product_images),
             })
 
-        super(MarketplaceProduct, cls)._add_rec_mp_field_mapping(marketplace, mp_field_mapping)
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MarketplaceProduct, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
     @api.model
     def shopee_get_sanitizers(self, mp_field_mapping):

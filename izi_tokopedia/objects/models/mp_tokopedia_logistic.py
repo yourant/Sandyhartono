@@ -16,15 +16,19 @@ class MPTokopediaLogistic(models.Model):
     logo = fields.Char(string="Logo", readonly=True)
 
     @classmethod
-    def _add_rec_mp_field_mapping(cls, marketplace=None, mp_field_mapping=None):
-        marketplace = 'tokopedia'
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
 
+        marketplace = 'tokopedia'
         mp_field_mapping = {
             'shipper_id': ('shipper_id', lambda env, r: str(r)),
             'shipper_name': ('shipper_name', None),
             'logo': ('logo', None)
         }
-        super(MPTokopediaLogistic, cls)._add_rec_mp_field_mapping(marketplace, mp_field_mapping)
+
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MPTokopediaLogistic, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):
