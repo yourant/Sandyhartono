@@ -21,6 +21,10 @@ class MarketplaceAccount(models.Model):
     marketplace = fields.Selection(selection_add=[('shopee', 'Shopee')])
     sp_partner_id = fields.Char(string="Partner ID", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_partner_key = fields.Char(string="Partner Key", required_if_marketplace="shopee", states=READONLY_STATES)
+    partner_id = fields.Many2one(default=lambda self:
+                                 self.env.ref('izi_shopee.res_partner_shopee',
+                                              raise_if_not_found=False).id
+                                 )
     # sp_reason = fields.Char(string="Shopee Reason", readonly=True, states=READONLY_STATES)
 
     @api.model
