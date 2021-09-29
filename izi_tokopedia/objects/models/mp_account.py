@@ -26,8 +26,8 @@ class MarketplaceAccount(models.Model):
     tp_shop_ids = fields.One2many(comodel_name="mp.tokopedia.shop", inverse_name="mp_account_id", string="Shop(s)")
     tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop")
     partner_id = fields.Many2one(default=lambda self:
-                                 self.env.ref('izi_tokopedia.res_partner_tokopedia',
-                                              raise_if_not_found=False).id
+    self.env.ref('izi_tokopedia.res_partner_tokopedia',
+                 raise_if_not_found=False).id
                                  )
 
     @api.model
@@ -111,21 +111,17 @@ class MarketplaceAccount(models.Model):
 
         tp_account = self.tokopedia_get_account()
         tp_product = TokopediaProduct(tp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
-        tp_data_raw, tp_data_sanitized = tp_product.get_product_info(shop_id=self.tp_shop_id.shop_id, limit=10)
-        check_existing_records = mp_product_obj.with_context(mp_account_ctx). \
-            check_existing_records('tp_product_id', tp_data_raw, tp_data_sanitized, isinstance(tp_data_sanitized, list))
-        if check_existing_records['need_update_records']:
-            mp_product_obj.with_context({'mp_account_id': self.id}).update_records(
-                check_existing_records['need_update_records'])
-
-        if check_existing_records['need_create_records']:
-            tp_data_raw, tp_data_sanitized = mp_product_obj._prepare_create_records(
-                check_existing_records['need_create_records'])
-            mp_product_obj.with_context({'mp_account_id': self.id}).create_records(tp_data_raw, tp_data_sanitized,
-                                                                                   isinstance(tp_data_sanitized, list))
-
-        if check_existing_records['need_skip_records']:
-            mp_product_obj.log_skip(self.marketplace, check_existing_records['need_skip_records'])
+        tp_data_raw, tp_data_sanitized = tp_product.get_product_info(shop_id=self.tp_shop_id.shop_id,
+                                                                     limit=mp_account_ctx.get('product_limit'))
+        check_existing_records_params = {
+            'identifier_field': 'tp_product_id',
+            'raw_data': tp_data_raw,
+            'mp_data': tp_data_sanitized,
+            'multi': isinstance(tp_data_sanitized, list)
+        }
+        check_existing_records = mp_product_obj.with_context(mp_account_ctx).check_existing_records(
+            **check_existing_records_params)
+        mp_product_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
     def tokopedia_get_mp_product_variant(self):
@@ -140,21 +136,21 @@ class MarketplaceAccount(models.Model):
                                               sanitizers=mp_product_variant_obj.get_sanitizers(self.marketplace))
 
         mp_products = mp_product_obj.search([('tp_has_variant', '=', True)])
+        tp_variant_ids = []
         for mp_product in mp_products:
             mp_product_raw = json.loads(mp_product.raw, strict=False)
-            tp_variant_ids = json_digger(mp_product_raw, 'variant/childrenID')
-            for tp_variant_id in tp_variant_ids:
-                tp_data_raw, tp_data_sanitized = tp_product_variant.get_product_info(product_id=tp_variant_id)
-                check_existing_records_params = {
-                    'identifier_field': 'tp_variant_id',
-                    'raw_data': tp_data_raw,
-                    'mp_data': tp_data_sanitized,
-                    'multi': isinstance(tp_data_sanitized, list)
-                }
-                check_existing_records = mp_product_variant_obj.with_context(mp_account_ctx).check_existing_records(
-                    **check_existing_records_params)
-                mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
-                    check_existing_records)
+            tp_variant_ids.extend(json_digger(mp_product_raw, 'variant/childrenID'))
+        tp_data_raw, tp_data_sanitized = tp_product_variant.get_product_info(product_id=tp_variant_ids)
+        check_existing_records_params = {
+            'identifier_field': 'tp_variant_id',
+            'raw_data': tp_data_raw,
+            'mp_data': tp_data_sanitized,
+            'multi': isinstance(tp_data_sanitized, list)
+        }
+        check_existing_records = mp_product_variant_obj.with_context(mp_account_ctx).check_existing_records(
+            **check_existing_records_params)
+        mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
+            check_existing_records)
 
     @api.multi
     def tokopedia_get_products(self):

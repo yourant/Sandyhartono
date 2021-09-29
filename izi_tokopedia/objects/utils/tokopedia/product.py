@@ -23,6 +23,8 @@ class TokopediaProduct(TokopediaAPI):
 
         if product_id:
             limit = 1
+            if isinstance(product_id, list):
+                product_id = ','.join([str(pid) for pid in product_id])
             params.update({
                 'product_id': product_id
             })
