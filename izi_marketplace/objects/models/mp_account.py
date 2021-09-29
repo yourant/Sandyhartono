@@ -63,6 +63,8 @@ class MarketplaceAccount(models.Model):
     debug_force_update_raw = fields.Boolean(string="Force Update Raw", default=False, help="Force update raw field.")
     debug_store_product_img = fields.Boolean(string="Image Binary Convert",
                                              default=False, help="Store product image as binary into the database")
+    debug_product_limit = fields.Integer(string="Product Limit", required=True, default=0,
+                                         help="Maximum number to import product, set 0 for unlimited!")
 
     @api.multi
     def _compute_mp_token(self):
@@ -82,7 +84,8 @@ class MarketplaceAccount(models.Model):
             'mp_account_id': self.id,
             'force_update': self.debug_force_update,
             'force_update_raw': self.debug_force_update_raw,
-            'store_product_img': self.debug_store_product_img
+            'store_product_img': self.debug_store_product_img,
+            'product_limit': self.debug_product_limit
         })
         return context
 

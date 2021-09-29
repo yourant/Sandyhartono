@@ -97,6 +97,7 @@
                   <field name="debug_force_update" widget="boolean_toggle"/>
                   <field name="debug_force_update_raw" widget="boolean_toggle"/>
                   <field name="debug_store_product_img" widget="boolean_toggle"/>
+                  <field name="debug_product_limit"/>
                 </group>
               </page>
             </notebook>

@@ -13,4 +13,5 @@ class MarketplaceProductImage(models.Model):
     sequence = fields.Integer(string="Sequence", default=1)
     name = fields.Char(string="Image URL", readonly=True)
     image = fields.Binary('Image', attachment=True)
-    mp_product_id = fields.Many2one(comodel_name="mp.product", string="Marketplace Product", readonly=True)
+    mp_product_id = fields.Many2one(comodel_name="mp.product", string="Marketplace Product", readonly=True,
+                                    ondelete="restrict")

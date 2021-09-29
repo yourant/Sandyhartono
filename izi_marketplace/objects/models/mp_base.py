@@ -58,8 +58,8 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def log_skip(self, marketplace, need_skip_records):
         num_skip = len(need_skip_records)
-        log_message = "Skipping {num_skip} existing  record(s) of {model_name}"
-        self._logger(marketplace, log_message.format(**{'num_skip': num_skip, 'model_name': self._name}))
+        log_message = "Skipping {num_skip} existing  record(s) of {model}"
+        self._logger(marketplace, log_message.format(**{'num_skip': num_skip, 'model': self._name}))
 
     @api.model
     def _get_rec_mp_field_mapping(self, marketplace):
@@ -184,8 +184,8 @@ class MarketplaceBase(models.AbstractModel):
 
             for index, sanitized_data in enumerate(sanitized_datas):
                 context['index'] = index
-                sanitized_data, values = self._run_mapping_raw_data(raw_data=raw_datas[index],
-                                                                    sanitized_data=sanitized_data)
+                sanitized_data, values = self.with_context(context)._run_mapping_raw_data(raw_data=raw_datas[index],
+                                                                                          sanitized_data=sanitized_data)
                 values_list.append(values)
 
             return sanitized_datas, values_list
@@ -263,16 +263,16 @@ class MarketplaceBase(models.AbstractModel):
         mp_account_obj = self.env['mp.account']
         record_obj = self.env[self._name]
 
-        context = self._context
+        context = self._context.copy()
         if not context.get('mp_account_id'):
             raise ValidationError("Please define mp_account_id in context!")
 
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
 
-        log_message_updating = "{model_name}: Found existing record with ID {rec_id} is need to be updated: {rec_name}"
-        log_message_skipping = "{model_name}: Found existing record with ID {rec_id} is need to be skipped: {rec_name}"
-        log_message_creating = "{model_name}: Found data need to be created!"
+        log_msg_updating = "{model}: ({num}) Found existing record with ID {rec_id} is need to be updated: {rec_name}"
+        log_msg_skipping = "{model}: ({num}) Found existing record with ID {rec_id} is need to be skipped: {rec_name}"
+        log_msg_creating = "{model}: ({num}) Found data need to be created!"
 
         if multi:
             raw_datas = raw_data
@@ -286,7 +286,9 @@ class MarketplaceBase(models.AbstractModel):
             self._logger(marketplace, "Looking for existing records of %s started... Please wait!" % self._name)
 
             for index, mp_data in enumerate(mp_datas):
-                existing_record = self.check_existing_records(identifier_field, raw_datas[index], mp_data)
+                context['index'] = index
+                existing_record = self.with_context(context).check_existing_records(identifier_field, raw_datas[index],
+                                                                                    mp_data)
                 for key in existing_record.keys():
                     check_existing_records[key].append(existing_record[key])
 
@@ -317,8 +319,9 @@ class MarketplaceBase(models.AbstractModel):
         if record.exists():
             current_signature = self.generate_signature(sanitized_data)
             if current_signature != record.signature or context.get('force_update'):
-                self._logger(marketplace, log_message_updating.format(**{
-                    'model_name': self._name,
+                self._logger(marketplace, log_msg_updating.format(**{
+                    'num': context.get('index') + 1,
+                    'model': self._name,
                     'rec_id': record.id,
                     'rec_name': record.display_name
                 }))
@@ -326,13 +329,14 @@ class MarketplaceBase(models.AbstractModel):
             if context.get('force_update_raw'):
                 values = {'raw': values.get('raw')}
                 return {'need_update_records': (record, values, raw_data, sanitized_data)}
-            self._logger(marketplace, log_message_skipping.format(**{
-                'model_name': self._name,
+            self._logger(marketplace, log_msg_skipping.format(**{
+                'num': context.get('index') + 1,
+                'model': self._name,
                 'rec_id': record.id,
                 'rec_name': record.display_name
             }))
             return {'need_skip_records': (record, {})}
-        self._logger(marketplace, log_message_creating.format(model_name=self._name))
+        self._logger(marketplace, log_msg_creating.format(model=self._name, num=context.get('index') + 1))
         return {'need_create_records': (raw_data, sanitized_data)}
 
     @api.model
@@ -381,7 +385,7 @@ class MarketplaceBase(models.AbstractModel):
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
 
-        log_message = "Creating {model_name} with ID {rec_id}: {rec_name}"
+        log_message = "Creating {model} with ID {rec_id}: {rec_name}"
 
         if multi:
             raw_datas = raw_data
@@ -400,7 +404,7 @@ class MarketplaceBase(models.AbstractModel):
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
         record = record_obj.create(values)
         self._logger(marketplace, log_message.format(**{
-            'model_name': record_obj._name,
+            'model': record_obj._name,
             'rec_id': record.id,
             'rec_name': record.display_name
         }))
@@ -428,9 +432,9 @@ class MarketplaceBase(models.AbstractModel):
         for need_update_record in need_update_records:
             record, values, raw_data, sanitized_data = need_update_record
             record.write(values)
-            log_message = "Updating {model_name} with ID {rec_id}: {rec_name}"
+            log_message = "Updating {model} with ID {rec_id}: {rec_name}"
             self._logger(marketplace, log_message.format(**{
-                'model_name': record_obj._name,
+                'model': record_obj._name,
                 'rec_id': record.id,
                 'rec_name': record.display_name
             }))
