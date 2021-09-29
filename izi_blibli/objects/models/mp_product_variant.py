@@ -77,7 +77,7 @@ class MarketplaceProductVariant(models.Model):
 
         def _handle_image(env, data):
             if data:
-                if env.context.get('debug_store_product_img'):
+                if env.context.get('store_product_img'):
                     return get_mp_asset(data['images'][0]['locationPath'])
             else:
                 return None
