@@ -76,17 +76,23 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     def shopee_get_logistic(self):
-        mp_shopee_logistic_obj = self.env['mp.shopee.logistic']
-
         self.ensure_one()
+        mp_account_ctx = self.generate_context()
+        mp_shopee_logistic_obj = self.env['mp.shopee.logistic'].with_context(mp_account_ctx)
         params = {}
         if self.mp_token_id.state == 'valid':
             params = {'access_token': self.mp_token_id.name}
         sp_account = self.shopee_get_account(**params)
         sp_logistic = ShopeeLogistic(sp_account, sanitizers=mp_shopee_logistic_obj.get_sanitizers(self.marketplace))
         sp_data_raw, sp_data_sanitized = sp_logistic.get_logsitic_list()
-        mp_shopee_logistic_obj.with_context({'mp_account_id': self.id}).create_records(
-            sp_data_raw, sp_data_sanitized, isinstance(sp_data_sanitized, list))
+        check_existing_records_params = {
+            'identifier_field': 'logistics_channel_id',
+            'raw_data': sp_data_raw['logistics_channel_list'],
+            'mp_data': sp_data_sanitized,
+            'multi': isinstance(sp_data_sanitized, list)
+        }
+        check_existing_records = mp_shopee_logistic_obj.check_existing_records(**check_existing_records_params)
+        mp_shopee_logistic_obj.handle_result_check_existing_records(check_existing_records)
 
     @api.multi
     def shopee_get_dependencies(self):
