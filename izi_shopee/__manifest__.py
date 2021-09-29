@@ -36,7 +36,7 @@
         # 'security/res_groups.xml',
 
         # data
-
+        'data/mp_partner.xml',
         # global action
         # 'views/action/action.xml',
 

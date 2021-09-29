@@ -26,6 +26,10 @@ class MarketplaceAccount(models.Model):
     bli_client_id = fields.Char('Client ID', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_client_secret = fields.Char('Client Secret', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_store_id = fields.Integer('Store ID', states=READONLY_STATES)
+    partner_id = fields.Many2one(default=lambda self:
+                                 self.env.ref('izi_blibli.res_partner_blibli',
+                                              raise_if_not_found=False).id
+                                 )
 
     @api.model
     def blibli_get_account(self):
