@@ -5,9 +5,9 @@ from odoo.exceptions import UserError
 from datetime import datetime, timedelta
 
 
-class SetOpenWizard(models.TransientModel):
+class MPOrderWizard(models.TransientModel):
 
-    _name = 'mp.get.order.wizard'
+    _name = 'wiz.mp.get.order'
 
     order_start_date = fields.Datetime(string='Get Start Time Order', required=True,
                                        default=lambda self: fields.Datetime.to_string(
