@@ -57,6 +57,7 @@ class MarketplaceAccount(models.Model):
     auth_message = fields.Char(string="Authentication Message", readonly=True)
     mp_product_ids = fields.One2many(comodel_name="mp.product", inverse_name="mp_account_id",
                                      string="Marketplace Product(s)")
+    partner_id = fields.Many2one('res.partner', string='Partner Marketplace')
     debug_force_update = fields.Boolean(string="Force Update", default=False,
                                         help="Force update even there is no changes from marketplace")
     debug_force_update_raw = fields.Boolean(string="Force Update Raw Only", default=False,
@@ -116,7 +117,7 @@ class MarketplaceAccount(models.Model):
         return {
             'name': 'Get Orders',
             'view_mode': 'form',
-            'res_model': 'mp.get.order.wizard',
+            'res_model': 'wiz.mp.get.order',
             'view_id': form_view.id,
             'type': 'ir.actions.act_window',
             'target': 'new',

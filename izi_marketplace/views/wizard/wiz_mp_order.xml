@@ -1,7 +1,7 @@
 <odoo>
     <record id="izi_marketplace.mp_get_order_form" model="ir.ui.view">
-        <field name="name">mp.get.order.wizard</field>
-        <field name="model">mp.get.order.wizard</field>
+        <field name="name">wiz.mp.get.order</field>
+        <field name="model">wiz.mp.get.order</field>
         <field name="arch" type="xml">
             <form string="Get Order">
                 <group class="oe_title">
@@ -20,7 +20,7 @@
     <record id="izi_marketplace.mp_get_order_wizard" model="ir.actions.act_window">
         <field name="name">Get Order</field>
         <field name="type">ir.actions.act_window</field>
-        <field name="res_model">mp.get.order.wizard</field>
+        <field name="res_model">wiz.mp.get.order</field>
         <field name="view_mode">form</field>
         <field name="view_id" ref="mp_get_order_form"/>
         <field name="target">new</field>
