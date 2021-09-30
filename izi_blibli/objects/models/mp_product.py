@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import api, fields, models
+from bs4 import BeautifulSoup
 from odoo.addons.izi_marketplace.objects.utils.tools import get_mp_asset
 
 
@@ -27,7 +28,6 @@ class MarketplaceProduct(models.Model):
         marketplace = 'blibli'
         mp_field_mapping = {
             'name': ('productName', None),
-            'description_sale': ('description', None),
             'bli_has_variant': ('bli_has_variant', None),
         }
 
@@ -73,6 +73,12 @@ class MarketplaceProduct(models.Model):
             else:
                 return None
 
+        def _handle_description(env, data):
+            if data:
+                return BeautifulSoup(data).get_text()
+            else:
+                return None
+
         def _handle_product_images(env, data):
             if data:
                 pictures = [(5, 0, 0)]
@@ -94,6 +100,7 @@ class MarketplaceProduct(models.Model):
         mp_field_mapping.update({
             'mp_product_image_ids': ('items', _handle_product_images),
             'list_price': ('items', _handle_price_info),
+            'description_sale': ('description', _handle_description),
             'default_code': ('items', _handle_default_code),
             'weight': ('items', _handle_weight),
             'length': ('items', _handle_length),
