@@ -406,7 +406,7 @@ class MarketplaceBase(models.AbstractModel):
             'rec_id': record.id,
             'rec_name': record.display_name
         }))
-        return self.with_context(context)._finish_create_records(record)
+        return record
 
     @api.model
     def _finish_create_records(self, records):
@@ -443,4 +443,8 @@ class MarketplaceBase(models.AbstractModel):
             records |= record
             self._logger(marketplace,
                          "%s: Updated %d of %d" % (record_obj._name, len(records), len(need_update_records)))
+        return self.with_context(context)._finish_update_records(records)
+
+    @api.model
+    def _finish_update_records(self, records):
         return records

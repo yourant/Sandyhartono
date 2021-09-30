@@ -7,5 +7,12 @@
       <field name="res_model">mp.tokopedia.shop</field>
       <field name="view_mode">tree,form</field>
     </record>
+
+    <record id="izi_tokopedia.action_window_tp_logistic" model="ir.actions.act_window">
+      <field name="name">Logistic</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.tokopedia.logistic</field>
+      <field name="view_mode">tree,form</field>
+    </record>
   </data>
 </odoo>

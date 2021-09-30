@@ -44,6 +44,7 @@
         'views/common/mp_account.xml',
         'views/common/mp_token.xml',
         'views/common/mp_tokopedia_shop.xml',
+        'views/common/mp_tokopedia_logistic.xml',
 
         # wizard
 
