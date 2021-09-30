@@ -320,7 +320,7 @@ class MarketplaceBase(models.AbstractModel):
             current_signature = self.generate_signature(sanitized_data)
             if current_signature != record.signature or context.get('force_update'):
                 self._logger(marketplace, log_msg_updating.format(**{
-                    'num': context.get('index') + 1,
+                    'num': context.get('index', 0) + 1,
                     'model': self._name,
                     'rec_id': record.id,
                     'rec_name': record.display_name
@@ -330,13 +330,13 @@ class MarketplaceBase(models.AbstractModel):
                 values = {'raw': values.get('raw')}
                 return {'need_update_records': (record, values, raw_data, sanitized_data)}
             self._logger(marketplace, log_msg_skipping.format(**{
-                'num': context.get('index') + 1,
+                'num': context.get('index', 0) + 1,
                 'model': self._name,
                 'rec_id': record.id,
                 'rec_name': record.display_name
             }))
             return {'need_skip_records': (record, {})}
-        self._logger(marketplace, log_msg_creating.format(model=self._name, num=context.get('index') + 1))
+        self._logger(marketplace, log_msg_creating.format(model=self._name, num=context.get('index', 0) + 1))
         return {'need_create_records': (raw_data, sanitized_data)}
 
     @api.model
@@ -365,12 +365,10 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def _prepare_create_records(self, need_create_records):
-        if isinstance(need_create_records, list):
-            raw_data = [need_create_record[0] for need_create_record in need_create_records]
-            sanitized_data = [need_create_record[1] for need_create_record in need_create_records]
-        else:
-            raw_data = need_create_records[0]
-            sanitized_data = need_create_records[1]
+        if not isinstance(need_create_records, list):
+            need_create_records = [need_create_records]
+        raw_data = [need_create_record[0] for need_create_record in need_create_records]
+        sanitized_data = [need_create_record[1] for need_create_record in need_create_records]
         return raw_data, sanitized_data
 
     @api.model
@@ -427,8 +425,12 @@ class MarketplaceBase(models.AbstractModel):
         mp_account = mp_account_obj.browse(context.get('mp_account_id'))
         marketplace = mp_account.marketplace
 
+        if not isinstance(need_update_records, list):
+            need_update_records = [need_update_records]
+
         self._logger(marketplace, "Updating %d record(s) of %s started... Please wait!" % (
             len(need_update_records), record_obj._name))
+
         for need_update_record in need_update_records:
             record, values, raw_data, sanitized_data = need_update_record
             record.write(values)
