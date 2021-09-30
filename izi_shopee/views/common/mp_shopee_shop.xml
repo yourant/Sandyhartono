@@ -36,6 +36,7 @@
               <page string="Logistics">
                 <field name="logistic_ids">
                   <kanban create="false">
+                    <field name="is_category" invisible="1"/>
                     <field name="logistics_channel_name"/>
                     <templates>
                       <t t-name="kanban-box">
