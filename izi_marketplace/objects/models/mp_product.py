@@ -42,10 +42,13 @@ class MarketplaceProduct(models.Model):
                                      "Use this field anywhere a small image is required.")
     mp_product_image_ids = fields.One2many(comodel_name="mp.product.image", inverse_name="mp_product_id",
                                            string="Marketplace Product Images")
+    mp_product_main_image_url = fields.Char(string="Marketplace Product Main Image URL",
+                                            compute="_compute_mp_product_main_image_url", store=True)
     mp_product_variant_ids = fields.One2many(comodel_name="mp.product.variant", inverse_name="mp_product_id",
                                              string="Marketplace Product Variant")
     mp_product_variant_count = fields.Integer(
         '# Product Variants', compute='_compute_product_variant_count')
+    debug_store_product_img = fields.Boolean(related="mp_account_id.debug_store_product_img")
 
     @api.model
     def create(self, values):
@@ -81,7 +84,15 @@ class MarketplaceProduct(models.Model):
     @api.multi
     def get_main_image(self):
         self.ensure_one()
-        return self.mp_product_image_ids.sorted('sequence')[0]
+        if self.mp_product_image_ids.exists():
+            return self.mp_product_image_ids.sorted('sequence')[0]
+        return self.mp_product_image_ids
+
+    @api.depends('mp_product_image_ids.sequence', 'mp_product_image_ids.name')
+    def _compute_mp_product_main_image_url(self):
+        for mp_product in self:
+            mp_product_main_img = mp_product.get_main_image()
+            mp_product.mp_product_main_image_url = mp_product_main_img.name
 
     @api.one
     @api.depends('mp_product_variant_ids.mp_product_id')
