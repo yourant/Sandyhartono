@@ -125,7 +125,7 @@ class MarketplaceAccount(models.Model):
     @api.multi
     def shopee_get_mp_product(self):
         mp_product_obj = self.env['mp.product']
-
+        mp_account_ctx = self.generate_context()
         self.ensure_one()
         params = {}
         if self.mp_token_id.state == 'valid':
@@ -133,19 +133,19 @@ class MarketplaceAccount(models.Model):
         sp_account = self.shopee_get_account(**params)
         sp_product = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
         sp_data_raw, sp_data_sanitized = sp_product.get_product_list()
-        check_existing_records = mp_product_obj.with_context({'mp_account_id': self.id}).check_existing_records(
+        check_existing_records = mp_product_obj.with_context(mp_account_ctx).check_existing_records(
             'sp_product_id', sp_data_raw, sp_data_sanitized, isinstance(sp_data_sanitized, list))
         if check_existing_records['need_update_records']:
             mp_product_obj.with_context({'mp_account_id': self.id}).update_records(
                 check_existing_records['need_update_records'])
 
         if check_existing_records['need_create_records']:
-            sp_data_raw, sp_data_sanitized = mp_product_obj._prepare_create_records(
+            sp_data_raw, sp_data_sanitized = mp_product_obj.with_context(mp_account_ctx)._prepare_create_records(
                 check_existing_records['need_create_records'])
-            mp_product_obj.with_context({'mp_account_id': self.id}).create_records(sp_data_raw, sp_data_sanitized,
-                                                                                   isinstance(sp_data_sanitized, list))
+            mp_product_obj.with_context(mp_account_ctx).create_records(sp_data_raw, sp_data_sanitized,
+                                                                       isinstance(sp_data_sanitized, list))
         if check_existing_records['need_skip_records']:
-            mp_product_obj.log_skip(self.marketplace, check_existing_records['need_skip_records'])
+            mp_product_obj.with_context(mp_account_ctx).log_skip(self.marketplace, check_existing_records['need_skip_records'])
 
     @api.multi
     def shopee_get_mp_product_variant(self):

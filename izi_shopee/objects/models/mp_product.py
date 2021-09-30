@@ -54,7 +54,10 @@ class MarketplaceProduct(models.Model):
                     'sequence': index,
                     'name': pic,
                 }
-
+                if env.context.get('store_product_img'):
+                    base_data_image.update({
+                        'image': get_mp_asset(pic)
+                    })
                 pictures.append((0, 0, base_data_image))
             return pictures
 
