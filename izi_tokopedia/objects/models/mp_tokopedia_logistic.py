@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+import json
 
 from odoo import api, fields, models
 
@@ -7,13 +8,16 @@ from odoo import api, fields, models
 class MPTokopediaLogistic(models.Model):
     _name = 'mp.tokopedia.logistic'
     _inherit = 'mp.base'
+    _description = "Marketplace Tokopedia Logistic"
     _rec_name = 'shipper_name'
     _rec_mp_external_id = 'shipper_id'
 
-    shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Shop", required=True)
+    # shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Shop", required=True)
     shipper_id = fields.Char(string="Shipper ID", readonly=True)
     shipper_name = fields.Char(string="Shipper Name", readonly=True)
     logo = fields.Char(string="Logo", readonly=True)
+    service_ids = fields.One2many(comodel_name="mp.tokopedia.logistic.service", inverse_name="logistic_id",
+                                  string="Services")
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -24,7 +28,8 @@ class MPTokopediaLogistic(models.Model):
         mp_field_mapping = {
             'shipper_id': ('shipper_id', lambda env, r: str(r)),
             'shipper_name': ('shipper_name', None),
-            'logo': ('logo', None)
+            'logo': ('logo', None),
+            'services': ('services', None)
         }
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
@@ -38,10 +43,70 @@ class MPTokopediaLogistic(models.Model):
         }
 
     @api.model
-    def _finish_mapping_raw_data(self, sanitized_data, values):
-        sanitized_data, values = super(MPTokopediaLogistic, self)._finish_mapping_raw_data(sanitized_data, values)
+    def _finish_create_records(self, records):
+        mp_tokopedia_logistic_service_obj = self.env['mp.tokopedia.logistic.service']
+
         mp_account = self.get_mp_account_from_context()
-        values.update({
-            'shop_id': mp_account.tp_shop_id.id
-        })
-        return sanitized_data, values
+        mp_account_ctx = mp_account.generate_context().copy()
+
+        records = super(MPTokopediaLogistic, self)._finish_create_records(records)
+        tp_logistic_service_raws = []
+        tp_logistic_service_sanitizeds = []
+
+        for record in records:
+            tp_logistic_raw = json.loads(record.raw, strict=False)
+            tp_logistic_services = [dict(tp_logistic_service, **dict([('logistic_id', record.id)])) for
+                                    tp_logistic_service in tp_logistic_raw['services']]
+            tp_data_raw, tp_data_sanitized = mp_tokopedia_logistic_service_obj._prepare_mapping_raw_data(
+                raw_data=tp_logistic_services)
+            tp_logistic_service_raws.extend(tp_data_raw)
+            tp_logistic_service_sanitizeds.extend(tp_data_sanitized)
+
+        check_existing_records_params = {
+            'identifier_field': 'service_id',
+            'raw_data': tp_logistic_service_raws,
+            'mp_data': tp_logistic_service_sanitizeds,
+            'multi': isinstance(tp_logistic_service_sanitizeds, list)
+        }
+        check_existing_records = mp_tokopedia_logistic_service_obj.with_context(
+            mp_account_ctx).check_existing_records(**check_existing_records_params)
+        mp_tokopedia_logistic_service_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
+            check_existing_records)
+
+        return records
+
+    @api.model
+    def _finish_update_records(self, records):
+        records = super(MPTokopediaLogistic, self)._finish_update_records(records)
+        self._finish_create_records(records)
+        return records
+
+
+class MPTokopediaLogisticService(models.Model):
+    _name = 'mp.tokopedia.logistic.service'
+    _inherit = 'mp.base'
+    _description = 'Marketplace Tokopedia Logistic Service'
+    _rec_name = 'service_name'
+    _rec_mp_external_id = 'service_id'
+
+    logistic_id = fields.Many2one(comodel_name="mp.tokopedia.logistic", string="Logistic", required=True,
+                                  ondelete="restrict")
+    service_id = fields.Char(string="Service ID", readonly=True)
+    service_name = fields.Char(string="Service Name", readonly=True)
+    service_desc = fields.Char(string="Service Description", readonly=True)
+
+    @classmethod
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
+
+        marketplace = 'tokopedia'
+        mp_field_mapping = {
+            'logistic_id': ('logistic_id', None),
+            'service_id': ('service_id', lambda env, r: str(r)),
+            'service_name': ('service_name', None),
+            'service_desc': ('service_desc', None)
+        }
+
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MPTokopediaLogisticService, cls)._add_rec_mp_field_mapping(mp_field_mappings)

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_mp_tokopedia_logistic" model="ir.ui.view">
+      <field name="name">Marketplace Tokopedia Logistic Form View</field>
+      <field name="model">mp.tokopedia.logistic</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Tokopedia Logistic">
+          <sheet>
+            <field name="logo" widget="image_url" class="oe_avatar" readonly="1"/>
+            <div class="oe_title">
+              <label for="shipper_name" class="oe_edit_only"/>
+              <h1>
+                <field name="shipper_name"/>
+              </h1>
+            </div>
+            <notebook>
+              <page string="Service(s)">
+                <field name="service_ids">
+                  <tree>
+                    <field name="service_name"/>
+                    <field name="service_desc"/>
+                  </tree>
+                </field>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="signature"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>
