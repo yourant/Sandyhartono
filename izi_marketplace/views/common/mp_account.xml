@@ -90,6 +90,7 @@
               <page name="mp_order" string="Order">
                 <group name="mp_order" string="Marketplace Order" attrs="{'invisible': [('marketplace', '=', False)]}">
                   <field name="partner_id"/>
+                  <field name="warehouse_id" domain="[('company_id', '=', company_id)]"/>
                 </group>
               </page>
               <page string="Debug" groups="base.group_no_one">
