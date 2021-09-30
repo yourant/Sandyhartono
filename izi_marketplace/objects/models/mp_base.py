@@ -336,7 +336,7 @@ class MarketplaceBase(models.AbstractModel):
                 'rec_name': record.display_name
             }))
             return {'need_skip_records': (record, {})}
-        self._logger(marketplace, log_msg_creating.format(model=self._name, num=context.get('index') + 1))
+        self._logger(marketplace, log_msg_creating.format(model=self._name, num=context.get('index', 0) + 1))
         return {'need_create_records': (raw_data, sanitized_data)}
 
     @api.model
@@ -366,7 +366,7 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def _prepare_create_records(self, need_create_records):
         if not isinstance(need_create_records, list):
-            need_create_records = list(need_create_records)
+            need_create_records = [need_create_records]
         raw_data = [need_create_record[0] for need_create_record in need_create_records]
         sanitized_data = [need_create_record[1] for need_create_record in need_create_records]
         return raw_data, sanitized_data
