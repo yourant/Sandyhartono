@@ -110,3 +110,9 @@ class MPTokopediaLogisticService(models.Model):
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(MPTokopediaLogisticService, cls)._add_rec_mp_field_mapping(mp_field_mappings)
+
+    @api.model
+    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
+        context = self._context
+        domain = ['&', ('logistic_id', '=', context.get('logistic_id'))] + domain
+        return super(MPTokopediaLogisticService, self).search_read(domain, fields, offset, limit, order)

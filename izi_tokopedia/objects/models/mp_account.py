@@ -92,10 +92,17 @@ class MarketplaceAccount(models.Model):
         mp_tokopedia_logistic_obj.handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    def tokopedia_get_active_logistics(self):
+        mp_account_ctx = self.generate_context()
+        self.ensure_one()
+        self.tp_shop_id.with_context(mp_account_ctx).get_active_logistics()
+
+    @api.multi
     def tokopedia_get_dependencies(self):
         self.ensure_one()
         self.tokopedia_get_shop()
         self.tokopedia_get_logistics()
+        self.tokopedia_get_active_logistics()
 
     @api.multi
     def tokopedia_get_mp_product(self):
