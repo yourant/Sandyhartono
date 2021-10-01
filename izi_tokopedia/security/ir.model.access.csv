@@ -1,2 +1,5 @@
 "id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
-"izi_module_name.access_model_crud_group_user","Model Name Access for Group User: CRUD","module_name.model_model_name",,1,1,1,1
+"izi_tokopedia.access_mp_tokopedia_shop_r_mp_user","MP TP Shop Access for MP User: R","izi_tokopedia.model_mp_tokopedia_shop","izi_marketplace.group_mp_user",1,0,0,0
+"izi_tokopedia.access_mp_tokopedia_shop_logistic_r_mp_user","MP TP Shop Logistic Access for MP User: R","izi_tokopedia.model_mp_tokopedia_shop_logistic","izi_marketplace.group_mp_user",1,0,0,0
+"izi_tokopedia.access_mp_tokopedia_logistic_r_mp_user","MP TP Logistic Access for MP User: R","izi_tokopedia.model_mp_tokopedia_logistic","izi_marketplace.group_mp_user",1,0,0,0
+"izi_tokopedia.access_mp_tokopedia_logistic_service_r_mp_user","MP TP Logistic Service Access for MP User: R","izi_tokopedia.model_mp_tokopedia_logistic_service","izi_marketplace.group_mp_user",1,0,0,0
