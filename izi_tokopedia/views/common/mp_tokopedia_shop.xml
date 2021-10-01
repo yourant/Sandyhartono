@@ -6,6 +6,10 @@
       <field name="model">mp.tokopedia.shop</field>
       <field name="arch" type="xml">
         <form string="Marketplace Tokopedia Shop">
+          <header>
+            <button name="get_active_logistics" string="Get Active Logistics" type="object"
+                    context="{'mp_account_id': mp_account_id}"/>
+          </header>
           <sheet>
             <div class="oe_button_box" name="button_box">
               <img class="mp-account-img" src="/izi_tokopedia/static/src/img/tp.png"/>
@@ -30,7 +34,49 @@
               </group>
             </group>
             <notebook>
-              <page string="Logistics">
+              <page string="Active Logistics">
+                <field name="shop_logistic_ids" mode="kanban"
+                       context="{'default_shop_id': active_id, 'default_mp_account_id': mp_account_id}">
+                  <kanban create="0">
+                    <field name="shop_id"/>
+                    <field name="mp_account_id"/>
+                    <field name="logistic_id"/>
+                    <field name="service_ids"/>
+                    <field name="name"/>
+                    <field name="logo"/>
+                    <templates>
+                      <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                          <!--                          <a t-if="!read_only_mode" type="delete" class="fa fa-times pull-right"/>-->
+                          <div class="o_kanban_image">
+                            <img t-if="record.logo.raw_value" t-att-src="record.logo.raw_value"
+                                 class="oe_kanban_avatar"/>
+                          </div>
+                          <div class="oe_kanban_details">
+                            <field name="name"/>
+                          </div>
+                        </div>
+                      </t>
+                    </templates>
+                  </kanban>
+                  <form string="Marketplace Tokopedia Shop Logistic">
+                    <sheet>
+                      <!--suppress OdooXml -->
+                      <field name="id" invisible="1"/>
+                      <field name="shop_id" invisible="1"/>
+                      <field name="mp_account_id" invisible="1"/>
+                      <group>
+                        <!--suppress PyUnresolvedReferences -->
+                        <field name="logistic_id" attrs="{'readonly': [('id', '!=', False)]}" force_save="1"
+                               options="{'no_create': True}"/>
+                      </group>
+                      <separator string="Active Service(s)" attrs="{'invisible': [('logistic_id', '=', False)]}"/>
+                      <field name="service_ids" readonly="1" options="{'no_create': True}"
+                             context="{'logistic_id': logistic_id}"
+                             nolabel="1" attrs="{'invisible': [('logistic_id', '=', False)]}"/>
+                    </sheet>
+                  </form>
+                </field>
               </page>
               <page string="Debug" groups="base.group_no_one">
                 <group>

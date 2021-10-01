@@ -35,5 +35,16 @@
         </form>
       </field>
     </record>
+
+    <record id="izi_tokopedia.tree_mp_tokopedia_logistic_service" model="ir.ui.view">
+      <field name="name">Marketplace Tokopedia Logistic Service Tree View</field>
+      <field name="model">mp.tokopedia.logistic.service</field>
+      <field name="arch" type="xml">
+        <tree string="Marketplace Tokopedia Logistic Service">
+          <field name="service_name"/>
+          <field name="service_desc"/>
+        </tree>
+      </field>
+    </record>
   </data>
 </odoo>
