@@ -14,8 +14,6 @@ class MPShopeeLogistic(models.Model):
     logistics_channel_id = fields.Char(string="Logistic ID", readonly=True)
     logistics_channel_name = fields.Char(string="Logistic Name", readonly=True)
     logistics_description = fields.Char(string="Logistic Description", readonly=True)
-    enabled = fields.Boolean(string='Logistic Enabled', readonly=True)
-    cod_enabled = fields.Boolean(string='COD Enabled', readonly=True)
     is_category = fields.Boolean(string='Logistic Category', readonly=True)
     item_max_weight = fields.Float(string="Item Max Weight", readonly=True)
     item_min_weight = fields.Float(string="Item Min Weight", readonly=True)
@@ -25,35 +23,39 @@ class MPShopeeLogistic(models.Model):
     item_max_width = fields.Float(string="Item Max Width", readonly=True)
     item_max_length = fields.Float(string="Item Max Length", readonly=True)
     item_max_unit = fields.Char(string="Item Max Unit", readonly=True)
-    shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Shop", required=True)
+    # shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Shop", required=True)
 
     @classmethod
-    def _build_model_attributes(cls, pool):
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
+
+        marketplace = 'shopee'
+        mp_field_mapping = {
+            'logistics_channel_id': ('logistics_channel_list/logistics_channel_id', lambda env, r: str(r)),
+            'logistics_channel_name': ('logistics_channel_list/logistics_channel_name', None),
+            'logistics_description': ('logistics_channel_list/logistics_description', None),
+            'item_max_weight': ('logistics_channel_list/weight_limit/item_max_weight', None),
+            'item_min_weight': ('logistics_channel_list/weight_limit/item_min_weight', None),
+            'item_max_volume': ('logistics_channel_list/volume_limit/item_max_volume', None),
+            'item_min_volume': ('logistics_channel_list/volume_limit/item_min_volume', None),
+            'item_max_height': ('logistics_channel_list/item_max_dimension/height', None),
+            'item_max_width': ('logistics_channel_list/item_max_dimension/width', None),
+            'item_max_length': ('logistics_channel_list/item_max_dimension/length', None),
+            'item_max_unit': ('logistics_channel_list/item_max_dimension/unit', None),
+        }
 
         def _set_logistic_parent(env, data):
             category_logistic_id = [8000, 8001, 8002, 8003, 8004, 8005, 80024, 80008, 80032, 80031, 80028, 80021]
             is_category = True if data in category_logistic_id else False
             return is_category
 
-        cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
-            'shopee': {
-                'logistics_channel_id': ('logistics_channel_list/logistics_channel_id', lambda env, r: str(r)),
-                'logistics_channel_name': ('logistics_channel_list/logistics_channel_name', None),
-                'logistics_description': ('logistics_channel_list/logistics_description', None),
-                'enabled': ('logistics_channel_list/enabled', None),
-                'cod_enabled': ('logistics_channel_list/cod_enabled', None),
-                'item_max_weight': ('logistics_channel_list/weight_limit/item_max_weight', None),
-                'item_min_weight': ('logistics_channel_list/weight_limit/item_min_weight', None),
-                'item_max_volume': ('logistics_channel_list/volume_limit/item_max_volume', None),
-                'item_min_volume': ('logistics_channel_list/volume_limit/item_min_volume', None),
-                'item_max_height': ('logistics_channel_list/item_max_dimension/height', None),
-                'item_max_width': ('logistics_channel_list/item_max_dimension/width', None),
-                'item_max_length': ('logistics_channel_list/item_max_dimension/length', None),
-                'item_max_unit': ('logistics_channel_list/item_max_dimension/unit', None),
-                'is_category': ('logistics_channel_list/logistics_channel_id', _set_logistic_parent),
-            }
+        mp_field_mapping.update({
+            'is_category': ('logistics_channel_list/logistics_channel_id', _set_logistic_parent),
         })
-        super(MPShopeeLogistic, cls)._build_model_attributes(pool)
+
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MPShopeeLogistic, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
     @api.model
     def shopee_get_sanitizers(self, mp_field_mapping):

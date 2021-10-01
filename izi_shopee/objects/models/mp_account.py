@@ -117,10 +117,17 @@ class MarketplaceAccount(models.Model):
         mp_shopee_logistic_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    def shopee_get_active_logistics(self):
+        mp_account_ctx = self.generate_context()
+        self.ensure_one()
+        self.sp_shop_id.with_context(mp_account_ctx).get_active_logistics()
+
+    @api.multi
     def shopee_get_dependencies(self):
         self.ensure_one()
         self.shopee_get_shop()
         self.shopee_get_logistic()
+        self.shopee_get_active_logistics()
 
     @api.multi
     def shopee_get_mp_product(self):
@@ -145,7 +152,8 @@ class MarketplaceAccount(models.Model):
             mp_product_obj.with_context(mp_account_ctx).create_records(sp_data_raw, sp_data_sanitized,
                                                                        isinstance(sp_data_sanitized, list))
         if check_existing_records['need_skip_records']:
-            mp_product_obj.with_context(mp_account_ctx).log_skip(self.marketplace, check_existing_records['need_skip_records'])
+            mp_product_obj.with_context(mp_account_ctx).log_skip(
+                self.marketplace, check_existing_records['need_skip_records'])
 
     @api.multi
     def shopee_get_mp_product_variant(self):
