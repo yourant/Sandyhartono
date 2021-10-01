@@ -33,21 +33,26 @@
               </group>
             </group>
             <notebook>
-              <page string="Logistics">
-                <field name="logistic_ids">
-                  <kanban create="false">
-                    <field name="is_category" invisible="1"/>
-                    <field name="logistics_channel_name"/>
-                    <templates>
-                      <t t-name="kanban-box">
-                        <div>
-                          <div class="oe_kanban_details">
-                            <field name="logistics_channel_name"/>
-                          </div>
-                        </div>
-                      </t>
-                    </templates>
-                  </kanban>
+              <page string="Active Logistics">
+                <field name="shop_logistic_ids" mode="tree" context="{'default_shop_id': active_id, 'default_mp_account_id': mp_account_id}">
+                  <tree>
+                    <field name="name"/>
+                    <field name="enabled"/>
+                    <field name="cod_enabled"/>
+                  </tree>
+                  <form string="Marketplace Shopee Shop Logistic">
+                    <sheet>
+                      <!--suppress OdooXml -->
+                      <field name="id" invisible="1"/>
+                      <field name="shop_id" invisible="1"/>
+                      <field name="mp_account_id" invisible="1"/>
+                      <group>
+                        <!--suppress PyUnresolvedReferences -->
+                        <field name="logistic_id" attrs="{'readonly': [('id', '!=', False)]}" force_save="1" options="{'no_create': True}"/>
+                        <field name="enabled"/>
+                      </group>
+                    </sheet>
+                  </form>
                 </field>
               </page>
               <page string="Debug" groups="base.group_no_one">

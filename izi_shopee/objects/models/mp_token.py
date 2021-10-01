@@ -29,10 +29,10 @@ class MarketplaceToken(models.Model):
     @api.multi
     def shopee_validate_current_token(self):
         self.ensure_one()
-        if self.state != 'valid':
-            try:
-                self.mp_account_id.shopee_renew_token()
-            except Exception as e:
-                self.mp_account_id.write({'state': 'authenticating', 'auth_message': str(e.args[0])})
+        # if self.state != 'valid':
+        try:
+            self.mp_account_id.shopee_renew_token()
+        except Exception as e:
+            self.mp_account_id.write({'state': 'authenticating', 'auth_message': str(e.args[0])})
             return self.mp_account_id.mp_token_ids.sorted('expired_date', reverse=True)[0]
         return self
