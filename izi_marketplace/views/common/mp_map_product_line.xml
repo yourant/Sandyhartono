@@ -27,6 +27,7 @@
           <field name="product_id"/>
           <field name="mp_product_id" invisible="1"/>
           <field name="mp_product_variant_id" invisible="1"/>
+          <field name="map_type" readonly="1"/>
           <field name="state" force_save="1"/>
         </tree>
       </field>
