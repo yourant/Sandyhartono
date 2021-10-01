@@ -27,6 +27,7 @@
         # odoo addons
         'base',
         'sale_management',
+        'stock',
         # third party addons
         'web_widget_image_url',
 
