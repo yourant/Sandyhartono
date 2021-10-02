@@ -50,7 +50,7 @@
                           <!--                          <a t-if="!read_only_mode" type="delete" class="fa fa-times pull-right"/>-->
                           <div class="o_kanban_image">
                             <img t-if="record.logo.raw_value" t-att-src="record.logo.raw_value"
-                                 class="oe_kanban_avatar"/>
+                                 class="oe_kanban_avatar" style="max-height: 50px;"/>
                           </div>
                           <div class="oe_kanban_details">
                             <field name="name"/>

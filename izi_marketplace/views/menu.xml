@@ -38,6 +38,7 @@
 
     <!-- Marketplace / Configuration -->
     <menuitem id="izi_marketplace.menu_separator_mp_account_config" name="Configuration"
+              groups="izi_marketplace.group_mp_manager"
               parent="izi_marketplace.menu_root_marketplace" sequence="100"/>
 
     <!-- Marketplace / Configuration / Access Token -->
