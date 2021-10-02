@@ -7,3 +7,4 @@
 "izi_marketplace.access_mp_map_product_crud_mp_user","MP Map Product Access for MP User: CRUD","izi_marketplace.model_mp_map_product","izi_marketplace.group_mp_user",1,1,1,1
 "izi_marketplace.access_mp_map_product_field_crud_mp_user","MP Map Product Field Access for MP User: CRUD","izi_marketplace.model_mp_map_product_field","izi_marketplace.group_mp_user",1,1,1,1
 "izi_marketplace.access_mp_map_product_line_crud_mp_user","MP Map Product Line Access for MP User: CRUD","izi_marketplace.model_mp_map_product_line","izi_marketplace.group_mp_user",1,1,1,1
+"izi_marketplace.access_mp_account_crud_mp_manager","MP Account Access for MP Manager: CRUD","izi_marketplace.model_mp_account","izi_marketplace.group_mp_manager",1,1,1,1
