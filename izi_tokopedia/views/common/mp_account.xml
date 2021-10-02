@@ -7,7 +7,7 @@
       <field name="inherit_id" ref="izi_marketplace.form_mp_account"/>
       <field name="arch" type="xml">
         <xpath expr="//div[@name='button_box']" position="inside">
-          <img class="mp-account-img" src="/izi_tokopedia/static/src/img/tp.png"
+          <img class="mp-account-img" src="/izi_tokopedia/static/src/img/tp.png" alt=""
                attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}"/>
         </xpath>
         <xpath expr="//group[@name='mp_credential']" position="inside">

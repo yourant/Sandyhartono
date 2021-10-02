@@ -18,9 +18,9 @@
             <t t-name="kanban-box">
               <div class="oe_kanban_global_click">
                 <div class="o_kanban_image">
-                  <img t-if="record.debug_store_product_img.raw_value"
+                  <img t-if="record.debug_store_product_img.raw_value" alt=""
                        t-att-src="kanban_image('mp.product', 'image_small', record.id.raw_value)"/>
-                  <img t-if="!record.debug_store_product_img.raw_value"
+                  <img t-if="!record.debug_store_product_img.raw_value" alt=""
                        t-att-src="record.mp_product_main_image_url.raw_value"/>
                 </div>
                 <div class="oe_kanban_details">

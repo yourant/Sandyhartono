@@ -40,7 +40,7 @@
           </header>
           <sheet>
             <div attrs="{'invisible': ['|', ('auth_message', '=', False), ('auth_message', '=', '')]}">
-              <div class="alert alert-warning text-center o_form_header" states="authenticating">
+              <div class="alert alert-warning text-center o_form_header" role="alert" states="authenticating">
                 <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
                 <div>
                   <strong>
@@ -48,7 +48,7 @@
                   </strong>
                 </div>
               </div>
-              <div class="alert alert-success text-center o_form_header" states="authenticated">
+              <div class="alert alert-success text-center o_form_header" role="alert" states="authenticated">
                 <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
                 <div>
                   <strong>
