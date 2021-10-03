@@ -119,9 +119,3 @@ class MPShopeeShopLogistic(models.Model):
     name = fields.Char(related="logistic_id.logistics_channel_name")
     enabled = fields.Boolean(string="Logistic is Enable ? ")
     cod_enabled = fields.Boolean(string='COD Enabled', readonly=True)
-
-    # TODO: No service_ids field, please make sure this code is correct!
-    # @api.onchange('service_ids')
-    # def onchange_shop_id(self):
-    #     logistic_ids = self.shop_id.shop_logistic_ids.mapped('logistic_id').ids
-    #     return {'domain': {'logistic_id': [('id', 'not in', logistic_ids)]}}
