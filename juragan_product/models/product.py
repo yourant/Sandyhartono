@@ -234,6 +234,7 @@ class ProductTemplate(models.Model):
                 "width": product_tmpl_id.width,
                 "condition": product_tmpl_id.condition,
                 "package_content": product_tmpl_id.package_content,
+                "company_id": product_tmpl_id.company_id.id,
                 "type": 'product'
             }
 
@@ -1871,6 +1872,56 @@ class WebhookServer(models.Model):
 
             self.after_get_products()
 
+            self.get_staging_attribute_line_and_staging_variant(limit=500)
+            self.get_records('mp.shopee.item.attribute.val', force_update=True, limit=500, commit_every=100)
+            self.get_records('mp.shopee.item.logistic', force_update=True, limit=500, commit_every=100)
+
+            self.with_context(create_product_attr=True).get_records('mp.lazada.product.attr',force_update=True, limit=500, commit_every=100)
+            self.with_context(create_product_attr=True).get_records('mp.blibli.item.attribute.val',force_update=True, limit=500, commit_every=100)
+        except Exception as e:
+            raise UserError(e)
+    
+    def get_product_templates(self):
+        try:
+            self = self.with_context(get_products=True)
+            self.with_context(create_product_product=False).get_records('product.template', domain_code='all_active', force_update=True, limit=500, commit_every=100)
+            self.get_records('product.image', force_update=True, limit=500, commit_every=100)
+            self.get_records('product.template.wholesale', force_update=True, limit=500, commit_every=100)
+        except Exception as e:
+            raise UserError(e)
+    
+    def get_product_stagings(self):
+        try:
+            self = self.with_context(get_products=True)
+            self.get_records('product.staging', force_update=True, domain_code='all_active', limit=500, commit_every=100)
+            self.get_records('product.image.staging', force_update=True, limit=500, commit_every=100)
+            self.get_records('product.staging.wholesale', force_update=True, limit=500, commit_every=100)
+        except Exception as e:
+            raise UserError(e)
+    
+    def get_product_products(self):
+        try:
+            self.get_records('product.product', force_update=True, domain_code='all_active', limit=500, commit_every=100)
+             # get product discount
+            try:
+                self.get_product_discounts()
+            except Exception as e:
+                _logger.error(str(e))
+            self.after_get_products()
+        except Exception as e:
+            raise UserError(e)
+    
+    def get_product_staging_variants(self):
+        try:
+            self.get_records('mp.tokopedia.variant.value', force_update=True, limit=500, commit_every=100)
+            self.get_records('mp.tokopedia.attribute.line', force_update=True, limit=500, commit_every=100)
+            self.get_records('mp.blibli.attribute.line', force_update=True, limit=500, commit_every=100)
+            self.get_records('product.staging.variant', force_update=True, limit=500, commit_every=100)
+        except Exception as e:
+            raise UserError(e)
+    
+    def get_product_marketplace_attributes(self):
+        try:
             self.get_staging_attribute_line_and_staging_variant(limit=500)
             self.get_records('mp.shopee.item.attribute.val', force_update=True, limit=500, commit_every=100)
             self.get_records('mp.shopee.item.logistic', force_update=True, limit=500, commit_every=100)
