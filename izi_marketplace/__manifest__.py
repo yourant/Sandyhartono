@@ -30,6 +30,7 @@
         'stock',
         # third party addons
         'web_widget_image_url',
+        'web_notify',
 
         # developed addons
     ],

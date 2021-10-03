@@ -105,13 +105,13 @@ class MarketplaceAccount(models.Model):
     def action_get_dependencies(self):
         self.ensure_one()
         if hasattr(self, '%s_get_dependencies' % self.marketplace):
-            getattr(self, '%s_get_dependencies' % self.marketplace)()
+            return getattr(self, '%s_get_dependencies' % self.marketplace)()
 
     @api.multi
     def action_get_products(self):
         self.ensure_one()
         if hasattr(self, '%s_get_products' % self.marketplace):
-            getattr(self, '%s_get_products' % self.marketplace)()
+            return getattr(self, '%s_get_products' % self.marketplace)()
 
     @api.multi
     def action_get_orders(self):
