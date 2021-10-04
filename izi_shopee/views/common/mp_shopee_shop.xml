@@ -10,6 +10,7 @@
             <div class="oe_button_box" name="button_box">
               <img class="mp-account-img" src="/izi_shopee/static/src/img/sp.png"/>
             </div>
+            <field name="shop_logo" widget="image_url" class="oe_avatar" readonly="1"/>
             <div class="oe_title">
               <label for="shop_name" class="oe_edit_only"/>
               <h1>
