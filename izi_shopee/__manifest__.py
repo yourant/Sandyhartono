@@ -45,6 +45,7 @@
         'views/common/mp_token.xml',
         'views/common/mp_product.xml',
         'views/common/mp_shopee_shop.xml',
+        'views/common/mp_shopee_logistic.xml',
         # wizard
 
         # report paperformat
@@ -72,7 +73,7 @@
         'views/menu.xml',
 
         # security
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         # 'security/ir.rule.csv',
 
         # data

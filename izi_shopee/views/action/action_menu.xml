@@ -7,5 +7,12 @@
       <field name="res_model">mp.shopee.shop</field>
       <field name="view_mode">tree,form</field>
     </record>
+
+    <record id="izi_shopee.action_window_sp_logistic" model="ir.actions.act_window">
+      <field name="name">Logistic</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.shopee.logistic</field>
+      <field name="view_mode">tree,form</field>
+    </record>
   </data>
 </odoo>

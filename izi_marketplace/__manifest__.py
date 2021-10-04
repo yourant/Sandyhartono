@@ -30,12 +30,13 @@
         'stock',
         # third party addons
         'web_widget_image_url',
+        'web_notify',
 
         # developed addons
     ],
     "data": [
         # group
-        # 'security/res_groups.xml',
+        'security/res_groups.xml',
 
         # data
         'data/functions.xml',
@@ -77,7 +78,7 @@
         'views/menu.xml',
 
         # security
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         # 'security/ir.rule.csv',
 
         # data

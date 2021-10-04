@@ -1,2 +1,2 @@
 "id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
-"izi_module_name.access_model_crud_group_user","Model Name Access for Group User: CRUD","module_name.model_model_name",,1,1,1,1
+"izi_blibli.access_mp_blibli_logistic_r_mp_user","MP BLI Logistic Access for MP User: R","izi_blibli.model_mp_blibli_logistic","izi_marketplace.group_mp_user",1,0,0,0

@@ -4,7 +4,7 @@ import hashlib
 import json
 import logging
 
-from odoo import api, fields, models
+from odoo import api, fields, models, sql_db
 from odoo.exceptions import ValidationError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
@@ -48,18 +48,32 @@ class MarketplaceBase(models.AbstractModel):
         pass
 
     @api.model
-    def _logger(self, marketplace, message, level="info"):
+    def _notify(self, notif_type, message, notif_sticky=False):
+        notif_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
+        uid, context = self.env.uid, self.env.context
+        notif_env = api.Environment(notif_cr, uid, context)
+
+        getattr(notif_env.user, 'notify_%s' % notif_type)(message, sticky=notif_sticky)
+        notif_env.cr.commit()
+        notif_env.cr.close()
+
+    @api.model
+    def _logger(self, marketplace, message, level="info", notify=False, notif_type="info", notif_sticky=False):
         logger = logging.getLogger(__name__)
 
         log_message = "[%s] %s" % (marketplace.upper(), message)
 
         getattr(logger, level)(log_message)
 
+        if notify:
+            self._notify(notif_type, message, notif_sticky)
+
     @api.model
-    def log_skip(self, marketplace, need_skip_records):
+    def log_skip(self, marketplace, need_skip_records, notify=False, notif_type="info", notif_sticky=False):
         num_skip = len(need_skip_records)
         log_message = "Skipping {num_skip} existing  record(s) of {model}"
-        self._logger(marketplace, log_message.format(**{'num_skip': num_skip, 'model': self._name}))
+        self._logger(marketplace, log_message.format(**{'num_skip': num_skip, 'model': self._name}), notify=notify,
+                     notif_type=notif_type, notif_sticky=notif_sticky)
 
     @api.model
     def _get_rec_mp_field_mapping(self, marketplace):
@@ -283,7 +297,8 @@ class MarketplaceBase(models.AbstractModel):
                 'need_skip_records': []
             }
 
-            self._logger(marketplace, "Looking for existing records of %s started... Please wait!" % self._name)
+            self._logger(marketplace, "Looking for existing records of %s is started... Please wait!" % self._name,
+                         notify=True, notif_sticky=True)
 
             for index, mp_data in enumerate(mp_datas):
                 context['index'] = index
@@ -307,10 +322,14 @@ class MarketplaceBase(models.AbstractModel):
                     'action': 'skipped'
                 },
             }
-            self._logger(marketplace, "Looking for existing records of %s finished!" % self._name)
-            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_update']))
-            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_create']))
-            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_skip']))
+            self._logger(marketplace, "Looking for existing records of %s is finished!" % self._name, notify=True,
+                         notif_sticky=True)
+            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_update']), notify=True,
+                         notif_sticky=True)
+            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_create']), notify=True,
+                         notif_sticky=True)
+            self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_skip']), notify=True,
+                         notif_sticky=True)
             return check_existing_records
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
@@ -390,7 +409,8 @@ class MarketplaceBase(models.AbstractModel):
             mp_datas = mp_data
             records = record_obj
             self._logger(marketplace,
-                         "Creating %d record(s) of %s started... Please wait!" % (len(mp_datas), record_obj._name))
+                         "Creating %d record(s) of %s started... Please wait!" % (len(mp_datas), record_obj._name),
+                         notify=True, notif_sticky=True)
 
             for index, mp_data in enumerate(mp_datas):
                 records |= self.create_records(raw_datas[index], mp_data)
@@ -406,7 +426,7 @@ class MarketplaceBase(models.AbstractModel):
             'rec_id': record.id,
             'rec_name': record.display_name
         }))
-        return self.with_context(context)._finish_create_records(record)
+        return record
 
     @api.model
     def _finish_create_records(self, records):
@@ -429,7 +449,7 @@ class MarketplaceBase(models.AbstractModel):
             need_update_records = [need_update_records]
 
         self._logger(marketplace, "Updating %d record(s) of %s started... Please wait!" % (
-            len(need_update_records), record_obj._name))
+            len(need_update_records), record_obj._name), notify=True, notif_sticky=True)
 
         for need_update_record in need_update_records:
             record, values, raw_data, sanitized_data = need_update_record
@@ -443,4 +463,8 @@ class MarketplaceBase(models.AbstractModel):
             records |= record
             self._logger(marketplace,
                          "%s: Updated %d of %d" % (record_obj._name, len(records), len(need_update_records)))
+        return self.with_context(context)._finish_update_records(records)
+
+    @api.model
+    def _finish_update_records(self, records):
         return records

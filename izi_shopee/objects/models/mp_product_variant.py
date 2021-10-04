@@ -43,7 +43,7 @@ class MPProductVariant(models.Model):
             return None
 
         def _handle_product_images(env, data):
-            if env.context.get('store_product_img'):
+            if data and env.context.get('store_product_img'):
                 return get_mp_asset(data)
             else:
                 return None

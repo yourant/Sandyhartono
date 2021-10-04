@@ -55,12 +55,15 @@ class MarketplaceAccount(models.Model):
     @api.multi
     def tokopedia_get_shop(self):
         mp_account_ctx = self.generate_context()
+        _notify = self.env['mp.base']._notify
         mp_tokopedia_shop_obj = self.env['mp.tokopedia.shop'].with_context(mp_account_ctx)
 
         self.ensure_one()
 
         tp_account = self.tokopedia_get_account()
         tp_shop = TokopediaShop(tp_account, sanitizers=mp_tokopedia_shop_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing shop from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
         tp_data_raw, tp_data_sanitized = tp_shop.get_shop_info()
         check_existing_records_params = {
             'identifier_field': 'shop_id',
@@ -74,6 +77,7 @@ class MarketplaceAccount(models.Model):
     @api.multi
     def tokopedia_get_logistics(self):
         mp_account_ctx = self.generate_context()
+        _notify = self.env['mp.base']._notify
         mp_tokopedia_logistic_obj = self.env['mp.tokopedia.logistic'].with_context(mp_account_ctx)
 
         self.ensure_one()
@@ -81,6 +85,8 @@ class MarketplaceAccount(models.Model):
         tp_account = self.tokopedia_get_account()
         tp_logistic = TokopediaLogistic(tp_account, api_version="v2",
                                         sanitizers=mp_tokopedia_logistic_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing logistic from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
         tp_data_raw, tp_data_sanitized = tp_logistic.get_logistic_info(shop_id=self.tp_shop_id.shop_id)
         check_existing_records_params = {
             'identifier_field': 'shipper_id',
@@ -92,13 +98,28 @@ class MarketplaceAccount(models.Model):
         mp_tokopedia_logistic_obj.handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    def tokopedia_get_active_logistics(self):
+        mp_account_ctx = self.generate_context()
+        self.ensure_one()
+        self.tp_shop_id.with_context(mp_account_ctx).get_active_logistics()
+
+    @api.multi
     def tokopedia_get_dependencies(self):
         self.ensure_one()
         self.tokopedia_get_shop()
         self.tokopedia_get_logistics()
+        self.tokopedia_get_active_logistics()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications',
+            'params': {
+                'force_show_number': 1
+            }
+        }
 
     @api.multi
     def tokopedia_get_mp_product(self):
+        _notify = self.env['mp.base']._notify
         mp_product_obj = self.env['mp.product']
 
         self.ensure_one()
@@ -107,6 +128,8 @@ class MarketplaceAccount(models.Model):
 
         tp_account = self.tokopedia_get_account()
         tp_product = TokopediaProduct(tp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing product from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
         tp_data_raw, tp_data_sanitized = tp_product.get_product_info(shop_id=self.tp_shop_id.shop_id,
                                                                      limit=mp_account_ctx.get('product_limit'))
         check_existing_records_params = {
@@ -153,3 +176,7 @@ class MarketplaceAccount(models.Model):
         self.ensure_one()
         self.tokopedia_get_mp_product()
         self.tokopedia_get_mp_product_variant()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications'
+        }

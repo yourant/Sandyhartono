@@ -44,6 +44,7 @@
         'views/common/mp_account.xml',
         'views/common/mp_token.xml',
         'views/common/mp_tokopedia_shop.xml',
+        'views/common/mp_tokopedia_logistic.xml',
 
         # wizard
 
@@ -72,7 +73,7 @@
         'views/menu.xml',
 
         # security
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         # 'security/ir.rule.csv',
 
         # data
