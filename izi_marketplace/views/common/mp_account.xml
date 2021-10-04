@@ -33,7 +33,7 @@
             <button name="action_authenticate" string="Authenticate" class="oe_highlight" type="object" states="new,authenticating"/>
             <button name="action_get_dependencies" string="1. Get Dependencies" class="oe_highlight" type="object" states="authenticated"/>
             <button name="action_get_products" string="2. Get Products" class="oe_highlight" type="object" states="authenticated"/>
-            <button name="action_get_orders" string="3. Get Orders" class="oe_highlight" type="object" states="authenticated"/>
+            <button name="action_get_orders" string="3. Get Orders" class="oe_highlight" type="object" states="authenticated" context="{'default_mp_account_id': active_id}"/>
             <button name="action_reauth" string="Re-Authenticate" type="object" states="authenticated"/>
             <field name="state" widget="statusbar" statusbar_visible="new,authenticated"/>
           </header>

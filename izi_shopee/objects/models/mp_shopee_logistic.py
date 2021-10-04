@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import api, fields, models
+from lxml.html import fromstring as html_fromstring
 
 
 class MPShopeeLogistic(models.Model):
@@ -34,7 +35,6 @@ class MPShopeeLogistic(models.Model):
         mp_field_mapping = {
             'logistics_channel_id': ('logistics_channel_list/logistics_channel_id', lambda env, r: str(r)),
             'logistics_channel_name': ('logistics_channel_list/logistics_channel_name', None),
-            'logistics_description': ('logistics_channel_list/logistics_description', None),
             'item_max_weight': ('logistics_channel_list/weight_limit/item_max_weight', None),
             'item_min_weight': ('logistics_channel_list/weight_limit/item_min_weight', None),
             'item_max_volume': ('logistics_channel_list/volume_limit/item_max_volume', None),
@@ -50,7 +50,14 @@ class MPShopeeLogistic(models.Model):
             is_category = True if data in category_logistic_id else False
             return is_category
 
+        def _parsing_logistic_description(env, data):
+            if data:
+                return html_fromstring(data).text_content()
+            else:
+                return None
+
         mp_field_mapping.update({
+            'logistics_description': ('logistics_channel_list/logistics_description', _parsing_logistic_description),
             'is_category': ('logistics_channel_list/logistics_channel_id', _set_logistic_parent),
         })
 

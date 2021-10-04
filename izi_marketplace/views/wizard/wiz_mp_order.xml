@@ -5,6 +5,7 @@
         <field name="arch" type="xml">
             <form string="Get Order">
                 <group class="oe_title">
+                    <field name="mp_account_id" invisible="1"/>
                     <field name="order_start_date"/>
                     <field name="order_end_date"/>
                 </group>

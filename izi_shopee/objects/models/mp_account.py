@@ -211,3 +211,9 @@ class MarketplaceAccount(models.Model):
             'type': 'ir.actions.client',
             'tag': 'close_notifications'
         }
+
+    @api.multi
+    def shopee_get_orders(self, date_from, date_to):
+        self.ensure_one()
+        mp_account_ctx = self.generate_context()
+        _notify = self.env['mp.base']._notify
