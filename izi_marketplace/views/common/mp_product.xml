@@ -190,5 +190,72 @@
       </field>
     </record>
 
+    <record id="izi_marketplace.form_mp_product_variant" model="ir.ui.view">
+      <field name="name">Marketplace Product Variant Form View</field>
+      <field name="model">mp.product.variant</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Product Variant">
+          <sheet>
+            <field name="currency_id" invisible="1"/>
+            <!--suppress OdooXml -->
+            <field name="id" invisible="1"/>
+            <div class="oe_button_box" name="button_box">
+              <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+              </button>
+            </div>
+            <field name="image" widget="image" class="oe_avatar" readonly="1"/>
+            <div class="oe_title">
+              <label class="oe_edit_only" for="name" string="Product Name"/>
+              <h1>
+                <field name="name" placeholder="Product Name"/>
+              </h1>
+            </div>
+            <notebook>
+              <page string="General Information" name="general_information">
+                <group>
+                  <group>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="marketplace" attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="mp_account_id" domain="[('marketplace', '=', marketplace)]" attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <field name="default_code"/>
+                  </group>
+                  <group name="group_standard_price">
+                    <field name="list_price" widget='monetary' options="{'currency_field': 'currency_id', 'field_digits': True}"/>
+                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                  </group>
+                </group>
+                <group name="mp_product_fields"></group>
+              </page>
+              <page string="Inventory" name="inventory">
+                <group>
+                  <group string="Logistics" name="weight_and_volume">
+                    <label for="weight"/>
+                    <div class="o_row" name="weight">
+                      <field name="weight"/>
+                      <span>kg</span>
+                    </div>
+                    <label for="volume"/>
+                    <div class="o_row" name="volume">
+                      <field name="volume" string="Volume"/>
+                      <span>m³</span>
+                    </div>
+                  </group>
+                </group>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="signature"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
   </data>
 </odoo>
