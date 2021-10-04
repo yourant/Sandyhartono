@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import api, fields, models
+from lxml.html import fromstring as html_fromstring
 
 
 class MPBlibliLogistic(models.Model):
@@ -26,8 +27,10 @@ class MPBlibliLogistic(models.Model):
                 'logistics_name': ('name', None),
                 'is_selected': ('selected', None),
                 'geolocation': ('geolocation', None),
-                'info_additional': ('information/additional', None),
-                'info_highlight': ('information/highlighted', None),
+                'info_additional': ('information/additional', lambda env,
+                                    r: html_fromstring(r).text_content() if r else False),
+                'info_highlight': ('information/highlighted', lambda env,
+                                   r: html_fromstring(r).text_content() if r else False),
             }
         })
         super(MPBlibliLogistic, cls)._build_model_attributes(pool)

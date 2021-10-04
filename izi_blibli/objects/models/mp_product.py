@@ -2,7 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import api, fields, models
-from bs4 import BeautifulSoup
+from lxml.html import fromstring as html_fromstring
 from odoo.addons.izi_marketplace.objects.utils.tools import get_mp_asset
 
 
@@ -75,7 +75,7 @@ class MarketplaceProduct(models.Model):
 
         def _handle_description(env, data):
             if data:
-                return BeautifulSoup(data).get_text()
+                return html_fromstring(data).text_content()
             else:
                 return None
 
