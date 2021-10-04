@@ -76,12 +76,15 @@ class MarketplaceAccount(models.Model):
     def shopee_get_shop(self):
         self.ensure_one()
         mp_account_ctx = self.generate_context()
+        _notify = self.env['mp.base']._notify
         mp_shopee_shop_obj = self.env['mp.shopee.shop'].with_context(mp_account_ctx)
         params = {}
         if self.mp_token_id.state == 'valid':
             params = {'access_token': self.mp_token_id.name}
         sp_account = self.shopee_get_account(**params)
         sp_shop = ShopeeShop(sp_account, sanitizers=mp_shopee_shop_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing shop from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
         sp_shop_raw = sp_shop.get_shop_info()
         sp_data_raw, sp_data_sanitized = mp_shopee_shop_obj.with_context(
             mp_account_ctx)._prepare_mapping_raw_data(raw_data=sp_shop_raw)
@@ -99,12 +102,15 @@ class MarketplaceAccount(models.Model):
     def shopee_get_logistic(self):
         self.ensure_one()
         mp_account_ctx = self.generate_context()
+        _notify = self.env['mp.base']._notify
         mp_shopee_logistic_obj = self.env['mp.shopee.logistic'].with_context(mp_account_ctx)
         params = {}
         if self.mp_token_id.state == 'valid':
             params = {'access_token': self.mp_token_id.name}
         sp_account = self.shopee_get_account(**params)
         sp_logistic = ShopeeLogistic(sp_account, sanitizers=mp_shopee_logistic_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing logistic from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
         sp_data_raw, sp_data_sanitized = sp_logistic.get_logsitic_list()
         check_existing_records_params = {
             'identifier_field': 'logistics_channel_id',
@@ -128,17 +134,27 @@ class MarketplaceAccount(models.Model):
         self.shopee_get_shop()
         self.shopee_get_logistic()
         self.shopee_get_active_logistics()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications',
+            'params': {
+                'force_show_number': 1
+            }
+        }
 
     @api.multi
     def shopee_get_mp_product(self):
         mp_product_obj = self.env['mp.product']
         mp_account_ctx = self.generate_context()
+        _notify = self.env['mp.base']._notify
         self.ensure_one()
         params = {}
         if self.mp_token_id.state == 'valid':
             params = {'access_token': self.mp_token_id.name}
         sp_account = self.shopee_get_account(**params)
         sp_product = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing product from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
         sp_data_raw, sp_data_sanitized = sp_product.get_product_list()
         check_existing_records = mp_product_obj.with_context(mp_account_ctx).check_existing_records(
             'sp_product_id', sp_data_raw, sp_data_sanitized, isinstance(sp_data_sanitized, list))
@@ -191,3 +207,7 @@ class MarketplaceAccount(models.Model):
         self.ensure_one()
         self.shopee_get_mp_product()
         self.shopee_get_mp_product_variant()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications'
+        }
