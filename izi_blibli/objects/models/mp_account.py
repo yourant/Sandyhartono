@@ -77,6 +77,13 @@ class MarketplaceAccount(models.Model):
     def blibli_get_dependencies(self):
         self.ensure_one()
         self.blibli_get_logistic()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications',
+            'params': {
+                'force_show_number': 1
+            }
+        }
 
     @api.multi
     def blibli_get_mp_product(self):
@@ -139,3 +146,7 @@ class MarketplaceAccount(models.Model):
         self.ensure_one()
         self.blibli_get_mp_product()
         self.blibli_get_mp_product_variant()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications'
+        }
