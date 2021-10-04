@@ -32,7 +32,7 @@ class MPBlibliLogistic(models.Model):
         })
         super(MPBlibliLogistic, cls)._build_model_attributes(pool)
 
-    @ api.model
+    @api.model
     def blibli_get_sanitizers(self, mp_field_mapping):
         default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='content')
         return {
