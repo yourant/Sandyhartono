@@ -21,7 +21,6 @@
               <group>
                 <field name="shop_id"/>
                 <field name="mp_account_id"/>
-                <field name="shop_logo" widget="url"/>
                 <field name="shop_description"/>
                 <field name="shop_region"/>
                 <field name="shop_status"/>
