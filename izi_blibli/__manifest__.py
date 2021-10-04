@@ -41,6 +41,7 @@
         # global action
         'views/common/mp_account.xml',
         'views/common/mp_product.xml',
+        'views/common/mp_blibli_logistic.xml',
 
         # view
 
@@ -62,13 +63,13 @@
         # 'views/action/action_onboarding.xml',
 
         # action menu
-        # 'views/action/action_menu.xml',
+        'views/action/action_menu.xml',
 
         # action onboarding
         # 'views/action/action_onboarding.xml',
 
         # menu
-        # 'views/menu.xml',
+        'views/menu.xml',
 
         # security
         # 'security/ir.model.access.csv',

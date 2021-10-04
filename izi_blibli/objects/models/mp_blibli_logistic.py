@@ -38,3 +38,12 @@ class MPBlibliLogistic(models.Model):
         return {
             'logistic': default_sanitizer
         }
+
+    # @api.model
+    # def _finish_mapping_raw_data(self, sanitized_data, values):
+    #     sanitized_data, values = super(MPBlibliLogistic, self)._finish_mapping_raw_data(sanitized_data, values)
+    #     mp_account = self.get_mp_account_from_context()
+    #     values.update({
+    #         'shop_id': mp_account.bli_shop_name
+    #     })
+    #     return sanitized_data, values

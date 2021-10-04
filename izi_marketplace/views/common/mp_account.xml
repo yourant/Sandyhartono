@@ -79,10 +79,8 @@
             </group>
             <notebook>
               <page name="mp_credential" string="Credential">
-                <group name="mp_credential" string="Marketplace Account"
-                       attrs="{'invisible': [('marketplace', '=', False)]}"></group>
-                <group name="mp_token" string="Marketplace Token"
-                       attrs="{'invisible': ['|', ('state', '!=', 'authenticated'), ('access_token', '=', False)]}">
+                <group name="mp_credential" string="Marketplace Account" attrs="{'invisible': [('marketplace', '=', False)]}"></group>
+                <group name="mp_token" string="Marketplace Token" attrs="{'invisible': ['|', ('state', '!=', 'authenticated'), ('access_token', '=', False)]}">
                   <field name="access_token"/>
                   <field name="access_token_expired_date"/>
                 </group>

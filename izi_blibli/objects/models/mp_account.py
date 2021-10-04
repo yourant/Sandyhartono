@@ -26,6 +26,7 @@ class MarketplaceAccount(models.Model):
     bli_client_id = fields.Char('Client ID', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_client_secret = fields.Char('Client Secret', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_store_id = fields.Integer('Store ID', states=READONLY_STATES)
+
     @api.model
     def blibli_get_account(self):
         credentials = {
@@ -52,15 +53,25 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     def blibli_get_logistic(self):
-        mp_blibli_logistic_obj = self.env['mp.blibli.logistic']
+        mp_account_ctx = self.generate_context()
+        mp_blibli_logistic_obj = self.env['mp.blibli.logistic'].with_context(mp_account_ctx)
 
         self.ensure_one()
         params = {}
         bli_account = self.blibli_get_account(**params)
         bli_logistic = BlibliLogistic(bli_account, sanitizers=mp_blibli_logistic_obj.get_sanitizers(self.marketplace))
         bli_data_raw, bli_data_sanitized = bli_logistic.get_logsitic_list()
-        mp_blibli_logistic_obj.with_context({'mp_account_id': self.id}).create_records(
-            bli_data_raw, bli_data_sanitized, isinstance(bli_data_sanitized, list))
+        check_existing_records_params = {
+            'identifier_field': 'logistics_code',
+            'raw_data': bli_data_raw,
+            'mp_data': bli_data_sanitized,
+            'multi': isinstance(bli_data_sanitized, list)
+        }
+        check_existing_records = mp_blibli_logistic_obj.with_context(
+            mp_account_ctx).check_existing_records(**check_existing_records_params)
+        mp_blibli_logistic_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+        # mp_blibli_logistic_obj.with_context({'mp_account_id': self.id}).create_records(
+        #     bli_data_raw, bli_data_sanitized, isinstance(bli_data_sanitized, list))
 
     @api.multi
     def blibli_get_dependencies(self):
