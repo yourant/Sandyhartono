@@ -213,7 +213,7 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
-    def shopee_get_orders(self, date_from, date_to):
+    def shopee_get_orders(self, from_date, to_date):
         self.ensure_one()
         mp_account_ctx = self.generate_context()
         _notify = self.env['mp.base']._notify

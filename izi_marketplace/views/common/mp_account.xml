@@ -30,10 +30,14 @@
       <field name="arch" type="xml">
         <form string="Marketplace Account">
           <header>
-            <button name="action_authenticate" string="Authenticate" class="oe_highlight" type="object" states="new,authenticating"/>
-            <button name="action_get_dependencies" string="1. Get Dependencies" class="oe_highlight" type="object" states="authenticated"/>
-            <button name="action_get_products" string="2. Get Products" class="oe_highlight" type="object" states="authenticated"/>
-            <button name="action_get_orders" string="3. Get Orders" class="oe_highlight" type="object" states="authenticated" context="{'default_mp_account_id': active_id}"/>
+            <button name="action_authenticate" string="Authenticate" class="oe_highlight" type="object"
+                    states="new,authenticating"/>
+            <button name="action_get_dependencies" string="1. Get Dependencies" class="oe_highlight" type="object"
+                    states="authenticated"/>
+            <button name="action_get_products" string="2. Get Products" class="oe_highlight" type="object"
+                    states="authenticated"/>
+            <button name="%(izi_marketplace.action_window_wiz_mp_order)d" string="3. Get Orders" class="oe_highlight"
+                    type="action" states="authenticated" context="{'default_mp_account_id': active_id}"/>
             <button name="action_reauth" string="Re-Authenticate" type="object" states="authenticated"/>
             <field name="state" widget="statusbar" statusbar_visible="new,authenticated"/>
           </header>
@@ -60,7 +64,8 @@
               <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
                 <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
               </button>
-              <button name="action_view_mp_product" string="MP Products" class="oe_stat_button" icon="fa-bars" type="object" states="authenticating,authenticated"/>
+              <button name="action_view_mp_product" string="MP Products" class="oe_stat_button" icon="fa-bars"
+                      type="object" states="authenticating,authenticated"/>
             </div>
             <div class="oe_title">
               <label for="name" class="oe_edit_only"/>
@@ -79,8 +84,10 @@
             </group>
             <notebook>
               <page name="mp_credential" string="Credential">
-                <group name="mp_credential" string="Marketplace Account" attrs="{'invisible': [('marketplace', '=', False)]}"></group>
-                <group name="mp_token" string="Marketplace Token" attrs="{'invisible': ['|', ('state', '!=', 'authenticated'), ('access_token', '=', False)]}">
+                <group name="mp_credential" string="Marketplace Account"
+                       attrs="{'invisible': [('marketplace', '=', False)]}"></group>
+                <group name="mp_token" string="Marketplace Token"
+                       attrs="{'invisible': ['|', ('state', '!=', 'authenticated'), ('access_token', '=', False)]}">
                   <field name="access_token"/>
                   <field name="access_token_expired_date"/>
                 </group>

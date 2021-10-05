@@ -1,27 +1,41 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+
+from dateutil.relativedelta import relativedelta
 from odoo import fields, models, api, _
-from odoo.exceptions import UserError
-from datetime import datetime, timedelta
+from odoo.exceptions import ValidationError
 
 
-class MPOrderWizard(models.TransientModel):
+class WizardMPOrder(models.TransientModel):
+    _name = 'wiz.mp.order'
+    _description = 'Wizard Marketplace Order'
 
-    _name = 'wiz.mp.get.order'
+    INTERVAL_TYPES = [
+        ('days', 'Day(s)'),
+        ('weeks', 'Week(s)'),
+        ('months', 'Month(s)'),
+    ]
 
-    mp_account_id = fields.Many2one(comodel_name='mp.account', string='MP Account')
-    order_start_date = fields.Datetime(string='Get Start Time Order', required=True,
-                                       default=lambda self: fields.Datetime.to_string(
-                                           datetime.now() - timedelta(days=3))
-                                       )
-    order_end_date = fields.Datetime(string='Get End Time Order', required=True, default=lambda self:
-                                     fields.Datetime.to_string(datetime.now()))
+    mp_account_id = fields.Many2one(comodel_name="mp.account", string="MP Account", required=True)
+    use_interval = fields.Boolean(string="Use Interval?", default=True)
+    interval = fields.Integer(string="Interval", required=False, default=3)
+    interval_type = fields.Selection(string="Interval Type", selection=INTERVAL_TYPES, required=False, default="days")
+    from_date = fields.Datetime(string="From Date", required=True)
+    to_date = fields.Datetime(string="To Date", required=True)
+
+    @api.onchange('interval', 'interval_type')
+    def onchange_interval(self):
+        interval = dict([(self.interval_type, self.interval)])
+        time_delta = relativedelta(**interval)
+        now = fields.Datetime.from_string(fields.Datetime.now())
+        self.from_date = fields.Datetime.to_string(now - time_delta)
+        self.to_date = fields.Datetime.to_string(now)
 
     def get_order(self):
-        self.ensure_one()
-        if self.order_end_date < self.order_start_date:
-            raise UserError('End Datetime field must be higger from Start Datetime ..')
-        else:
-            if hasattr(self.mp_account_id, '%s_get_orders' % self.env.context.get('marketplace')):
-                getattr(self.mp_account_id, '%s_get_orders' % self.env.context.get('marketplace'))(
-                    date_from=self.order_start_date, date_to=self.order_end_date)
+        from_date = fields.Datetime.from_string(self.from_date)
+        to_date = fields.Datetime.from_string(self.to_date)
+        if from_date > to_date:
+            raise ValidationError("Invalid date range, from_date higher than to_date. Please input correct date range!")
+        if hasattr(self.mp_account_id, '%s_get_orders' % self.mp_account_id.marketplace):
+            getattr(self.mp_account_id, '%s_get_orders' % self.mp_account_id.marketplace)(from_date=from_date,
+                                                                                          to_date=to_date)

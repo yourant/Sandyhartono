@@ -9,3 +9,4 @@ from . import account
 from . import shop
 from . import logistic
 from . import product
+from . import order

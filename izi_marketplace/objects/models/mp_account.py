@@ -115,22 +115,6 @@ class MarketplaceAccount(models.Model):
             return getattr(self, '%s_get_products' % self.marketplace)()
 
     @api.multi
-    def action_get_orders(self):
-        self.ensure_one()
-        form_view = self.env.ref('izi_marketplace.mp_get_order_form')
-        return {
-            'name': 'Get Orders',
-            'view_mode': 'form',
-            'res_model': 'wiz.mp.get.order',
-            'view_id': form_view.id,
-            'type': 'ir.actions.act_window',
-            'target': 'new',
-            'context': {
-                'marketplace': self.marketplace
-            },
-        }
-
-    @api.multi
     def action_view_mp_product(self):
         self.ensure_one()
         action = self.env.ref('izi_marketplace.action_window_mp_product_view_per_marketplace').read()[0]
