@@ -13,6 +13,7 @@ class SaleOrder(models.Model):
     MP_ORDER_STATUSES = [
         ('new', 'New'),
         ('waiting', 'Waiting Payment'),
+        ('to_cancel', 'To Cancel'),
         ('cancel', 'Cancelled'),
         ('to_process', 'To Process'),
         ('in_process', 'In Process'),
