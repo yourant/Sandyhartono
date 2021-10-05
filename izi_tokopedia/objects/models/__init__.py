@@ -8,3 +8,4 @@ from . import mp_tokopedia_logistic
 from . import mp_product
 from . import mp_product_image
 from . import mp_product_variant
+from . import sale_order
