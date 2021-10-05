@@ -16,7 +16,8 @@ class TokopediaEndpoint(object):
             'logistic_active_info': ('GET', '/v1/logistic/fs/{fs_id}/active-info'),
         },
         'v2': {
-            'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info')
+            'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info'),
+            'order_list': ('GET', '/v2/order/list')
         }
     }
 

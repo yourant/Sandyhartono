@@ -3,10 +3,12 @@
 import json
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.logistic import TokopediaLogistic
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.product import TokopediaProduct
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.shop import TokopediaShop
 
@@ -180,3 +182,22 @@ class MarketplaceAccount(models.Model):
             'type': 'ir.actions.client',
             'tag': 'close_notifications'
         }
+
+    @api.multi
+    def tokopedia_get_sale_order(self, from_date, to_date):
+        _notify = self.env['mp.base']._notify
+
+        self.ensure_one()
+
+        mp_account_ctx = self.generate_context()
+        tp_account = self.tokopedia_get_account()
+        tp_order = TokopediaOrder(tp_account, api_version="v2")
+        _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
+        tp_data_raw = tp_order.get_order_list(from_date=from_date, to_date=to_date, shop_id=self.tp_shop_id.shop_id)
+        raise UserError("%d order(s) imported!" % len(tp_data_raw))
+
+    @api.multi
+    def tokopedia_get_orders(self, from_date, to_date):
+        self.ensure_one()
+        self.tokopedia_get_sale_order(from_date, to_date)

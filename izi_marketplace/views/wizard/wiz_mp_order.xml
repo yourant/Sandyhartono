@@ -1,30 +1,28 @@
 <odoo>
-    <record id="izi_marketplace.mp_get_order_form" model="ir.ui.view">
-        <field name="name">wiz.mp.get.order</field>
-        <field name="model">wiz.mp.get.order</field>
-        <field name="arch" type="xml">
-            <form string="Get Order">
-                <group class="oe_title">
-                    <field name="mp_account_id" invisible="1"/>
-                    <field name="order_start_date"/>
-                    <field name="order_end_date"/>
-                </group>
-                <footer>
-                    <button name="get_order" string="Confirm" type="object" class="btn-primary"/>
-                    <button string="Cancel" class="btn-secondary" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-
-
-    <record id="izi_marketplace.mp_get_order_wizard" model="ir.actions.act_window">
-        <field name="name">Get Order</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">wiz.mp.get.order</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="mp_get_order_form"/>
-        <field name="target">new</field>
-        <field name="context">{'marketplace': context.get('mp_account'))}</field>
-    </record>
+  <record id="izi_marketplace.form_wiz_mp_order" model="ir.ui.view">
+    <field name="name">Wizard Marketplace Order Form View</field>
+    <field name="model">wiz.mp.order</field>
+    <field name="arch" type="xml">
+      <form string="Wizard Marketplace Order">
+        <field name="mp_account_id" invisible="1"/>
+        <group>
+          <field name="use_interval"/>
+        </group>
+        <group>
+          <group>
+            <field name="interval" attrs="{'invisible': [('use_interval', '=', False)]}"/>
+            <field name="from_date"/>
+          </group>
+          <group>
+            <field name="interval_type" attrs="{'invisible': [('use_interval', '=', False)]}"/>
+            <field name="to_date"/>
+          </group>
+        </group>
+        <footer>
+          <button name="get_order" string="Get Order" type="object" class="btn-primary"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
 </odoo>
