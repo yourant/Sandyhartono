@@ -27,6 +27,7 @@ class SaleOrder(models.Model):
     mp_order_status = fields.Selection(string="MP Order Status", selection=MP_ORDER_STATUSES, required=False,
                                        compute="_compute_mp_order_status")
     mp_order_status_notes = fields.Char(string="MP Order Status Notes", compute="_compute_mp_order_status")
+    mp_invoice_number = fields.Char(string="MP Invoice Number", required=False)
 
     @classmethod
     def _build_model_attributes(cls, pool):
