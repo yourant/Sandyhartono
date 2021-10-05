@@ -35,6 +35,26 @@ class MPBlibliLogistic(models.Model):
         })
         super(MPBlibliLogistic, cls)._build_model_attributes(pool)
 
+    @classmethod
+    def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
+        if not mp_field_mappings:
+            mp_field_mappings = []
+
+        marketplace = 'blibli'
+        mp_field_mapping = {
+            'logistics_code': ('code', None),
+            'logistics_name': ('name', None),
+            'is_selected': ('selected', None),
+            'geolocation': ('geolocation', None),
+            'info_additional': ('information/additional', lambda env,
+                                r: html_fromstring(r).text_content() if r else False),
+            'info_highlight': ('information/highlighted', lambda env,
+                               r: html_fromstring(r).text_content() if r else False),
+        }
+
+        mp_field_mappings.append((marketplace, mp_field_mapping))
+        super(MPBlibliLogistic, cls)._add_rec_mp_field_mapping(mp_field_mappings)
+
     @api.model
     def blibli_get_sanitizers(self, mp_field_mapping):
         default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='content')
@@ -42,11 +62,11 @@ class MPBlibliLogistic(models.Model):
             'logistic': default_sanitizer
         }
 
-    # @api.model
-    # def _finish_mapping_raw_data(self, sanitized_data, values):
-    #     sanitized_data, values = super(MPBlibliLogistic, self)._finish_mapping_raw_data(sanitized_data, values)
-    #     mp_account = self.get_mp_account_from_context()
-    #     values.update({
-    #         'shop_id': mp_account.bli_shop_name
-    #     })
-    #     return sanitized_data, values
+    @api.model
+    def _finish_mapping_raw_data(self, sanitized_data, values):
+        sanitized_data, values = super(MPBlibliLogistic, self)._finish_mapping_raw_data(sanitized_data, values)
+        mp_account = self.get_mp_account_from_context()
+        values.update({
+            'shop_id': mp_account.bli_shop_id.id
+        })
+        return sanitized_data, values

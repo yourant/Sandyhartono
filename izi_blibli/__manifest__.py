@@ -42,6 +42,7 @@
         'views/common/mp_account.xml',
         'views/common/mp_product.xml',
         'views/common/mp_blibli_logistic.xml',
+        'views/common/mp_blibli_shop.xml',
 
         # view
 
