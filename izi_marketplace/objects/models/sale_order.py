@@ -42,7 +42,7 @@ class SaleOrder(models.Model):
     mp_buyer_email = fields.Char(string='Buyer Email', readonly=True)
     mp_buyer_phone = fields.Char(string='Buyer Phone', readonly=True)
     mp_cancel_reason = fields.Char(string='Order Cancel Reason', readonly=True)
-    mp_update_order_notes = fields.Text(string='Order Notes', readonly=True)
+    mp_order_notes = fields.Text(string='Order Notes', readonly=True)
 
     mp_recipient_address_city = fields.Char(string='Recipient City', readonly=True)
     mp_recipient_address_name = fields.Char(string='Recipient Name', readonly=True)
