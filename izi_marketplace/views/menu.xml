@@ -7,6 +7,7 @@
 
     <!-- Marketplace / Accounts -->
     <menuitem id="izi_marketplace.menu_separator_mp_account" name="Accounts"
+              groups="izi_marketplace.group_mp_manager"
               parent="izi_marketplace.menu_root_marketplace" sequence="0"/>
 
     <!-- Marketplace / Accounts / Accounts -->
