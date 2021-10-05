@@ -32,12 +32,17 @@ class SaleOrder(models.Model):
     mp_awb_number = fields.Char(string='AWB Number', required=False)
     mp_awb_url = fields.Text(string='AWB URL', required=False, readonly=True)
 
+    mp_payment_date = fields.Datetime(string='Order Payment Date', readonly=True)
+    mp_order_date = fields.Datetime(string='Order Date', readonly=True)
+    mp_update_order_date = fields.Datetime(string='Order Update Date', readonly=True)
+
     mp_buyer_id = fields.Integer(string="Buyer ID", readonly=True)
     mp_buyer_username = fields.Char(string='Buyer Username', readonly=True)
     mp_buyer_name = fields.Char(string='Buyer Name', readonly=True)
     mp_buyer_email = fields.Char(string='Buyer Email', readonly=True)
     mp_buyer_phone = fields.Char(string='Buyer Phone', readonly=True)
     mp_cancel_reason = fields.Char(string='Order Cancel Reason', readonly=True)
+    mp_update_order_notes = fields.Text(string='Order Notes', readonly=True)
 
     mp_recipient_address_city = fields.Char(string='Recipient City', readonly=True)
     mp_recipient_address_name = fields.Char(string='Recipient Name', readonly=True)
