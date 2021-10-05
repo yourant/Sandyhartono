@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import mp, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
