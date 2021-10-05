@@ -6,6 +6,7 @@ from odoo import api, fields, models
 
 from odoo.addons.izi_blibli.objects.utils.blibli.account import BlibliAccount
 from odoo.addons.izi_blibli.objects.utils.blibli.logistic import BlibliLogistic
+from odoo.addons.izi_blibli.objects.utils.blibli.shop import BlibliShop
 from odoo.addons.izi_blibli.objects.utils.blibli.product import BlibliProduct
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 
@@ -26,10 +27,11 @@ class MarketplaceAccount(models.Model):
     bli_client_id = fields.Char('Client ID', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_client_secret = fields.Char('Client Secret', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_store_id = fields.Integer('Store ID', states=READONLY_STATES)
+    bli_shop_id = fields.Many2one(comodel_name="mp.blibli.shop", string="Current Shop")
 
     @api.model
-    def blibli_get_account(self):
-        credentials = {
+    def blibli_get_account(self, **kwargs):
+        credentials = dict({
             'usermail': self.bli_usermail,
             'shop_name': self.bli_shop_name,
             'shop_code': self.bli_shop_code,
@@ -37,7 +39,7 @@ class MarketplaceAccount(models.Model):
             'store_id': 10001,
             'client_id': self.bli_client_id,
             'client_secret': self.bli_client_secret
-        }
+        }, **kwargs)
         bli_account = BlibliAccount(**credentials)
         return bli_account
 
@@ -74,9 +76,43 @@ class MarketplaceAccount(models.Model):
         #     bli_data_raw, bli_data_sanitized, isinstance(bli_data_sanitized, list))
 
     @api.multi
+    def blibli_get_shop(self):
+        self.ensure_one()
+        mp_account_ctx = self.generate_context()
+        _notify = self.env['mp.base']._notify
+        mp_blibli_shop_obj = self.env['mp.blibli.shop'].with_context(mp_account_ctx)
+        params = {}
+        # if self.mp_token_id.state == 'valid':
+        #     params = {'access_token': self.mp_token_id.name}
+        bli_account = self.blibli_get_account(**params)
+        bli_shop = BlibliShop(bli_account, sanitizers=mp_blibli_shop_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing shop from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
+        bli_shop_raw = bli_shop.get_shop_info()
+        bli_data_raw, bli_data_sanitized = mp_blibli_shop_obj.with_context(
+            mp_account_ctx)._prepare_mapping_raw_data(raw_data=bli_shop_raw)
+        check_existing_records_params = {
+            'identifier_field': 'shop_id',
+            'raw_data': bli_data_raw,
+            'mp_data': bli_data_sanitized,
+            'multi': isinstance(bli_data_sanitized, list)
+        }
+        check_existing_records = mp_blibli_shop_obj.with_context(
+            mp_account_ctx).check_existing_records(**check_existing_records_params)
+        mp_blibli_shop_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+
+    @api.multi
+    def blibli_get_active_logistics(self):
+        mp_account_ctx = self.generate_context()
+        self.ensure_one()
+        self.bli_shop_id.with_context(mp_account_ctx).get_active_logistics()
+
+    @api.multi
     def blibli_get_dependencies(self):
         self.ensure_one()
+        self.blibli_get_shop()
         self.blibli_get_logistic()
+        self.blibli_get_active_logistics()
         return {
             'type': 'ir.actions.client',
             'tag': 'close_notifications',

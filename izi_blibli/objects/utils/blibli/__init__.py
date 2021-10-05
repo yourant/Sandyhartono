@@ -3,6 +3,7 @@
 
 from . import endpoint
 from . import account
+from . import shop
 from . import exception
 from . import tools
 from . import logistic
