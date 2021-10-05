@@ -28,6 +28,36 @@ class SaleOrder(models.Model):
                                        compute="_compute_mp_order_status")
     mp_order_status_notes = fields.Char(string="MP Order Status Notes", compute="_compute_mp_order_status")
     mp_invoice_number = fields.Char(string="MP Invoice Number", required=False)
+    mp_payment_method_info = fields.Char(string='Payment Method', required=False, readonly=True)
+    mp_awb_number = fields.Char(string='AWB Number', required=False)
+    mp_awb_url = fields.Text(string='AWB URL', required=False, readonly=True)
+
+    mp_buyer_id = fields.Integer(string="Buyer ID", readonly=True)
+    mp_buyer_username = fields.Char(string='Buyer Username', readonly=True)
+    mp_buyer_name = fields.Char(string='Buyer Name', readonly=True)
+    mp_buyer_email = fields.Char(string='Buyer Email', readonly=True)
+    mp_buyer_phone = fields.Char(string='Buyer Phone', readonly=True)
+    mp_cancel_reason = fields.Char(string='Order Cancel Reason', readonly=True)
+
+    mp_recipient_address_city = fields.Char(string='Recipient City', readonly=True)
+    mp_recipient_address_name = fields.Char(string='Recipient Name', readonly=True)
+    mp_recipient_address_district = fields.Char(string='Recipient District', readonly=True)
+    mp_recipient_address_country = fields.Char(string='Recipient Country', readonly=True)
+    mp_recipient_address_zipcode = fields.Char(string='Recipient Zipcode', readonly=True)
+    mp_recipient_address_phone = fields.Char(string='Recipient Phone', readonly=True)
+    mp_recipient_address_state = fields.Char(string='Recipient State', readonly=True)
+    mp_recipient_address_full = fields.Text(string='Recipient Full Address', readonly=True)
+
+    mp_delivery_carrier_name = fields.Char(string='Delivery Name', readonly=True)
+    mp_delivery_carrier_type = fields.Char(string='Delivery Carrier Type', readonly=True)
+    mp_delivery_type = fields.Selection([
+        ('pickup', 'Pickup'),
+        ('drop off', 'Drop Off'),
+        ('both', 'Pickup & Drop Off'),
+        ('send_to_warehouse', 'Send to Warehouse')])
+    mp_accept_deadline = fields.Datetime(string='Maximum Confirmation Date', readonly=True)
+    mp_shipping_deadline = fields.Datetime(string='Maximum Shpping Date', readonly=True)
+    mp_delivery_weight = fields.Float(string='Weight (KG)', readonly=True)
 
     @classmethod
     def _build_model_attributes(cls, pool):
