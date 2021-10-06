@@ -2,11 +2,15 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import json
 
+from Cryptodome.PublicKey import RSA
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from requests import HTTPError
 
-from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
+from odoo.addons.izi_marketplace.objects.utils.tools import mp, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.encryption import TokopediaEncryption
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.exception import TokopediaAPIError
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.logistic import TokopediaLogistic
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.product import TokopediaProduct
@@ -27,6 +31,36 @@ class MarketplaceAccount(models.Model):
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_ids = fields.One2many(comodel_name="mp.tokopedia.shop", inverse_name="mp_account_id", string="Shop(s)")
     tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop")
+    tp_private_key_file = fields.Binary(string="Secret Key File")
+    tp_private_key_file_name = fields.Char(string="Secret Key File Name")
+    tp_private_key = fields.Char(string="Secret Key", compute="_compute_tp_private_key")
+    tp_public_key_file = fields.Binary(string="Public Key File")
+    tp_public_key_file_name = fields.Char(string="Public Key File Name")
+    tp_public_key = fields.Char(string="Public Key", compute="_compute_tp_public_key")
+
+    @api.multi
+    def _compute_tp_private_key(self):
+        self.ensure_one()
+        if self.tp_private_key_file:
+            self.tp_private_key = self.with_context({'bin_size': False}).tp_private_key_file
+
+    @api.multi
+    def _compute_tp_public_key(self):
+        self.ensure_one()
+        if self.tp_public_key_file:
+            self.tp_public_key = self.with_context({'bin_size': False}).tp_public_key_file
+
+    @api.multi
+    def generate_rsa_key(self):
+        _notify = self.env['mp.base']._notify
+
+        self.ensure_one()
+
+        key = RSA.generate(2048)
+        self.tp_private_key_file = key.export_key()
+        self.tp_public_key_file = key.publickey().export_key()
+
+        _notify('info', "New RSA key generated successfully, don't forget to register it to Tokopedia!")
 
     @api.model
     def tokopedia_get_account(self, **kwargs):
@@ -53,6 +87,23 @@ class MarketplaceAccount(models.Model):
             'state': 'authenticated',
             'auth_message': 'Congratulations, you have been successfully authenticated!'
         })
+
+    @api.multi
+    def tokopedia_register_public_key(self):
+        _notify = self.env['mp.base']._notify
+
+        self.ensure_one()
+
+        tp_account = self.tokopedia_get_account()
+        tp_encryption = TokopediaEncryption(tp_account)
+        try:
+            response = tp_encryption.register_public_key(self.tp_public_key_file)
+            if response.status_code == 200:
+                _notify('info', 'Public key registered successfully!')
+        except TokopediaAPIError as tp_error:
+            raise UserError(tp_error.args)
+        except HTTPError as http_error:
+            raise UserError(http_error.args)
 
     @api.multi
     def tokopedia_get_shop(self):
@@ -184,18 +235,33 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
+    @mp.tokopedia.capture_error
     def tokopedia_get_sale_order(self, from_date, to_date):
+        mp_account_ctx = self.generate_context()
+        order_obj = self.env['sale.order'].with_context(mp_account_ctx)
         _notify = self.env['mp.base']._notify
 
         self.ensure_one()
 
-        mp_account_ctx = self.generate_context()
+        self.tokopedia_register_public_key()
+
         tp_account = self.tokopedia_get_account()
         tp_order = TokopediaOrder(tp_account, api_version="v2")
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
-        tp_data_raw = tp_order.get_order_list(from_date=from_date, to_date=to_date, shop_id=self.tp_shop_id.shop_id)
-        raise UserError("%d order(s) imported!" % len(tp_data_raw))
+        tp_data_raw = tp_order.get_order_list(from_date=from_date, to_date=to_date, shop_id=self.tp_shop_id.shop_id,
+                                              limit=mp_account_ctx.get('order_limit'))
+        tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(raw_data=tp_data_raw,
+                                                                             endpoint_key='sanitize_decrypt')
+        check_existing_records_params = {
+            'identifier_field': 'tp_order_id',
+            'raw_data': tp_data_raw,
+            'mp_data': tp_data_sanitized,
+            'multi': isinstance(tp_data_sanitized, list)
+        }
+        check_existing_records = order_obj.with_context(mp_account_ctx).check_existing_records(
+            **check_existing_records_params)
+        order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
     def tokopedia_get_orders(self, from_date, to_date):

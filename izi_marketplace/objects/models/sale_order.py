@@ -51,7 +51,7 @@ class SaleOrder(models.Model):
     # MP Order Shipment
     mp_awb_number = fields.Char(string="AWB Number", required=False)
     mp_awb_url = fields.Text(string="AWB URL", required=False, readonly=True)
-    mp_delivery_carrier_name = fields.Char(string="Delivery Name", readonly=True)
+    mp_delivery_carrier_name = fields.Char(string="Delivery Carrier Name", readonly=True)
     mp_delivery_carrier_type = fields.Char(string="Delivery Carrier Type", readonly=True)
     mp_delivery_type = fields.Selection(string="Delivery Type", selection=MP_DELIVERY_TYPES, required=False)
     mp_shipping_deadline = fields.Datetime(string="Maximum Shpping Date", readonly=True)
@@ -65,14 +65,14 @@ class SaleOrder(models.Model):
     mp_buyer_phone = fields.Char(string="Buyer Phone", readonly=True)
 
     # MP Recipient Info
-    mp_recipient_address_city = fields.Char(string="Recipient City", readonly=True)
     mp_recipient_address_name = fields.Char(string="Recipient Name", readonly=True)
+    mp_recipient_address_phone = fields.Char(string="Recipient Phone", readonly=True)
+    mp_recipient_address_full = fields.Text(string="Recipient Full Address", readonly=True)
     mp_recipient_address_district = fields.Char(string="Recipient District", readonly=True)
+    mp_recipient_address_city = fields.Char(string="Recipient City", readonly=True)
+    mp_recipient_address_state = fields.Char(string="Recipient State", readonly=True)
     mp_recipient_address_country = fields.Char(string="Recipient Country", readonly=True)
     mp_recipient_address_zip = fields.Char(string="Recipient ZIP", readonly=True)
-    mp_recipient_address_phone = fields.Char(string="Recipient Phone", readonly=True)
-    mp_recipient_address_state = fields.Char(string="Recipient State", readonly=True)
-    mp_recipient_address_full = fields.Text(string="Recipient Full Address", readonly=True)
 
     @classmethod
     def _build_model_attributes(cls, pool):
