@@ -126,6 +126,61 @@ class MarketplaceBase(models.AbstractModel):
         return mp_account_obj.browse(context.get('mp_account_id'))
 
     @api.model
+    def get_mp_partner(self, mp_account, values):
+        res_partner_obj = self.env['res.partner']
+
+        # Search Partner
+        partner = False
+        if mp_account.partner_id:
+            partner = mp_account.partner_id
+        else:
+            # Processed partner_id
+            if not partner and values.get('mp_recipient_address_phone'):
+                partner = res_partner_obj.sudo().search(
+                    [('phone', '=', values.get('mp_recipient_address_phone')), ('type', '=', 'contact')], limit=1)
+
+            # Create Partner From Buyer Information
+            if not partner:
+                partner = self.env['res.partner'].sudo().create({
+                    'name': values.get('mp_recipient_address_name'),
+                    'phone': values.get('mp_recipient_address_phone'),
+                })
+
+        # Search Shipping Address
+        shipping_address = False
+        if values.get('mp_recipient_address_phone'):
+            shipping_address = res_partner_obj.sudo().search(
+                [('parent_id', '=', partner.id), ('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
+        if not shipping_address:
+            shipping_address = self.env['res.partner'].sudo().create({
+                'type': 'delivery',
+                'parent_id': partner.id,
+                'phone': values.get('mp_recipient_address_phone'),
+                'name': values.get('mp_recipient_address_name'),
+                'street': values.get('mp_recipient_address_full'),
+                'city': values.get('mp_recipient_address_city'),
+                'street2': values.get('mp_recipient_address_district', '') + ' ' +
+                values.get('mp_recipient_address_city', '') + ' ' +
+                values.get('mp_recipient_address_state', '') + ' ' +
+                values.get('mp_recipient_address_country', ''),
+                'zip': values.get('mp_recipient_address_zipcode'),
+            })
+        else:
+            shipping_address.sudo().write({
+                'name': values.get('mp_recipient_address_name'),
+                'street': values.get('mp_recipient_address_full'),
+                'city': values.get('mp_recipient_address_city'),
+                'street2': values.get('mp_recipient_address_district', '') + ' ' +
+                values.get('mp_recipient_address_city', '') + ' ' +
+                values.get('mp_recipient_address_state', '') + ' ' +
+                values.get('mp_recipient_address_country', ''),
+                'zip': values.get('mp_recipient_address_zipcode'),
+                'type': 'delivery',
+            })
+
+        return partner, shipping_address
+
+    @api.model
     def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None, endpoint_key=None):
         mp_account_obj = self.env['mp.account']
 
