@@ -2,7 +2,6 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from .api import ShopeeAPI
-from datetime import datetime, timedelta
 
 
 class ShopeeProduct(ShopeeAPI):

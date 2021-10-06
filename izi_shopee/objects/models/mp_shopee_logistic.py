@@ -24,7 +24,6 @@ class MPShopeeLogistic(models.Model):
     item_max_width = fields.Float(string="Item Max Width", readonly=True)
     item_max_length = fields.Float(string="Item Max Length", readonly=True)
     item_max_unit = fields.Char(string="Item Max Unit", readonly=True)
-    # shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Shop", required=True)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):

@@ -3,9 +3,7 @@
 import json
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
 
-from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
 from odoo.addons.izi_shopee.objects.utils.shopee.shop import ShopeeShop
