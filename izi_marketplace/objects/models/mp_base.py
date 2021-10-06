@@ -35,6 +35,8 @@ class MarketplaceBase(models.AbstractModel):
     @classmethod
     def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
         if mp_external_id_fields:
+            if not cls._rec_mp_external_id:
+                cls._rec_mp_external_id = {}
             cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **dict(mp_external_id_fields))
 
     @classmethod
