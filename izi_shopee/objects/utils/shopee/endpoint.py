@@ -22,7 +22,9 @@ class ShopeeEndpoint(object):
             'logistic_list': ('GET', '/api/v2/logistics/get_channel_list'),
             'product_list': ('GET', '/api/v2/product/get_item_list'),
             'product_info': ('GET', '/api/v2/product/get_item_base_info'),
-            'product_variant_list': ('GET', '/api/v2/product/get_model_list')
+            'product_variant_list': ('GET', '/api/v2/product/get_model_list'),
+            'order_list': ('GET', '/api/v2/order/get_order_list'),
+            'order_detail': ('GET', '/api/v2/order/get_order_detail')
         }
     }
 

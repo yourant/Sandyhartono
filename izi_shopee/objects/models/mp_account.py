@@ -3,12 +3,14 @@
 import json
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
 from odoo.addons.izi_shopee.objects.utils.shopee.shop import ShopeeShop
 from odoo.addons.izi_shopee.objects.utils.shopee.product import ShopeeProduct
+from odoo.addons.izi_shopee.objects.utils.shopee.order import ShopeeOrder
 
 
 class MarketplaceAccount(models.Model):
@@ -155,7 +157,7 @@ class MarketplaceAccount(models.Model):
         sp_product = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing product from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
-        sp_data_raw, sp_data_sanitized = sp_product.get_product_list()
+        sp_data_raw, sp_data_sanitized = sp_product.get_product_list(limit=mp_account_ctx.get('product_limit'))
         check_existing_records = mp_product_obj.with_context(mp_account_ctx).check_existing_records(
             'sp_product_id', sp_data_raw, sp_data_sanitized, isinstance(sp_data_sanitized, list))
         if check_existing_records['need_update_records']:
@@ -213,7 +215,34 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
-    def shopee_get_orders(self, from_date, to_date):
-        self.ensure_one()
+    def shopee_get_sale_order(self, from_date, to_date):
+        sale_order_obj = self.env['sale.order']
         mp_account_ctx = self.generate_context()
         _notify = self.env['mp.base']._notify
+        params = {}
+        if self.mp_token_id.state == 'valid':
+            params = {'access_token': self.mp_token_id.name}
+        sp_account = self.shopee_get_account(**params)
+        sp_order = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
+        _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
+                notif_sticky=True)
+        sp_data_raw, sp_data_sanitized = sp_order.get_order_list(from_date=from_date, to_date=to_date)
+        check_existing_records_params = {
+            'identifier_field': 'sp_order_id',
+            'raw_data': sp_data_raw,
+            'mp_data': sp_data_sanitized,
+            'multi': isinstance(sp_data_sanitized, list)
+        }
+        check_existing_records = sale_order_obj.with_context(mp_account_ctx).check_existing_records(
+            **check_existing_records_params)
+        sale_order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+        # raise UserError("%d order(s) imported!" % len(sp_data_raw))
+
+    @api.multi
+    def shopee_get_orders(self, from_date, to_date):
+        self.ensure_one()
+        self.shopee_get_sale_order(from_date, to_date)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications'
+        }

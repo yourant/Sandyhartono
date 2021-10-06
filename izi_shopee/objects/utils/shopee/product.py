@@ -81,7 +81,7 @@ class ShopeeProduct(ShopeeAPI):
                     raw_data, sp_data = self.get_product_info(sp_data_list['item'])
                     self.product_data.extend(sp_data)
                     self.product_data_raw.extend(raw_data)
-                    self.logger.info("Product: Imported %d of unlimited." % len(self.product_data))
+                    self._logger.info("Product: Imported %d of unlimited." % len(self.product_data))
                     if not sp_data_list['has_next_page']:
                         unlimited = False
                     else:
@@ -109,7 +109,7 @@ class ShopeeProduct(ShopeeAPI):
                     raw_data, sp_data = self.get_product_info(sp_data_list['item'])
                     self.product_data.extend(sp_data)
                     self.product_data_raw.extend(raw_data)
-                    self.logger.info("Product: Imported %d of %d." % (len(self.product_data), limit))
+                    self._logger.info("Product: Imported %d of %d." % (len(self.product_data), limit))
 
-        self.logger.info("Product: Finished %d imported." % len(self.product_data))
+        self._logger.info("Product: Finished %d imported." % len(self.product_data))
         return self.product_data_raw, self.product_data
