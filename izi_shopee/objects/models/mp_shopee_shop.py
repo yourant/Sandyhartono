@@ -4,7 +4,6 @@ from datetime import datetime
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
-from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
 
 
