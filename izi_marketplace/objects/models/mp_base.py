@@ -16,6 +16,24 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_external_id = None
     _rec_mp_field_mapping = {}
 
+    @api.multi
+    def _check_required_if_marketplace(self):
+        """ If the field has 'required_if_marketplace="<marketplace>"' attribute, then it
+        required if record.marketplace is <marketplace>. """
+        empty_field = []
+        for record in self:
+            for k, f in record._fields.items():
+                if getattr(f, 'required_if_marketplace', None) == record.marketplace and not record[k]:
+                    empty_field.append(self.env['ir.model.fields'].search(
+                        [('name', '=', k), ('model', '=', record._name)]).field_description)
+        if empty_field:
+            raise ValidationError(', '.join(empty_field))
+        return True
+
+    _constraints = [
+        (_check_required_if_marketplace, 'Required fields not filled', []),
+    ]
+
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     marketplace = fields.Selection(string="Marketplace", readonly=True,
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
@@ -50,12 +68,12 @@ class MarketplaceBase(models.AbstractModel):
         pass
 
     @api.model
-    def _notify(self, notif_type, message, notif_sticky=False):
+    def _notify(self, notif_type, message, title=None, notif_sticky=False):
         notif_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
         uid, context = self.env.uid, self.env.context
         notif_env = api.Environment(notif_cr, uid, context)
 
-        getattr(notif_env.user, 'notify_%s' % notif_type)(message, sticky=notif_sticky)
+        getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
         notif_env.cr.commit()
         notif_env.cr.close()
 
@@ -68,7 +86,7 @@ class MarketplaceBase(models.AbstractModel):
         getattr(logger, level)(log_message)
 
         if notify:
-            self._notify(notif_type, message, notif_sticky)
+            self._notify(notif_type, message, notif_sticky=notif_sticky)
 
     @api.model
     def log_skip(self, marketplace, need_skip_records, notify=False, notif_type="info", notif_sticky=False):
@@ -182,14 +200,10 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None, endpoint_key=None):
-        mp_account_obj = self.env['mp.account']
-
         if response:
             raw_data = response.json()
 
-        context = self._context
-
-        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+        mp_account = self.get_mp_account_from_context()
         marketplace = mp_account.marketplace
 
         mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
