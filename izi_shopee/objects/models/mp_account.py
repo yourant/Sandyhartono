@@ -215,7 +215,7 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
-    def shopee_get_sale_order(self, from_date, to_date):
+    def shopee_get_sale_order(self, from_date, to_date, time_range='create_time'):
         sale_order_obj = self.env['sale.order']
         mp_account_ctx = self.generate_context()
         _notify = self.env['mp.base']._notify
@@ -226,7 +226,8 @@ class MarketplaceAccount(models.Model):
         sp_order = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
-        sp_data_raw, sp_data_sanitized = sp_order.get_order_list(from_date=from_date, to_date=to_date)
+        sp_data_raw, sp_data_sanitized = sp_order.get_order_list(
+            from_date=from_date, to_date=to_date, time_range=time_range)
         check_existing_records_params = {
             'identifier_field': 'sp_order_id',
             'raw_data': sp_data_raw,
