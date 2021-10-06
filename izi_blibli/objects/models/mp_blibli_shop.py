@@ -100,5 +100,5 @@ class MPShopeeShopLogistic(models.Model):
     logistic_id = fields.Many2one(comodel_name="mp.blibli.logistic", string="Logistic", required=True,
                                   ondelete="restrict")
     name = fields.Char(related="logistic_id.logistics_name")
-    is_selected = fields.Boolean(string="Logistic is Enable ? ")
-    geolocation = fields.Boolean(string='COD Enabled', readonly=True)
+    is_selected = fields.Boolean(string="Selected")
+    geolocation = fields.Boolean(string='Need Geolocation Information', readonly=True)
