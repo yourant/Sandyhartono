@@ -13,7 +13,9 @@ class BlibliEndpoint(object):
         # endpoint_key: (http_method, endpoint_url)
         'logistic': ('GET', '/v2/proxy/seller/v1/logistics'),
         'product_list': ('POST', '/v2/proxy/mta/api/businesspartner/v2/product/getProductList'),
-        'product_info': ('GET', '/v2/proxy/mta/api/businesspartner/v1/product/detailProduct')
+        'product_info': ('GET', '/v2/proxy/mta/api/businesspartner/v1/product/detailProduct'),
+        'order_list': ('GET', '/v2/proxy/mta/api/businesspartner/v1/order/orderList'),
+        'order_detail': ('GET', '/v2/proxy/mta/api/businesspartner/v1/order/orderDetail'),
     }
 
     def __init__(self, bli_account, host="base"):

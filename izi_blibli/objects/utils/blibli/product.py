@@ -69,7 +69,7 @@ class BlibliProduct(BlibliAPI):
                 raw_data, bli_data = self.get_product_info(bli_product_by_sku)
                 self.product_data.extend(bli_data)
                 self.product_data_raw.extend(raw_data)
-                self.logger.info("Product: Imported %d of unlimited." % len(self.product_data))
+                self._logger.info("Product: Imported %d of unlimited." % len(self.product_data))
                 offset += per_page
                 if bli_data_list['pageMetaData']['totalRecords'] >= offset:
                     page += 1
@@ -92,9 +92,9 @@ class BlibliProduct(BlibliAPI):
                     raw_data, bli_data = self.get_product_info(bli_data_list['item'])
                     self.product_data.extend(bli_data)
                     self.product_data_raw.extend(raw_data)
-                    self.logger.info("Product: Imported %d of %d." % (len(self.product_data), limit))
+                    self._logger.info("Product: Imported %d of %d." % (len(self.product_data), limit))
 
-        self.logger.info("Product: Finished %d imported." % len(self.product_data))
+        self._logger.info("Product: Finished %d imported." % len(self.product_data))
         return self.product_data_raw, self.product_data
 
     def get_product_variant(self, product_id):
