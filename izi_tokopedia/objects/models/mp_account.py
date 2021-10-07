@@ -94,21 +94,20 @@ class MarketplaceAccount(models.Model):
         })
 
     @api.multi
+    @mp.tokopedia.capture_error
     def tokopedia_register_public_key(self):
         _notify = self.env['mp.base']._notify
 
         self.ensure_one()
 
+        if not self.tp_public_key_file:
+            self.generate_rsa_key()
+
         tp_account = self.tokopedia_get_account()
         tp_encryption = TokopediaEncryption(tp_account)
-        try:
-            response = tp_encryption.register_public_key(self.tp_public_key_file)
-            if response.status_code == 200:
-                _notify('info', 'Public key registered successfully!')
-        except TokopediaAPIError as tp_error:
-            raise UserError(tp_error.args)
-        except HTTPError as http_error:
-            raise UserError(http_error.args)
+        response = tp_encryption.register_public_key(self.tp_public_key_file)
+        if response.status_code == 200:
+            _notify('info', 'Public key registered successfully!')
 
     @api.multi
     def tokopedia_get_shop(self):

@@ -20,14 +20,15 @@
                    attrs="{'invisible': [('tp_shop_ids', '=', [])]}"/>
           </group>
         </xpath>
-        <xpath expr="//group[@name='mp_token']" position="after">
-          <div name="tp_encryption" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
-            <separator string="Tokopedia Encryption"/>
+        <xpath expr="//page[@name='mp_credential']" position="after">
+          <page string="Encryption" name="tp_encryption" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
             <field name="tp_public_key"/>
-            <button name="generate_rsa_key" string="Generate RSA Key" type="object" style="margin: 10px;" icon="fa-lock"/>
+            <button name="generate_rsa_key" string="Generate RSA Key" type="object" style="margin: 10px;"
+                    icon="fa-lock"/>
             <button name="tokopedia_register_public_key" string="Register Public Key to Tokopedia" icon="fa-upload"
                     type="object" style="margin: 10px;"/>
-          </div>
+          </page>
+
         </xpath>
       </field>
     </record>
