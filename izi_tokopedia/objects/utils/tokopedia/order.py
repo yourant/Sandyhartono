@@ -31,6 +31,9 @@ class TokopediaOrder(TokopediaAPI):
                 'to_date': to_timestamp
             })
 
+            if limit == len(response_datas):
+                break
+
             unlimited = not limit
             if unlimited:
                 page = 1
@@ -42,12 +45,11 @@ class TokopediaOrder(TokopediaAPI):
                     prepared_request = self.build_request('order_list', **{
                         'params': params
                     })
-                    response_data = self.process_response('order_list', self.request(**prepared_request))
+                    response_data = self.process_response('default', self.request(**prepared_request))
                     if response_data:
-                        if isinstance(response_data, list):
-                            response_datas.extend(response_data)
-                        else:
-                            response_datas.append(response_data)
+                        order_ids = [order['order_id'] for order in response_data]
+                        response_data = [self.get_order_detail(order_id) for order_id in order_ids]
+                        response_datas.extend(response_data)
                         self._logger.info("Order: Imported %d record(s) of unlimited." % len(response_datas))
                         page += 1
                     else:
@@ -59,15 +61,14 @@ class TokopediaOrder(TokopediaAPI):
                         'page': pagination_page[0],
                         'per_page': pagination_page[1]
                     })
-                    prepared_request = self.build_request('product_info', **{
+                    prepared_request = self.build_request('order_list', **{
                         'params': params
                     })
                     response_data = self.process_response('order_list', self.request(**prepared_request))
                     if response_data:
-                        if isinstance(response_data, list):
-                            response_datas.extend(response_data)
-                        else:
-                            response_datas.append(response_data)
+                        order_ids = [order['order_id'] for order in response_data]
+                        response_data = [self.get_order_detail(order_id) for order_id in order_ids]
+                        response_datas.extend(response_data)
                         if limit == 1:
                             self._logger.info("Order: Imported 1 record.")
                         else:
@@ -75,3 +76,15 @@ class TokopediaOrder(TokopediaAPI):
 
         self._logger.info("Order: Finished %d record(s) imported." % len(response_datas))
         return response_datas
+
+    def get_order_detail(self, *args, **kwargs):
+        return getattr(self, '%s_get_order_detail' % self.api_version)(*args, **kwargs)
+
+    def v2_get_order_detail(self, order_id):
+        params = {
+            'order_id': order_id,
+        }
+        prepared_request = self.build_request('order_detail', **{
+            'params': params
+        })
+        return self.process_response('order_detail', self.request(**prepared_request))

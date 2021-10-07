@@ -11,13 +11,15 @@ class TokopediaEndpoint(object):
         # api_version: {endpoint_key: (http_method, endpoint_url)}
         'v1': {
             'token': ('POST', '/token?grant_type=client_credentials'),
+            'register_key': ('POST', '/v1/fs/{fs_id}/register'),
             'shop_info': ('GET', '/v1/shop/fs/{fs_id}/shop-info'),
             'product_info': ('GET', '/inventory/v1/fs/{fs_id}/product/info'),
             'logistic_active_info': ('GET', '/v1/logistic/fs/{fs_id}/active-info'),
         },
         'v2': {
             'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info'),
-            'order_list': ('GET', '/v2/order/list')
+            'order_list': ('GET', '/v2/order/list'),
+            'order_detail': ('GET', '/v2/fs/{fs_id}/order'),
         }
     }
 
@@ -46,9 +48,12 @@ class TokopediaEndpoint(object):
             'User-Agent': 'PostmanRuntime/7.17.1'
         }, **kwargs.get('headers', {}))
 
-        params = dict({
-            'per_page': 50
-        }, **kwargs.get('params', {}))
+        if kwargs.get('force_params'):
+            params = kwargs.get('params', {})
+        else:
+            params = dict({
+                'per_page': 50
+            }, **kwargs.get('params', {}))
 
         prepared_request = {
             'method': self.get_endpoints(endpoint_key)[0],
