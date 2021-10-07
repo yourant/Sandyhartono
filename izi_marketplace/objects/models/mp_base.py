@@ -173,33 +173,16 @@ class MarketplaceBase(models.AbstractModel):
                 partner = partner.parent_id
                 shipping_address = partner
 
-            if not partner and values.get('mp_buyer_id', False):
-                partner = res_partner_obj.sudo().search(
-                    [('mp_buyer_id', '=', values.get('mp_buyer_id')),
-                     ('type', '=', 'delivery')], limit=1)
-            else:
-                partner = partner.parent_id
-                shipping_address = partner
-
-            if not partner and values.get('mp_buyer_username', False):
-                partner = res_partner_obj.sudo().search(
-                    [('phone', '=', values.get('mp_buyer_username')),
-                     ('type', '=', 'contact')], limit=1)
-
             if not partner:
                 partner = self.env['res.partner'].sudo().create({
                     'name': values.get('mp_recipient_address_name'),
                     'phone': values.get('mp_recipient_address_phone'),
-                    'buyer_id': values.get('mp_buyer_id'),
-                    'buyer_username': values.get('mp_buyer_username'),
                 })
 
         if not shipping_address:
             shipping_address = self.env['res.partner'].sudo().create({
                 'type': 'delivery',
                 'parent_id': partner.id,
-                'buyer_id': values.get('mp_buyer_id'),
-                'buyer_username': values.get('mp_buyer_username'),
                 'phone': values.get('mp_recipient_address_phone'),
                 'name': values.get('mp_recipient_address_name'),
                 'street': values.get('mp_recipient_address_full'),
@@ -214,8 +197,6 @@ class MarketplaceBase(models.AbstractModel):
             shipping_address.sudo().write({
                 'name': values.get('mp_recipient_address_name'),
                 'street': values.get('mp_recipient_address_full'),
-                'buyer_id': values.get('mp_buyer_id'),
-                'buyer_username': values.get('mp_buyer_username'),
                 'city': values.get('mp_recipient_address_city'),
                 'street2': values.get('mp_recipient_address_district', '') + ' ' +
                 values.get('mp_recipient_address_city', '') + ' ' +

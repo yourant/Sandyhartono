@@ -57,7 +57,7 @@ class MarketplaceAccount(models.Model):
     auth_message = fields.Char(string="Authentication Message", readonly=True)
     mp_product_ids = fields.One2many(comodel_name="mp.product", inverse_name="mp_account_id",
                                      string="Marketplace Product(s)")
-    partner_id = fields.Many2one('res.partner', string='Partner Marketplace')
+    partner_id = fields.Many2one('res.partner', string='Partner Marketplace', required=True)
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse Marketplace')
     debug_force_update = fields.Boolean(string="Force Update", default=False,
                                         help="Force update even there is no changes from marketplace")
