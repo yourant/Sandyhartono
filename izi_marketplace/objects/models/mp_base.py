@@ -299,6 +299,11 @@ class MarketplaceBase(models.AbstractModel):
             currency.write({'active': True})
 
     @api.model
+    def enable_group_technical_features(self, xml_ids):
+        insert_implied_groups = [(4, self.env.ref(xml_id).id) for xml_id in xml_ids]
+        self.env.ref('base.group_user').write({'implied_ids': insert_implied_groups})
+
+    @api.model
     def remap_raw_data(self, raw):
         datas = []
         # check if all values are list object

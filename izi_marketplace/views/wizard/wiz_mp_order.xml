@@ -19,7 +19,8 @@
           </group>
         </group>
         <footer>
-          <button name="get_order" string="Get Order" type="object" class="btn-primary"/>
+          <button name="get_order" string="Get Order" type="object" class="btn-primary"
+                  context="{'close_notifications_and_wizard': True}"/>
           <button string="Cancel" class="btn-secondary" special="cancel"/>
         </footer>
       </form>
