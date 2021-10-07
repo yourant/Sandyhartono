@@ -19,6 +19,9 @@ from odoo.addons.izi_tokopedia.objects.utils.tokopedia.shop import TokopediaShop
 
 class MarketplaceAccount(models.Model):
     _inherit = 'mp.account'
+    _sql_constraints = [
+        ('unique_tp_shop_url', 'UNIQUE(tp_shop_url)', 'This URL is already registered, please try another shop URL!')
+    ]
 
     READONLY_STATES = {
         'authenticated': [('readonly', True)],
@@ -29,8 +32,8 @@ class MarketplaceAccount(models.Model):
     tp_client_id = fields.Char(string="Client ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_client_secret = fields.Char(string="Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
-    tp_shop_ids = fields.One2many(comodel_name="mp.tokopedia.shop", inverse_name="mp_account_id", string="Shop(s)")
-    tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop")
+    tp_shop_url = fields.Char(string="Shop URL", required_if_marketplace="tokopedia", states=READONLY_STATES)
+    tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop", readonly=True)
     tp_private_key_file = fields.Binary(string="Secret Key File")
     tp_private_key_file_name = fields.Char(string="Secret Key File Name")
     tp_private_key = fields.Char(string="Secret Key", compute="_compute_tp_private_key")

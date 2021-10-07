@@ -42,22 +42,29 @@ class MPTokopediaShop(models.Model):
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):
-        default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='data')
+        default_sanitizer = self.get_default_sanitizer(mp_field_mapping)
+
+        def sanitize_shop(response=None, raw_data=None):
+            if response:
+                raw_data = response.json()
+
+            mp_account = self.get_mp_account_from_context()
+
+            shop_raw_datas = []
+            for raw in raw_data['data']:
+                if raw.get('shop_url') == mp_account.tp_shop_url:
+                    shop_raw_datas.append(raw)
+                    break
+            return default_sanitizer(raw_data=shop_raw_datas)
+
         return {
-            'shop_info': default_sanitizer
+            'shop_info': sanitize_shop
         }
 
     @api.model
     def _finish_create_records(self, records):
-        mp_account_obj = self.env['mp.account']
-
-        context = self._context
-        if not context.get('mp_account_id'):
-            raise ValidationError("Please define mp_account_id in context!")
-
-        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
-
         records = super(MPTokopediaShop, self)._finish_create_records(records)
+        mp_account = self.get_mp_account_from_context()
         mp_account.write({'tp_shop_id': records[0].id})
         return records
 
