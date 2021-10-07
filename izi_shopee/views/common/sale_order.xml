@@ -4,7 +4,7 @@
         <record model="ir.ui.view" id="view_order_form">
             <field name="name">sale.order.form</field>
             <field name="model">sale.order</field>
-            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="inherit_id" ref="izi_marketplace.form_sale_order"/>
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='order_status']" position="inside">
                     <field name="sp_order_status" readonly="1"/>
