@@ -86,6 +86,17 @@ class SaleOrder(models.Model):
         if mp_order_status_notes:
             cls._rec_mp_order_status_notes = dict(cls._rec_mp_order_status_notes, **dict(mp_order_status_notes))
 
+    @api.model
+    def _finish_mapping_raw_data(self, sanitized_data, values):
+        sanitized_data, values = super(SaleOrder, self)._finish_mapping_raw_data(sanitized_data, values)
+        partner_shipping, customer = self.get_mp_order_customer(values)
+        values.update({
+            'partner_id': customer.id,
+            'partner_invoice_id': partner_shipping.id,
+            'partner_shipping_id': partner_shipping.id
+        })
+        return sanitized_data, values
+
     @api.multi
     def _compute_mp_order_status(self):
         for order in self:
@@ -111,3 +122,61 @@ class SaleOrder(models.Model):
                     order.mp_order_status_notes = mp_order_status_notes.get(order.mp_order_status, default_notes)
                 else:
                     order.mp_order_status_notes = False
+
+    @api.model
+    def lookup_partner_shipping(self, order_values, default_customer=None):
+        partner_obj = self.env['res.partner']
+
+        if not default_customer:
+            default_customer = partner_obj
+        partner_shipping = partner_obj
+        partner_shipping_values = {
+            'name': order_values.get('mp_recipient_address_name'),
+            'phone': order_values.get('mp_recipient_address_phone'),
+            'street': order_values.get('mp_recipient_address_full'),
+            'street2': '%s, %s, %s, %s' % (
+                order_values.get('mp_recipient_address_district', ''),
+                order_values.get('mp_recipient_address_city', ''),
+                order_values.get('mp_recipient_address_state', ''),
+                order_values.get('mp_recipient_address_country', ''),
+            ),
+            'zip': order_values.get('mp_recipient_address_zip')
+        }
+
+        if default_customer.exists():  # Then look for child partner (delivery address) of default customer
+            if order_values.get('mp_recipient_address_phone'):
+                partner_shipping = partner_obj.search([
+                    ('parent_id', '=', default_customer.id),
+                    ('phone', '=', order_values.get('mp_recipient_address_phone'))
+                ], limit=1)
+                if not partner_shipping.exists():  # Then create new child partner of default customer
+                    partner_shipping_values.update({'parent_id': default_customer.id, 'type': 'delivery'})
+                    partner_shipping = partner_obj.create(partner_shipping_values)
+        else:  # Then look for child partner (delivery address) first
+            if order_values.get('mp_recipient_address_phone'):
+                partner_shipping = partner_obj.search([
+                    ('parent_id', '!=', False),
+                    ('type', '=', 'delivery'),
+                    ('phone', '=', order_values.get('mp_recipient_address_phone'))
+                ], limit=1)
+                if not partner_shipping.exists():  # Then look for parent partner
+                    partner = partner_obj.search([
+                        ('parent_id', '=', False),
+                        ('type', '=', 'contact'),
+                        ('phone', '=', order_values.get('mp_recipient_address_phone'))
+                    ], limit=1)
+                    if not partner.exists():  # Then create partner
+                        partner_values = partner_shipping_values.copy()
+                        partner_values.update({'type': 'contact'})
+                        partner = partner_obj.create(partner_values)
+                    # Then pass it to this method recursively
+                    return self.lookup_partner_shipping(order_values, default_customer=partner)
+        # Finally return the partner shipping
+        return partner_shipping
+
+    @api.model
+    def get_mp_order_customer(self, values):
+        mp_account = self.mp_account_id
+        partner_shipping = self.lookup_partner_shipping(values, default_customer=mp_account.partner_id)
+        # Finally return the partner shipping and its parent as customer
+        return partner_shipping, partner_shipping.parent_id

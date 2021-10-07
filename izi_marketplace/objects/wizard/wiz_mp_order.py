@@ -39,3 +39,11 @@ class WizardMPOrder(models.TransientModel):
         if hasattr(self.mp_account_id, '%s_get_orders' % self.mp_account_id.marketplace):
             getattr(self.mp_account_id, '%s_get_orders' % self.mp_account_id.marketplace)(from_date=from_date,
                                                                                           to_date=to_date)
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications',
+            'params': {
+                'force_show_number': 1
+            }
+        }
