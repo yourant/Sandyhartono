@@ -15,9 +15,8 @@
             <field name="tp_client_id" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
             <field name="tp_client_secret" password="True" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
             <field name="tp_fs_id" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
-            <field name="tp_shop_ids" invisible="1"/>
-            <field name="tp_shop_id" domain="[('mp_account_id', '=', active_id)]"
-                   attrs="{'invisible': [('tp_shop_ids', '=', [])]}"/>
+            <field name="tp_shop_url" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_shop_id" attrs="{'invisible': [('tp_shop_id', '=', False)]}"/>
           </group>
         </xpath>
         <xpath expr="//page[@name='mp_credential']" position="after">
