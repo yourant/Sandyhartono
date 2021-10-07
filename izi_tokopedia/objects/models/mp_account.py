@@ -37,10 +37,11 @@ class MarketplaceAccount(models.Model):
     tp_public_key_file = fields.Binary(string="Public Key File")
     tp_public_key_file_name = fields.Char(string="Public Key File Name")
     tp_public_key = fields.Char(string="Public Key", compute="_compute_tp_public_key")
-    partner_id = fields.Many2one(default=lambda self:
-                                 self.env.ref('izi_tokopedia.res_partner_tokopedia',
-                                              raise_if_not_found=False).id
-                                 )
+
+    @api.onchange('marketplace')
+    def onchange_marketplace_tokopedia(self):
+        if self.marketplace == 'tokopedia':
+            self.partner_id = self.env.ref('izi_tokopedia.res_partner_tokopedia', raise_if_not_found=False).id
 
     @api.multi
     def _compute_tp_private_key(self):
