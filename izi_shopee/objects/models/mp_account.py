@@ -23,7 +23,6 @@ class MarketplaceAccount(models.Model):
     sp_partner_id = fields.Char(string="Partner ID", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_partner_key = fields.Char(string="Partner Key", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Current Shop")
-    # sp_reason = fields.Char(string="Shopee Reason", readonly=True, states=READONLY_STATES)
 
     @api.model
     def shopee_get_account(self, **kwargs):
@@ -234,13 +233,17 @@ class MarketplaceAccount(models.Model):
         }
         check_existing_records = sale_order_obj.with_context(mp_account_ctx).check_existing_records(
             **check_existing_records_params)
+        if time_range == 'create_time':
+            check_existing_records.pop('need_update_records')
+        elif time_range == 'update_time':
+            check_existing_records.pop('need_create_records')
         sale_order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
-        # raise UserError("%d order(s) imported!" % len(sp_data_raw))
 
     @api.multi
     def shopee_get_orders(self, from_date, to_date):
         self.ensure_one()
         self.shopee_get_sale_order(from_date, to_date)
+        self.shopee_get_sale_order(from_date, to_date, time_range='update_time')
         return {
             'type': 'ir.actions.client',
             'tag': 'close_notifications'

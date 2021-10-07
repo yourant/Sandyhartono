@@ -2,8 +2,6 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-# import pytz
-# import tzlocal
 
 from odoo import api, fields, models
 
@@ -32,9 +30,6 @@ class MarketplaceToken(models.Model):
     def shopee_validate_current_token(self):
         self.ensure_one()
         x_minutes = 10
-        # TODO: Please make sure, do we need tzlocal for this case?
-        # server_timezone = tzlocal.get_localzone().zone
-        # now_utc = pytz.timezone(server_timezone).localize(datetime.now()).astimezone(pytz.UTC)
         now_utc = datetime.utcnow()
         time_diff = now_utc.replace(tzinfo=None) - datetime.strptime(self.create_date, "%Y-%m-%d %H:%M:%S")
         if (time_diff.days > 0 or time_diff.seconds > (x_minutes * 60)) and self.refresh_token and self.sp_shop_id:
