@@ -78,5 +78,13 @@ odoo.define('izi_marketplace.framework', function (require) {
     return originUnblockUI();
   }
 
-  core.action_registry.add('close_notifications', CloseNotificationAction);
+  function closeNotificationAction(parent, action) {
+    let params = action.params || {};
+    closeNotifications(params);
+    if (action.context.close_notifications_and_wizard) {
+      parent.do_action({'type': 'ir.actions.act_window_close'})
+    }
+  }
+
+  core.action_registry.add('close_notifications', closeNotificationAction);
 });
