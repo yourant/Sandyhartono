@@ -111,14 +111,14 @@ class SaleOrder(models.Model):
             'order_detail': default_sanitizer
         }
 
-    @api.model
-    def _finish_mapping_raw_data(self, sanitized_data, values):
-        sanitized_data, values = super(SaleOrder, self)._finish_mapping_raw_data(sanitized_data, values)
-        mp_account = self.get_mp_account_from_context()
-        partner, shipping_address = self.get_mp_partner(mp_account, values)
-        values.update({
-            'partner_id': partner.id,
-            'partner_shipping_id': shipping_address.id,
-            'partner_invoice_id': partner.id
-        })
-        return sanitized_data, values
+    # @api.model
+    # def _finish_mapping_raw_data(self, sanitized_data, values):
+    #     sanitized_data, values = super(SaleOrder, self)._finish_mapping_raw_data(sanitized_data, values)
+    #     mp_account = self.get_mp_account_from_context()
+    #     partner, shipping_address = self.get_mp_partner(mp_account, values)
+    #     values.update({
+    #         'partner_id': partner.id,
+    #         'partner_shipping_id': shipping_address.id,
+    #         'partner_invoice_id': partner.id
+    #     })
+    #     return sanitized_data, values

@@ -70,6 +70,12 @@ class MarketplaceAccount(models.Model):
     debug_order_limit = fields.Integer(string="Order Import Limit", required=True, default=0,
                                        help="Maximum number to import order, set 0 for unlimited!")
 
+    @api.onchange('marketplace')
+    def onchange_marketplace(self):
+        self.partner_id = getattr(
+            self.env.ref('izi_{mp}.res_partner_{mp}'.format(**{'mp': self.marketplace}), raise_if_not_found=False),
+            'id', False)
+
     @api.multi
     def _compute_mp_token(self):
         for mp_account in self:

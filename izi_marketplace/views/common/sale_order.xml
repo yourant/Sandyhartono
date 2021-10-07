@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <record id="izi_marketplace.tree_sale_order_quotation" model="ir.ui.view">
+      <field name="name">Sale Order Tree View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_quotation_tree"/>
+      <field name="arch" type="xml">
+        <field name="date_order" position="after">
+          <field name="mp_accept_deadline" string="Confirmation Deadline"/>
+          <field name="mp_shipping_deadline" string="Delivery Deadline"/>
+        </field>
+        <field name="partner_id" position="after">
+          <field name="marketplace" string="Marketplace"/>
+        </field>
+        <field name="state" position="after">
+          <field name="mp_order_status" string="Marketplace Status"/>
+        </field>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.tree_sale_order_order" model="ir.ui.view">
+      <field name="name">Sale Order Tree View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_order_tree"/>
+      <field name="arch" type="xml">
+        <field name="confirmation_date" position="after">
+          <field name="mp_accept_deadline" string="Confirmation Deadline"/>
+          <field name="mp_shipping_deadline" string="Delivery Deadline"/>
+        </field>
+        <field name="partner_id" position="after">
+          <field name="marketplace" string="Marketplace"/>
+        </field>
+        <field name="state" position="after">
+          <field name="mp_order_status" string="Marketplace Status"/>
+        </field>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.form_sale_order" model="ir.ui.view">
+      <field name="name">Sale Order Form View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_order_form"/>
+      <field name="arch" type="xml">
+        <xpath expr="//field[@name='order_line']/.." position="after">
+          <page string="Marketplace" name="izi_info">
+            <div>
+              <!-- For Action Button -->
+            </div>
+            <group name="marketplace_info">
+              <group string="Account Information">
+                <field name="mp_invoice_number"/>
+                <field name="mp_account_id" readonly="1"/>
+                <field name="mp_buyer_username" readonly="1"/>
+                <field name="mp_buyer_name" readonly="1"/>
+                <field name="mp_buyer_email" readonly="1"/>
+                <field name="mp_buyer_phone" readonly="1"/>
+              </group>
+              <group string="Order Status" name="order_status">
+                <field name="mp_order_status" readonly="1"/>
+                <field name="mp_cancel_reason" readonly="1"/>
+                <field name="mp_payment_method_info" readonly="1"/>
+              </group>
+              <group string="Recipient Address">
+                <field name="mp_recipient_address_city" readonly="1"/>
+                <field name="mp_recipient_address_name" readonly="1"/>
+                <field name="mp_recipient_address_district" readonly="1"/>
+                <field name="mp_recipient_address_country" readonly="1"/>
+                <field name="mp_recipient_address_zip" readonly="1"/>
+                <field name="mp_recipient_address_phone" readonly="1"/>
+                <field name="mp_recipient_address_state" readonly="1"/>
+                <field name="mp_recipient_address_full" readonly="1"/>
+              </group>
+              <group string="Delivery Information">
+                <field name="mp_delivery_carrier_name" readonly="1"/>
+                <field name="mp_delivery_carrier_type" readonly="1" string="Delivery Carrier Type"/>
+                <field name="mp_awb_number" readonly="1"/>
+                <field name="mp_awb_url" widget="url" readonly="1"/>
+                <field name="mp_delivery_type" readonly="1" string="Delivery Type"/>
+                <field name="mp_accept_deadline" readonly="1"/>
+                <field name="mp_shipping_deadline" readonly="1"/>
+              </group>
+            </group>
+          </page>
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>
