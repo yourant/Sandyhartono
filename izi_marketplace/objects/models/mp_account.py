@@ -57,7 +57,7 @@ class MarketplaceAccount(models.Model):
     auth_message = fields.Char(string="Authentication Message", readonly=True)
     mp_product_ids = fields.One2many(comodel_name="mp.product", inverse_name="mp_account_id",
                                      string="Marketplace Product(s)")
-    partner_id = fields.Many2one('res.partner', string='Partner Marketplace', required=True)
+    partner_id = fields.Many2one('res.partner', string='Partner Marketplace')
     warehouse_id = fields.Many2one('stock.warehouse', string='Warehouse Marketplace')
     debug_force_update = fields.Boolean(string="Force Update", default=False,
                                         help="Force update even there is no changes from marketplace")
@@ -69,6 +69,12 @@ class MarketplaceAccount(models.Model):
                                          help="Maximum number to import product, set 0 for unlimited!")
     debug_order_limit = fields.Integer(string="Order Import Limit", required=True, default=0,
                                        help="Maximum number to import order, set 0 for unlimited!")
+
+    @api.onchange('marketplace')
+    def onchange_marketplace(self):
+        self.partner_id = getattr(
+            self.env.ref('izi_{mp}.res_partner_{mp}'.format(**{'mp': self.marketplace}), raise_if_not_found=False),
+            'id', False)
 
     @api.multi
     def _compute_mp_token(self):
