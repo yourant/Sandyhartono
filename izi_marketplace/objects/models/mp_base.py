@@ -147,7 +147,6 @@ class MarketplaceBase(models.AbstractModel):
     def get_mp_partner(self, mp_account, values):
         res_partner_obj = self.env['res.partner']
 
-        # Search Partner
         partner = False
         shipping_address = False
 
@@ -158,13 +157,11 @@ class MarketplaceBase(models.AbstractModel):
                     [('parent_id', '=', partner.id), ('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
 
         else:
-            # Processed partner_id
             if not partner and values.get('mp_recipient_address_phone'):
                 partner = res_partner_obj.sudo().search(
                     [('phone', '=', values.get('mp_recipient_address_phone')),
                      ('type', '=', 'delivery')], limit=1)
 
-            # Create Partner From Buyer Information
             if not partner:
                 partner = res_partner_obj.sudo().search(
                     [('phone', '=', values.get('mp_recipient_address_phone')),
