@@ -16,6 +16,24 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_external_id = None
     _rec_mp_field_mapping = {}
 
+    @api.multi
+    def _check_required_if_marketplace(self):
+        """ If the field has 'required_if_marketplace="<marketplace>"' attribute, then it
+        required if record.marketplace is <marketplace>. """
+        empty_field = []
+        for record in self:
+            for k, f in record._fields.items():
+                if getattr(f, 'required_if_marketplace', None) == record.marketplace and not record[k]:
+                    empty_field.append(self.env['ir.model.fields'].search(
+                        [('name', '=', k), ('model', '=', record._name)]).field_description)
+        if empty_field:
+            raise ValidationError(', '.join(empty_field))
+        return True
+
+    _constraints = [
+        (_check_required_if_marketplace, 'Required fields not filled', []),
+    ]
+
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     marketplace = fields.Selection(string="Marketplace", readonly=True,
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
@@ -35,6 +53,8 @@ class MarketplaceBase(models.AbstractModel):
     @classmethod
     def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
         if mp_external_id_fields:
+            if not cls._rec_mp_external_id:
+                cls._rec_mp_external_id = {}
             cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **dict(mp_external_id_fields))
 
     @classmethod
@@ -48,12 +68,12 @@ class MarketplaceBase(models.AbstractModel):
         pass
 
     @api.model
-    def _notify(self, notif_type, message, notif_sticky=False):
+    def _notify(self, notif_type, message, title=None, notif_sticky=False):
         notif_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
         uid, context = self.env.uid, self.env.context
         notif_env = api.Environment(notif_cr, uid, context)
 
-        getattr(notif_env.user, 'notify_%s' % notif_type)(message, sticky=notif_sticky)
+        getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
         notif_env.cr.commit()
         notif_env.cr.close()
 
@@ -66,7 +86,7 @@ class MarketplaceBase(models.AbstractModel):
         getattr(logger, level)(log_message)
 
         if notify:
-            self._notify(notif_type, message, notif_sticky)
+            self._notify(notif_type, message, notif_sticky=notif_sticky)
 
     @api.model
     def log_skip(self, marketplace, need_skip_records, notify=False, notif_type="info", notif_sticky=False):
@@ -124,15 +144,66 @@ class MarketplaceBase(models.AbstractModel):
         return mp_account_obj.browse(context.get('mp_account_id'))
 
     @api.model
-    def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None, endpoint_key=None):
-        mp_account_obj = self.env['mp.account']
+    def get_mp_partner(self, mp_account, values):
+        res_partner_obj = self.env['res.partner']
 
+        # Search Partner
+        partner = False
+        if mp_account.partner_id:
+            partner = mp_account.partner_id
+        else:
+            # Processed partner_id
+            if not partner and values.get('mp_recipient_address_phone'):
+                partner = res_partner_obj.sudo().search(
+                    [('phone', '=', values.get('mp_recipient_address_phone')), ('type', '=', 'contact')], limit=1)
+
+            # Create Partner From Buyer Information
+            if not partner:
+                partner = self.env['res.partner'].sudo().create({
+                    'name': values.get('mp_recipient_address_name'),
+                    'phone': values.get('mp_recipient_address_phone'),
+                })
+
+        # Search Shipping Address
+        shipping_address = False
+        if values.get('mp_recipient_address_phone'):
+            shipping_address = res_partner_obj.sudo().search(
+                [('parent_id', '=', partner.id), ('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
+        if not shipping_address:
+            shipping_address = self.env['res.partner'].sudo().create({
+                'type': 'delivery',
+                'parent_id': partner.id,
+                'phone': values.get('mp_recipient_address_phone'),
+                'name': values.get('mp_recipient_address_name'),
+                'street': values.get('mp_recipient_address_full'),
+                'city': values.get('mp_recipient_address_city'),
+                'street2': values.get('mp_recipient_address_district', '') + ' ' +
+                values.get('mp_recipient_address_city', '') + ' ' +
+                values.get('mp_recipient_address_state', '') + ' ' +
+                values.get('mp_recipient_address_country', ''),
+                'zip': values.get('mp_recipient_address_zipcode'),
+            })
+        else:
+            shipping_address.sudo().write({
+                'name': values.get('mp_recipient_address_name'),
+                'street': values.get('mp_recipient_address_full'),
+                'city': values.get('mp_recipient_address_city'),
+                'street2': values.get('mp_recipient_address_district', '') + ' ' +
+                values.get('mp_recipient_address_city', '') + ' ' +
+                values.get('mp_recipient_address_state', '') + ' ' +
+                values.get('mp_recipient_address_country', ''),
+                'zip': values.get('mp_recipient_address_zipcode'),
+                'type': 'delivery',
+            })
+
+        return partner, shipping_address
+
+    @api.model
+    def _prepare_mapping_raw_data(self, response=None, raw_data=None, sanitizer=None, endpoint_key=None):
         if response:
             raw_data = response.json()
 
-        context = self._context
-
-        mp_account = mp_account_obj.browse(context.get('mp_account_id'))
+        mp_account = self.get_mp_account_from_context()
         marketplace = mp_account.marketplace
 
         mp_field_mapping = self._get_rec_mp_field_mapping(marketplace)
