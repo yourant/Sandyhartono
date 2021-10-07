@@ -134,12 +134,6 @@ class SaleOrder(models.Model):
             'name': order_values.get('mp_recipient_address_name'),
             'phone': order_values.get('mp_recipient_address_phone'),
             'street': order_values.get('mp_recipient_address_full'),
-            'street2': '%s, %s, %s, %s' % (
-                order_values.get('mp_recipient_address_district', ''),
-                order_values.get('mp_recipient_address_city', ''),
-                order_values.get('mp_recipient_address_state', ''),
-                order_values.get('mp_recipient_address_country', ''),
-            ),
             'zip': order_values.get('mp_recipient_address_zip')
         }
 
