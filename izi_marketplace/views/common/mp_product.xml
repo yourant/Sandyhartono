@@ -28,7 +28,7 @@
                     <field name="name"/>
                     <small t-if="record.default_code.value">[<field name="default_code"/>]</small>
                   </strong>
-                  <div t-if="record.mp_product_variant_count.value &gt; 1" groups="product.group_product_variant">
+                  <div t-if="record.mp_product_variant_count.value &gt; 1">
                     <strong>
                       <t t-esc="record.mp_product_variant_count.value"/> Variants
                     </strong>
