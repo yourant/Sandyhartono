@@ -31,7 +31,7 @@ class TokopediaOrder(TokopediaAPI):
                 'to_date': to_timestamp
             })
 
-            if limit == len(response_datas):
+            if limit > 0 and limit == len(response_datas):
                 break
 
             unlimited = not limit
@@ -87,4 +87,5 @@ class TokopediaOrder(TokopediaAPI):
         prepared_request = self.build_request('order_detail', **{
             'params': params
         })
+        self._logger.info("Order: Getting order detail of order ID: %s... Please wait!" % order_id)
         return self.process_response('order_detail', self.request(**prepared_request))
