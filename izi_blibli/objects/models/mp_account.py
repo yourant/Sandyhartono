@@ -163,6 +163,8 @@ class MarketplaceAccount(models.Model):
 
         mp_products = mp_product_obj.search([('bli_has_variant', '=', True)])
         for mp_product in mp_products:
+            if mp_product['mp_account_id']['bli_shop_code'] != bli_account.shop_code:
+                continue
             mp_product_raw = json.loads(mp_product.raw, strict=False)
             bli_variant_ids = json_digger(mp_product_raw, 'bli_variant_ids')
             for bli_variant_id in bli_variant_ids:
