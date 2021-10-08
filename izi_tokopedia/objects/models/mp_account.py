@@ -4,13 +4,10 @@ import json
 
 from Cryptodome.PublicKey import RSA
 from odoo import api, fields, models
-from odoo.exceptions import UserError
-from requests import HTTPError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import mp, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.encryption import TokopediaEncryption
-from odoo.addons.izi_tokopedia.objects.utils.tokopedia.exception import TokopediaAPIError
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.logistic import TokopediaLogistic
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.product import TokopediaProduct
@@ -113,6 +110,7 @@ class MarketplaceAccount(models.Model):
             _notify('info', 'Public key registered successfully!')
 
     @api.multi
+    @mp.tokopedia.capture_error
     def tokopedia_get_shop(self):
         mp_account_ctx = self.generate_context()
         _notify = self.env['mp.base']._notify
@@ -135,6 +133,7 @@ class MarketplaceAccount(models.Model):
         mp_tokopedia_shop_obj.handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    @mp.tokopedia.capture_error
     def tokopedia_get_logistics(self):
         mp_account_ctx = self.generate_context()
         _notify = self.env['mp.base']._notify
@@ -158,6 +157,7 @@ class MarketplaceAccount(models.Model):
         mp_tokopedia_logistic_obj.handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    @mp.tokopedia.capture_error
     def tokopedia_get_active_logistics(self):
         mp_account_ctx = self.generate_context()
         self.ensure_one()
@@ -178,6 +178,7 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
+    @mp.tokopedia.capture_error
     def tokopedia_get_mp_product(self):
         _notify = self.env['mp.base']._notify
         mp_product_obj = self.env['mp.product']
@@ -203,6 +204,7 @@ class MarketplaceAccount(models.Model):
         mp_product_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    @mp.tokopedia.capture_error
     def tokopedia_get_mp_product_variant(self):
         mp_product_obj = self.env['mp.product']
         mp_product_variant_obj = self.env['mp.product.variant']
