@@ -89,12 +89,17 @@ class SaleOrder(models.Model):
     @api.model
     def _finish_mapping_raw_data(self, sanitized_data, values):
         sanitized_data, values = super(SaleOrder, self)._finish_mapping_raw_data(sanitized_data, values)
-        partner_shipping, customer = self.get_mp_order_customer(values)
+        mp_account = self.get_mp_account_from_context()
+        partner_shipping, customer = self.get_mp_order_customer(mp_account, values)
         values.update({
             'partner_id': customer.id,
             'partner_invoice_id': partner_shipping.id,
             'partner_shipping_id': partner_shipping.id
         })
+        if mp_account.warehouse_id:
+            values.update({
+                'warehouse_id': mp_account.warehouse_id.id,
+            })
         return sanitized_data, values
 
     @api.multi
@@ -169,8 +174,7 @@ class SaleOrder(models.Model):
         return partner_shipping
 
     @api.model
-    def get_mp_order_customer(self, values):
-        mp_account = self.mp_account_id
+    def get_mp_order_customer(self, mp_account, values):
         partner_shipping = self.lookup_partner_shipping(values, default_customer=mp_account.partner_id)
         # Finally return the partner shipping and its parent as customer
         return partner_shipping, partner_shipping.parent_id
