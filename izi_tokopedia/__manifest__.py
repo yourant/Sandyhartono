@@ -47,6 +47,7 @@
         'views/common/mp_tokopedia_logistic.xml',
 
         # wizard
+        'views/wizard/wiz_upload_public_key.xml',
 
         # report paperformat
         # 'data/report_paperformat.xml',

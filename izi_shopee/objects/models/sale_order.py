@@ -97,7 +97,7 @@ class SaleOrder(models.Model):
         mp_field_mapping.update({
             'mp_payment_date': ('order_list/pay_time', _convert_timestamp_to_datetime),
             'mp_order_date': ('order_list/create_time', _convert_timestamp_to_datetime),
-            'mp_update_order_date': ('order_list/update_time', _convert_timestamp_to_datetime),
+            'mp_order_last_update_date': ('order_list/update_time', _convert_timestamp_to_datetime),
             'mp_shipping_deadline': ('order_list/ship_by_date', _convert_timestamp_to_datetime)
         })
 

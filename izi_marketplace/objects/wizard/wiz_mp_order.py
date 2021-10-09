@@ -10,6 +10,11 @@ class WizardMPOrder(models.TransientModel):
     _name = 'wiz.mp.order'
     _description = 'Wizard Marketplace Order'
 
+    PARAMS = [
+        ('by_date_range', 'By Date Range'),
+        ('by_mp_invoice_number', 'By MP Invoice Number'),
+    ]
+
     INTERVAL_TYPES = [
         ('days', 'Day(s)'),
         ('weeks', 'Week(s)'),
@@ -17,11 +22,13 @@ class WizardMPOrder(models.TransientModel):
     ]
 
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="MP Account", required=True)
+    params = fields.Selection(string="Parameter", selection=PARAMS, required=True, default="by_date_range")
     use_interval = fields.Boolean(string="Use Interval?", default=True)
     interval = fields.Integer(string="Interval", required=False, default=3)
     interval_type = fields.Selection(string="Interval Type", selection=INTERVAL_TYPES, required=False, default="days")
-    from_date = fields.Datetime(string="From Date", required=True)
-    to_date = fields.Datetime(string="To Date", required=True)
+    from_date = fields.Datetime(string="From Date", required=False)
+    to_date = fields.Datetime(string="To Date", required=False)
+    mp_invoice_number = fields.Char(string="MP Invoice Number", required=False)
 
     @api.onchange('interval', 'interval_type')
     def onchange_interval(self):
@@ -32,13 +39,18 @@ class WizardMPOrder(models.TransientModel):
         self.to_date = fields.Datetime.to_string(now)
 
     def get_order(self):
-        from_date = fields.Datetime.from_string(self.from_date)
-        to_date = fields.Datetime.from_string(self.to_date)
-        if from_date > to_date:
-            raise ValidationError("Invalid date range, from_date higher than to_date. Please input correct date range!")
+        kwargs = {'params': self.params}
+        if self.params == 'by_date_range':
+            from_date = fields.Datetime.from_string(self.from_date)
+            to_date = fields.Datetime.from_string(self.to_date)
+            if from_date > to_date:
+                raise ValidationError(
+                    "Invalid date range, from_date higher than to_date. Please input correct date range!")
+            kwargs.update({'from_date': from_date, 'to_date': to_date})
+        elif self.params == 'by_mp_invoice_number':
+            kwargs.update({'mp_invoice_number': self.mp_invoice_number})
         if hasattr(self.mp_account_id, '%s_get_orders' % self.mp_account_id.marketplace):
-            getattr(self.mp_account_id, '%s_get_orders' % self.mp_account_id.marketplace)(from_date=from_date,
-                                                                                          to_date=to_date)
+            getattr(self.mp_account_id, '%s_get_orders' % self.mp_account_id.marketplace)(**kwargs)
 
         return {
             'type': 'ir.actions.client',
