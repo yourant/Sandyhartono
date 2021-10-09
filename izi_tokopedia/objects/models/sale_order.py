@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import json
+import time
 from base64 import b64decode
 from datetime import datetime
 
@@ -10,6 +11,7 @@ from Cryptodome.PublicKey import RSA
 from odoo import api, fields, models
 
 from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 
 
 class SaleOrder(models.Model):
@@ -79,20 +81,29 @@ class SaleOrder(models.Model):
             'tp_invoice_url': ('invoice_url', None),
             'mp_payment_method_info': ('payment_info/gateway_name', None),
             'mp_payment_date': (
-                'payment_info/payment_date', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1]))),
-            'mp_order_date': ('create_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1]))),
-            'mp_update_order_date': (
-                'update_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1]))),
-            'mp_accept_deadline': ('shipment_fulfillment/accept_deadline',
-                                   lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1]))),
+                'payment_info/payment_date',
+                lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
+            ),
+            'mp_order_date': (
+                'create_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
+            ),
+            'mp_order_last_update_date': (
+                'update_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
+            ),
+            'mp_accept_deadline': (
+                'shipment_fulfillment/accept_deadline',
+                lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
+            ),
 
             # MP Order Shipment
             'mp_awb_number': ('order_info/shipping_info/awb', None),
             'mp_delivery_carrier_name': ('order_info/shipping_info/logistic_name', None),
             'mp_delivery_carrier_type': ('order_info/shipping_info/logistic_service', None),
             'shipping_id': ('order_info/shipping_info/shipping_id', lambda env, r: str(r)),
-            'mp_shipping_deadline': ('shipment_fulfillment/confirm_shipping_deadline',
-                                     lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1]))),
+            'mp_shipping_deadline': (
+                'shipment_fulfillment/confirm_shipping_deadline',
+                lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
+            ),
 
             # MP Buyer Info
             'mp_buyer_id': ('buyer_info/buyer_id', lambda env, r: str(r)),
@@ -142,6 +153,7 @@ class SaleOrder(models.Model):
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):
+        mp_account = self.get_mp_account_from_context()
         default_sanitizer = self.get_default_sanitizer(mp_field_mapping)
 
         def sanitize_decrypt(response=None, raw_data=None):
@@ -149,20 +161,12 @@ class SaleOrder(models.Model):
                 raw_data = response.json()
 
             decrypted_raw_datas = []
-
-            for encrypted_raw_data in raw_data:
-                if 'encryption' in encrypted_raw_data:
-                    # noinspection PyBroadException
-                    try:
-                        secret = encrypted_raw_data['encryption']['secret']
-                        content = encrypted_raw_data['encryption']['content']
-                        if secret and content:
-                            raw_content = self.decrypt_content(content, self.decrypt_secret(secret))
-                            if raw_content:
-                                decrypted_raw_datas.append(merge_dict(encrypted_raw_data, raw_content))
-                    except Exception as e:
-                        self._logger("tokopedia", str(e), level="error", notify=True, notif_sticky=True,
-                                     notif_type="warning")
+            if not isinstance(raw_data, list):
+                raw_data = [raw_data]
+            for raw_data_with_encrypted_content in raw_data:
+                raw_content = self.tokopedia_decrypt_order(raw_data_with_encrypted_content, mp_account.tp_private_key)
+                if raw_content:
+                    decrypted_raw_datas.append(raw_content)
 
             return default_sanitizer(raw_data=decrypted_raw_datas)
 
@@ -170,23 +174,24 @@ class SaleOrder(models.Model):
             'sanitize_decrypt': sanitize_decrypt
         }
 
-    @api.multi
-    def decrypt_secret(self, encrypted_secret):
+    @api.model
+    def tokopedia_decrypt_secret(self, encrypted_secret, private_key):
         mp_account = self.get_mp_account_from_context()
 
         if not mp_account.tp_private_key:
             return False
-        secret = b64decode(encrypted_secret)
-        rsa_key = RSA.import_key(mp_account.tp_private_key)
+        secret = b64decode(encrypted_secret.encode('utf-8'))
+        rsa_key = RSA.import_key(private_key)
         # noinspection PyTypeChecker
         cipher = PKCS1_OAEP.new(key=rsa_key, hashAlgo=SHA256)
-        return cipher.decrypt(secret)
+        secret_key = cipher.decrypt(secret)
+        return secret_key
 
-    @api.multi
-    def decrypt_content(self, encrypted_content, secret_key):
+    @api.model
+    def tokopedia_decrypt_content(self, encrypted_content, secret_key):
         if not secret_key:
             return {}
-        data = b64decode(encrypted_content)
+        data = b64decode(encrypted_content.encode('utf-8'))
         nonce = data[-12:]
         tag = data[:-12][-16:]
         cipher_text = data[:-28]
@@ -194,11 +199,41 @@ class SaleOrder(models.Model):
         content = cipher.decrypt_and_verify(cipher_text, tag)
         return json.loads(content.decode('utf-8'))
 
+    # noinspection PyBroadException
+    @api.model
+    def tokopedia_decrypt_order(self, raw_data_with_encrypted_content, private_key, retried=0, max_retry=3):
+        mp_account = self.get_mp_account_from_context()
+        tp_account = mp_account.tokopedia_get_account()
+        tp_order = TokopediaOrder(tp_account, api_version="v2")
+        invoice_number = raw_data_with_encrypted_content['invoice_number']
+
+        if 'encryption' in raw_data_with_encrypted_content:
+            secret = raw_data_with_encrypted_content['encryption']['secret']
+            content = raw_data_with_encrypted_content['encryption']['content']
+            try:
+                raw_content = self.tokopedia_decrypt_content(content,
+                                                             self.tokopedia_decrypt_secret(secret, private_key))
+                if raw_content:
+                    self._logger('tokopedia', 'Decrypting order detail of %s is success!' % invoice_number)
+                    return merge_dict(raw_data_with_encrypted_content, raw_content)
+            except Exception as e:
+                while retried < max_retry:
+                    retried += 1
+                    self._logger('tokopedia',
+                                 "(%d/%d) Order detail of %s decypting is failed due to %s Retrying..." % (
+                                     retried, max_retry, invoice_number, str(e)), level='warning')
+                    time.sleep(1)
+                    mp_account.tokopedia_register_public_key()
+                    tp_data_detail_order = tp_order.get_order_detail(
+                        order_id=raw_data_with_encrypted_content['order_id'])
+                    return self.tokopedia_decrypt_order(tp_data_detail_order, private_key, retried=retried)
+                else:
+                    self._logger('tokopedia',
+                                 'Order detail of %s decrypting is skipped, due to exceed max retry limit = %d, '
+                                 'please try again later!' % (invoice_number, retried), level='warning')
+        return None
+
     @api.multi
     @api.depends('tp_order_status')
     def _compute_mp_order_status(self):
         super(SaleOrder, self)._compute_mp_order_status()
-
-    # @api.model
-    # def _finish_mapping_raw_data(self, sanitized_data, values):
-    #     return super(SaleOrder, self)._finish_mapping_raw_data(sanitized_data, values)

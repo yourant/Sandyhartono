@@ -68,11 +68,15 @@ class MarketplaceBase(models.AbstractModel):
         pass
 
     @api.model
-    def _notify(self, notif_type, message, title=None, notif_sticky=False):
-        notif_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
+    def _create_new_env(self):
+        new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
         uid, context = self.env.uid, self.env.context
-        notif_env = api.Environment(notif_cr, uid, context)
+        new_env = api.Environment(new_cr, uid, context)
+        return new_env
 
+    @api.model
+    def _notify(self, notif_type, message, title=None, notif_sticky=False):
+        notif_env = self._create_new_env()
         getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
         notif_env.cr.commit()
         notif_env.cr.close()

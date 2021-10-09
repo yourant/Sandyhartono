@@ -60,12 +60,19 @@ class MarketplaceAccount(models.Model):
         _notify = self.env['mp.base']._notify
 
         self.ensure_one()
-
         key = RSA.generate(2048)
-        self.tp_private_key_file = key.export_key()
-        self.tp_public_key_file = key.publickey().export_key()
-
-        _notify('info', "New RSA key generated successfully, don't forget to register it to Tokopedia!")
+        private_key, public_key = key.export_key(), key.publickey().export_key()
+        self.write({
+            'tp_private_key_file': private_key,
+            'tp_public_key_file': public_key
+        })
+        _notify('info', "New RSA key generated successfully!")
+        if self._context.get('get_private_key'):
+            return private_key
+        if self._context.get('get_public_key'):
+            return public_key
+        if self._context.get('get_pair_key'):
+            return private_key, public_key
 
     @api.model
     def tokopedia_get_account(self, **kwargs):
@@ -94,18 +101,32 @@ class MarketplaceAccount(models.Model):
         })
 
     @api.multi
+    def tokopedia_upload_public_key(self):
+        return {
+            'name': 'Upload Key Pair',
+            'view_mode': 'form',
+            'res_model': 'wiz.upload_public_key',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                'default_mp_account_id': self.id,
+            },
+        }
+
+    @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_register_public_key(self):
         _notify = self.env['mp.base']._notify
 
         self.ensure_one()
 
-        if not self.tp_public_key_file:
-            self.generate_rsa_key()
+        public_key = self.with_context({'bin_size': False}).tp_public_key_file
+        if not public_key:
+            public_key = self.with_context({'get_public_key': True}).generate_rsa_key()
 
         tp_account = self.tokopedia_get_account()
         tp_encryption = TokopediaEncryption(tp_account)
-        response = tp_encryption.register_public_key(self.tp_public_key_file)
+        response = tp_encryption.register_public_key(public_key)
         if response.status_code == 200:
             _notify('info', 'Public key registered successfully!')
 
@@ -245,10 +266,11 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     @mp.tokopedia.capture_error
-    def tokopedia_get_sale_order(self, from_date, to_date):
+    def tokopedia_get_sale_order(self, **kwargs):
         mp_account_ctx = self.generate_context()
         order_obj = self.env['sale.order'].with_context(mp_account_ctx)
         _notify = self.env['mp.base']._notify
+        _logger = self.env['mp.base']._logger
 
         self.ensure_one()
 
@@ -258,21 +280,61 @@ class MarketplaceAccount(models.Model):
         tp_order = TokopediaOrder(tp_account, api_version="v2")
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
-        tp_data_raw = tp_order.get_order_list(from_date=from_date, to_date=to_date, shop_id=self.tp_shop_id.shop_id,
-                                              limit=mp_account_ctx.get('order_limit'))
-        tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(raw_data=tp_data_raw,
-                                                                             endpoint_key='sanitize_decrypt')
+
+        params, tp_data_detail_orders = {}, []
+        tp_data_raws, tp_data_sanitizeds = [], []
+        if kwargs.get('params') == 'by_date_range':
+            params.update({
+                'from_date': kwargs.get('from_date'),
+                'to_date': kwargs.get('to_date'),
+                'shop_id': self.tp_shop_id.shop_id,
+                'limit': mp_account_ctx.get('order_limit')
+            })
+            tp_data_orders = tp_order.get_order_list(**params)
+            for tp_data_order in tp_data_orders:
+                tp_invoice_number = tp_data_order.get('invoice_ref_num')
+                tp_order_id = tp_data_order.get('order_id')
+                existing_order = order_obj.search_mp_records('tokopedia', str(tp_order_id))
+
+                # If no existing order OR mp status changed on existing order, then fetch new detail order
+                if not existing_order.exists() or (existing_order.exists() and (
+                        existing_order.mp_order_status != str(tp_data_order['order_status']))):
+                    notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
+                        str(len(tp_data_detail_orders) + 1), len(tp_data_orders), tp_invoice_number
+                    )
+                    _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+                    tp_data_detail_order = tp_order.get_order_detail(order_id=tp_order_id)
+                    tp_data_detail_orders.append(tp_data_detail_order)
+                    tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(
+                        raw_data=tp_data_detail_order, endpoint_key='sanitize_decrypt')
+                    tp_data_raws.extend(tp_data_raw)
+                    tp_data_sanitizeds.extend(tp_data_sanitized)
+
+            _logger(self.marketplace, 'Processed %s order(s) from %s of total orders imported!' % (
+                len(tp_data_detail_orders), len(tp_data_orders)
+            ), notify=True, notif_sticky=True)
+        elif kwargs.get('params') == 'by_mp_invoice_number':
+            mp_invoice_number = kwargs.get('mp_invoice_number')
+            params.update({'invoice_num': mp_invoice_number})
+            tp_data_detail_order = tp_order.get_order_detail(**params)
+            tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(
+                raw_data=tp_data_detail_order, endpoint_key='sanitize_decrypt')
+            tp_data_raws.extend(tp_data_raw)
+            tp_data_sanitizeds.extend(tp_data_sanitized)
+
+            _logger(self.marketplace, 'Processed order %s!' % mp_invoice_number, notify=True, notif_sticky=True)
+
         check_existing_records_params = {
             'identifier_field': 'tp_order_id',
-            'raw_data': tp_data_raw,
-            'mp_data': tp_data_sanitized,
-            'multi': isinstance(tp_data_sanitized, list)
+            'raw_data': tp_data_raws,
+            'mp_data': tp_data_sanitizeds,
+            'multi': isinstance(tp_data_sanitizeds, list)
         }
         check_existing_records = order_obj.with_context(mp_account_ctx).check_existing_records(
             **check_existing_records_params)
         order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
-    def tokopedia_get_orders(self, from_date, to_date):
+    def tokopedia_get_orders(self, **kwargs):
         self.ensure_one()
-        self.tokopedia_get_sale_order(from_date, to_date)
+        self.tokopedia_get_sale_order(**kwargs)
