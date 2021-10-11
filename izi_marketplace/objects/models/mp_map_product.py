@@ -290,6 +290,8 @@ class MarketplaceMapProductLine(models.Model):
     def onchange_product_id(self):
         if self.product_id:
             self.state = 'mapped'
+        else:
+            self.state = 'unmapped'
 
     @api.model
     def get_product_or_variant(self, map_line):
