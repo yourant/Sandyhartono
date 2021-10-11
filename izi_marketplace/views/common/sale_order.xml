@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <data>
+
+    <record id="izi_marketplace.search_sale_order" model="ir.ui.view">
+      <field name="name">Marketplace Order Search View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+      <field name="arch" type="xml">
+        <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+          <separator/>
+          <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
+          <separator/>
+          <filter name="group_by_marketplace_account" string="Marketplace Account" context="{'group_by': 'mp_account_id'}"/>
+        </xpath>
+      </field>
+    </record>
+
     <record id="izi_marketplace.tree_sale_order_quotation" model="ir.ui.view">
       <field name="name">Sale Order Tree View</field>
       <field name="model">sale.order</field>
