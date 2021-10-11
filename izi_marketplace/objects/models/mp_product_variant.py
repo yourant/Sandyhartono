@@ -34,3 +34,15 @@ class MarketplaceProductVariant(models.Model):
                                 help="Small-sized image of the product. It is automatically "
                                      "resized as a 64x64px image, with aspect ratio preserved. "
                                      "Use this field anywhere a small image is required.")
+
+    @api.multi
+    def get_product(self):
+        mp_map_product_line_obj = self.env['mp.map.product.line']
+
+        self.ensure_one()
+        mp_account = self.mp_account_id
+        map_line = mp_map_product_line_obj.search([
+            ('mp_account_id', '=', mp_account.id),
+            ('mp_product_variant_id', '=', self.id)
+        ])
+        return map_line.product_id

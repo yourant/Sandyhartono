@@ -82,6 +82,18 @@ class MarketplaceProduct(models.Model):
                 mp_product_image.sequence -= len(self.mp_product_image_ids)
 
     @api.multi
+    def get_product(self):
+        mp_map_product_line_obj = self.env['mp.map.product.line']
+
+        self.ensure_one()
+        mp_account = self.mp_account_id
+        map_line = mp_map_product_line_obj.search([
+            ('mp_account_id', '=', mp_account.id),
+            ('mp_product_id', '=', self.id)
+        ])
+        return map_line.product_id
+
+    @api.multi
     def get_main_image(self):
         self.ensure_one()
         if self.mp_product_image_ids.exists():
