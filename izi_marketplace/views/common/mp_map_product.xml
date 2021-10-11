@@ -78,6 +78,11 @@
                   </field>
                 </group>
               </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="debug_force_mapping_without_company" widget="boolean_toggle"/>
+                </group>
+              </page>
             </notebook>
           </sheet>
         </form>
