@@ -38,8 +38,10 @@ class MarketplaceMapProduct(models.Model):
                                         default=lambda self: self._get_default_field_mapping_ids())
     map_line_ids = fields.One2many(comodel_name="mp.map.product.line", inverse_name="map_id", string="Mapping Line")
     state = fields.Selection(string="Status", selection=MAP_STATES, required=True, default="draft")
-
+    debug_force_mapping_without_company = fields.Boolean(string="Force Mapping Without Company", default=False,
+                                                         help="Force update raw field only")
     # noinspection PyUnresolvedReferences
+
     @api.model
     def _get_default_field_mapping_ids(self):
         field_mapping_data = [
@@ -77,6 +79,10 @@ class MarketplaceMapProduct(models.Model):
 
         for field_mapping in field_mappings:
             domain = []
+            if self.debug_force_mapping_without_company:
+                domain.append(('company_id', '=?', self.company_id.id))
+            else:
+                domain.append(('company_id', '=', self.company_id.id))
             key = field_mapping.product_field_id.name
             value = getattr(record, getattr(field_mapping, lookup_field).name)
             if not value:
