@@ -32,12 +32,12 @@ class TokopediaAPI(object):
     def process_response(self, endpoint_key, response, **kwargs):
         validator = self.validators.get(endpoint_key, self.validators['default'])
         sanitizer = self.sanitizers.get(endpoint_key, self.sanitizers['default'])
-        if kwargs.get('no_validate'):
+        if kwargs.get('no_validate') and kwargs.get('no_sanitize'):
+            return response
+        elif kwargs.get('no_validate'):
             return sanitizer(response)
         elif kwargs.get('no_sanitize'):
             return validator(response)
-        elif kwargs.get('no_validate') and kwargs.get('no_sanitize'):
-            return response
         return sanitizer(validator(response))
 
     def from_api_timestamp(self, api_ts, as_tz='UTC'):
