@@ -98,6 +98,15 @@
             </group>
           </page>
         </xpath>
+        <xpath expr="//notebook" position="inside">
+          <page string="Debug" groups="base.group_no_one">
+            <group>
+              <field name="mp_external_id"/>
+              <field name="signature"/>
+              <field name="raw"/>
+            </group>
+          </page>
+        </xpath>
       </field>
     </record>
   </data>
