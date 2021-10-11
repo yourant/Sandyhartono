@@ -266,6 +266,8 @@ class MarketplaceMapProductLine(models.Model):
                                  related="mp_account_id.company_id", store=True)
     product_id = fields.Many2one(comodel_name="product.product", string="Product",
                                  required=False, domain=[('type', '=', 'product')])
+    product_tmpl_id = fields.Many2one(comodel_name="product.template", string="Product Template",
+                                      related="product_id.product_tmpl_id")
     mp_product_id = fields.Many2one(comodel_name="mp.product", string="MP Product", required=False)
     mp_product_variant_id = fields.Many2one(comodel_name="mp.product.variant", string="MP Product Variant",
                                             required=False)

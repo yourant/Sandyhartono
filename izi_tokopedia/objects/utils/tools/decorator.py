@@ -20,6 +20,8 @@ class TokopediaDecorator(object):
                 raise UserError(tp_error.args)
             except HTTPError as http_error:
                 raise UserError(http_error.args)
+            except ConnectionError as conn_error:
+                raise UserError(conn_error.args)
 
         return wrapper_decorator
 

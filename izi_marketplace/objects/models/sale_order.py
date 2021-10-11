@@ -43,7 +43,7 @@ class SaleOrder(models.Model):
     mp_payment_method_info = fields.Char(string="Payment Method", required=False, readonly=True)
     mp_payment_date = fields.Datetime(string="Order Payment Date", readonly=True)
     mp_order_date = fields.Datetime(string="Order Date", readonly=True)
-    mp_update_order_date = fields.Datetime(string="Order Update Date", readonly=True)
+    mp_order_last_update_date = fields.Datetime(string="Order Last Update Date", readonly=True)
     mp_accept_deadline = fields.Datetime(string="Maximum Confirmation Date", readonly=True)
     mp_cancel_reason = fields.Char(string='Order Cancel Reason', readonly=True)
     mp_order_notes = fields.Text(string='Order Notes', readonly=True)

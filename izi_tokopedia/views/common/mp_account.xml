@@ -24,6 +24,8 @@
             <field name="tp_public_key"/>
             <button name="generate_rsa_key" string="Generate RSA Key" type="object" style="margin: 10px;"
                     icon="fa-lock"/>
+            <button name="tokopedia_upload_public_key" string="Upload Existing Key from Local" type="object"
+                    style="margin: 10px;" icon="fa-lock" context="{'close_notifications_and_wizard': True}"/>
             <button name="tokopedia_register_public_key" string="Register Public Key to Tokopedia" icon="fa-upload"
                     type="object" style="margin: 10px;"/>
           </page>
