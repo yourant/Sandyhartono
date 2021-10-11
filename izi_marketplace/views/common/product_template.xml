@@ -9,7 +9,7 @@
         <xpath expr="//page[@name='general_information']" position="inside">
           <notebook>
             <page string="Marketplace">
-              <group name="marketplace" string="Map Line(s)">
+              <group name="marketplace" string="Marketplace Products">
                 <field name="map_line_ids" nolabel="1">
                   <tree order="marketplace">
                     <field name="marketplace"/>
