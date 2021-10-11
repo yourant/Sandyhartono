@@ -73,6 +73,7 @@ class MarketplaceAccount(models.Model):
                     'auth_message': 'Congratulations, you have been successfully authenticated!'})
 
     @api.multi
+    @mp.shopee.capture_error
     def shopee_get_shop(self):
         self.ensure_one()
         mp_account_ctx = self.generate_context()
@@ -99,6 +100,7 @@ class MarketplaceAccount(models.Model):
         mp_shopee_shop_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
+    @mp.shopee.capture_error
     def shopee_get_logistic(self):
         self.ensure_one()
         mp_account_ctx = self.generate_context()
@@ -143,6 +145,7 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
+    @mp.shopee.capture_error
     def shopee_get_mp_product(self):
         mp_product_obj = self.env['mp.product']
         mp_account_ctx = self.generate_context()
@@ -172,6 +175,7 @@ class MarketplaceAccount(models.Model):
                 self.marketplace, check_existing_records['need_skip_records'])
 
     @api.multi
+    @mp.shopee.capture_error
     def shopee_get_mp_product_variant(self):
         mp_product_obj = self.env['mp.product']
         mp_product_variant_obj = self.env['mp.product.variant']
