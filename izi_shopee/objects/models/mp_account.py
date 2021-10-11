@@ -4,6 +4,7 @@ import json
 
 from odoo import api, fields, models
 
+from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
 from odoo.addons.izi_shopee.objects.utils.shopee.shop import ShopeeShop
@@ -212,19 +213,33 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
-    def shopee_get_sale_order(self, from_date, to_date, time_range='create_time'):
+    @mp.shopee.capture_error
+    def shopee_get_sale_order(self, time_range, **kwargs):
         sale_order_obj = self.env['sale.order']
         mp_account_ctx = self.generate_context()
         _notify = self.env['mp.base']._notify
-        params = {}
+        account_params = {}
+        order_params = {}
         if self.mp_token_id.state == 'valid':
-            params = {'access_token': self.mp_token_id.name}
-        sp_account = self.shopee_get_account(**params)
+            account_params = {'access_token': self.mp_token_id.name}
+        sp_account = self.shopee_get_account(**account_params)
         sp_order = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
-        sp_data_raw, sp_data_sanitized = sp_order.get_order_list(
-            from_date=from_date, to_date=to_date, time_range=time_range)
+        if kwargs.get('params') == 'by_date_range':
+            order_params.update({
+                'from_date': kwargs.get('from_date'),
+                'to_date': kwargs.get('to_date'),
+                'limit': mp_account_ctx.get('order_limit'),
+                'time_range': time_range
+            })
+            sp_data_raw, sp_data_sanitized = sp_order.get_order_list(**order_params)
+        elif kwargs.get('params') == 'by_mp_invoice_number':
+            order_params.update({
+                'order_id': kwargs.get('mp_invoice_number')
+            })
+            sp_data_raw, sp_data_sanitized = sp_order.get_order_detail(**order_params)
+
         check_existing_records_params = {
             'identifier_field': 'sp_order_id',
             'raw_data': sp_data_raw,
@@ -240,10 +255,10 @@ class MarketplaceAccount(models.Model):
         sale_order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     @api.multi
-    def shopee_get_orders(self, from_date, to_date):
+    def shopee_get_orders(self, **kwargs):
         self.ensure_one()
-        self.shopee_get_sale_order(from_date, to_date)
-        self.shopee_get_sale_order(from_date, to_date, time_range='update_time')
+        self.shopee_get_sale_order(time_range='create_time', **kwargs)
+        self.shopee_get_sale_order(time_range='update_time', **kwargs)
         return {
             'type': 'ir.actions.client',
             'tag': 'close_notifications'
