@@ -50,6 +50,7 @@
         'views/common/mp_product.xml',
         'views/common/mp_map_product.xml',
         'views/common/mp_map_product_line.xml',
+        'views/common/product_template.xml',
         'views/common/sale_order.xml',
 
         # wizard
