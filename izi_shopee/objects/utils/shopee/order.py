@@ -14,15 +14,19 @@ class ShopeeOrder(ShopeeAPI):
     def get_order_list(self, *args, **kwargs):
         return getattr(self, '%s_get_order_list' % self.api_version)(*args, **kwargs)
 
-    def v2_get_order_detail(self, sp_data=None, order_id=None):
+    def get_order_detail(self, *args, **kwargs):
+        return getattr(self, '%s_get_order_detail' % self.api_version)(*args, **kwargs)
+
+    def v2_get_order_detail(self, **kwargs):
         response_field = ['item_list', 'recipient_address', 'note,shipping_carrier', 'pay_time',
                           'buyer_user_id', 'buyer_username', 'payment_method', 'package_list']
         order_id_list = []
-        if sp_data:
+        if kwargs.get('sp_data', False):
+            sp_data = kwargs.get('sp_data')
             for data in sp_data:
                 order_id_list.append(data['order_sn'])
-        elif order_id:
-            order_id_list.append(order_id)
+        elif kwargs.get('order_id', False):
+            order_id_list.append(kwargs.get('order_id'))
 
         params = {
             'order_sn_list': ','.join(order_id_list),
@@ -40,7 +44,7 @@ class ShopeeOrder(ShopeeAPI):
         raw_data, order_data = self.process_response('order_detail', self.request(**prepared_request))
         return raw_data['order_list'], order_data
 
-    def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_range='create_time'):
+    def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_range=None):
         date_ranges = self.pagination_date_range(from_date, to_date)
 
         for date_range in date_ranges:
@@ -69,8 +73,11 @@ class ShopeeOrder(ShopeeAPI):
                                                           })
                     response_data = self.process_response('order_list', self.request(**prepared_request))
                     if response_data['order_list']:
+                        params = {
+                            'sp_data': response_data['order_list']
+                        }
                         raw_data, sp_data = getattr(self, '%s_get_order_detail' %
-                                                    self.api_version)(response_data['order_list'])
+                                                    self.api_version)(**params)
                         self.order_data.extend(sp_data)
                         self.order_data_raw.extend(raw_data)
                         self._logger.info("Order: Imported %d of unlimited." % len(self.order_data))
