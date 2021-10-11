@@ -29,7 +29,7 @@ class MarketplaceToken(models.Model):
     @api.multi
     def shopee_validate_current_token(self):
         self.ensure_one()
-        x_minutes = 10
+        x_minutes = 230
         now_utc = datetime.utcnow()
         time_diff = now_utc.replace(tzinfo=None) - datetime.strptime(self.create_date, "%Y-%m-%d %H:%M:%S")
         if (time_diff.days > 0 or time_diff.seconds > (x_minutes * 60)) and self.refresh_token and self.sp_shop_id:
