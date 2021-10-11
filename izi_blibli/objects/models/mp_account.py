@@ -4,6 +4,7 @@ import json
 
 from odoo import api, fields, models
 
+from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_blibli.objects.utils.blibli.account import BlibliAccount
 from odoo.addons.izi_blibli.objects.utils.blibli.logistic import BlibliLogistic
 from odoo.addons.izi_blibli.objects.utils.blibli.shop import BlibliShop
@@ -191,7 +192,8 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
-    def blibli_get_sale_order(self, from_date, to_date):
+    @mp.blibli.capture_error
+    def blibli_get_sale_order(self, **kwargs):
         sale_order_obj = self.env['sale.order']
         mp_account_ctx = self.generate_context()
         _notify = self.env['mp.base']._notify
@@ -200,8 +202,18 @@ class MarketplaceAccount(models.Model):
         bli_order = BlibliOrder(bli_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
-        bli_data_raw, bli_data_sanitized = bli_order.get_order_list(
-            from_date=from_date, to_date=to_date)
+        if kwargs.get('params') == 'by_date_range':
+            params.update({
+                'from_date': kwargs.get('from_date'),
+                'to_date': kwargs.get('to_date'),
+                'limit': mp_account_ctx.get('order_limit')
+            })
+            bli_data_raw, bli_data_sanitized = bli_order.get_order_list(**params)
+        elif kwargs.get('params') == 'by_mp_invoice_number':
+            params.update({
+                'order_id': kwargs.get('mp_invoice_number')
+            })
+            bli_data_raw, bli_data_sanitized = bli_order.get_order_detail(**params)
         check_existing_records_params = {
             'identifier_field': 'bli_order_id',
             'raw_data': bli_data_raw,
@@ -214,9 +226,9 @@ class MarketplaceAccount(models.Model):
         # raise UserError("%d order(s) imported!" % len(sp_data_raw))
 
     @api.multi
-    def blibli_get_orders(self, from_date, to_date):
+    def blibli_get_orders(self, **kwargs):
         self.ensure_one()
-        self.blibli_get_sale_order(from_date, to_date)
+        self.blibli_get_sale_order(**kwargs)
         return {
             'type': 'ir.actions.client',
             'tag': 'close_notifications'
