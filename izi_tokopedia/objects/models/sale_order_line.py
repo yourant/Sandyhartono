@@ -2,7 +2,6 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
 
 
 class SaleOrderLine(models.Model):
@@ -60,13 +59,3 @@ class SaleOrderLine(models.Model):
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(SaleOrderLine, cls)._add_rec_mp_field_mapping(mp_field_mappings)
-
-    @api.model
-    def _finish_mapping_raw_data(self, sanitized_data, values):
-        sanitized_data, values = super(SaleOrderLine, self)._finish_mapping_raw_data(sanitized_data, values)
-
-        if not values.get('product_id'):
-            err_msg = 'Could not find matched record for MP Product "%s", please make sure this MP Product is mapped!'
-            raise ValidationError(err_msg % values['name'])
-
-        return sanitized_data, values
