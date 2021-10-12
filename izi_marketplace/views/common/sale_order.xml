@@ -19,6 +19,7 @@
           <filter string="In Shipping" name="in_ship" domain="[('mp_order_status','=', 'in_ship')]"/>
           <filter string="Done" name="done" domain="[('mp_order_status','=', 'done')]"/>
           <filter string="Returned" name="return" domain="[('mp_order_status','=', 'return')]"/>
+          <separator/>
           <group name="filter_per_mp"/>
           <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
           <filter name="group_by_marketplace_account" string="Marketplace Account" context="{'group_by': 'mp_account_id'}"/>

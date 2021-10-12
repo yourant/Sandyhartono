@@ -46,6 +46,7 @@
         'views/common/mp_tokopedia_shop.xml',
         'views/common/mp_tokopedia_logistic.xml',
         'views/common/mp_map_product_line.xml',
+        'views/common/sale_order.xml',
 
         # wizard
         'views/wizard/wiz_upload_public_key.xml',

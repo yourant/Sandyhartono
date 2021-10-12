@@ -44,6 +44,7 @@
         'views/common/mp_blibli_logistic.xml',
         'views/common/mp_blibli_shop.xml',
         'views/common/mp_map_product_line.xml',
+        'views/common/sale_order.xml',
 
         # view
 
