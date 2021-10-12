@@ -140,25 +140,26 @@ class SaleOrder(models.Model):
 
         tp_order_detail_raws, tp_order_detail_sanitizeds = [], []
 
-        for record in records:
-            tp_order_raw = json.loads(record.raw, strict=False)
-            tp_order_details = [
-                # Insert order_id into tp_order_detail_raw
-                dict(tp_order_detail_raw, **dict([('order_id', record.id)]))
-                for tp_order_detail_raw in json_digger(tp_order_raw, 'order_info/order_detail')
-            ]
-            tp_data_raw, tp_data_sanitized = order_line_obj._prepare_mapping_raw_data(raw_data=tp_order_details)
-            tp_order_detail_raws.extend(tp_data_raw)
-            tp_order_detail_sanitizeds.extend(tp_data_sanitized)
+        if mp_account.marketplace == 'tokopedia':
+            for record in records:
+                tp_order_raw = json.loads(record.raw, strict=False)
+                tp_order_details = [
+                    # Insert order_id into tp_order_detail_raw
+                    dict(tp_order_detail_raw, **dict([('order_id', record.id)]))
+                    for tp_order_detail_raw in json_digger(tp_order_raw, 'order_info/order_detail')
+                ]
+                tp_data_raw, tp_data_sanitized = order_line_obj._prepare_mapping_raw_data(raw_data=tp_order_details)
+                tp_order_detail_raws.extend(tp_data_raw)
+                tp_order_detail_sanitizeds.extend(tp_data_sanitized)
 
-        check_existing_records_params = {
-            'identifier_field': 'tp_order_detail_id',
-            'raw_data': tp_order_detail_raws,
-            'mp_data': tp_order_detail_sanitizeds,
-            'multi': isinstance(tp_order_detail_sanitizeds, list)
-        }
-        check_existing_records = order_line_obj.check_existing_records(**check_existing_records_params)
-        order_line_obj.handle_result_check_existing_records(check_existing_records)
+            check_existing_records_params = {
+                'identifier_field': 'tp_order_detail_id',
+                'raw_data': tp_order_detail_raws,
+                'mp_data': tp_order_detail_sanitizeds,
+                'multi': isinstance(tp_order_detail_sanitizeds, list)
+            }
+            check_existing_records = order_line_obj.check_existing_records(**check_existing_records_params)
+            order_line_obj.handle_result_check_existing_records(check_existing_records)
 
     @classmethod
     def _add_rec_mp_order_status(cls, mp_order_statuses=None, mp_order_status_notes=None):
