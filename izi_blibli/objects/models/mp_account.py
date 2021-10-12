@@ -4,12 +4,11 @@ import json
 
 from odoo import api, fields, models
 
-from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_blibli.objects.utils.blibli.account import BlibliAccount
 from odoo.addons.izi_blibli.objects.utils.blibli.logistic import BlibliLogistic
 from odoo.addons.izi_blibli.objects.utils.blibli.shop import BlibliShop
 from odoo.addons.izi_blibli.objects.utils.blibli.product import BlibliProduct
-from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
+from odoo.addons.izi_marketplace.objects.utils.tools import json_digger, mp
 from odoo.addons.izi_blibli.objects.utils.blibli.order import BlibliOrder
 
 
@@ -223,7 +222,6 @@ class MarketplaceAccount(models.Model):
         check_existing_records = sale_order_obj.with_context(mp_account_ctx).check_existing_records(
             **check_existing_records_params)
         sale_order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
-        # raise UserError("%d order(s) imported!" % len(sp_data_raw))
 
     @api.multi
     def blibli_get_orders(self, **kwargs):

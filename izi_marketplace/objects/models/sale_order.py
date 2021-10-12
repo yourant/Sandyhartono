@@ -35,7 +35,7 @@ class SaleOrder(models.Model):
 
     # MP Order Status
     mp_order_status = fields.Selection(string="MP Order Status", selection=MP_ORDER_STATUSES, required=False,
-                                       compute="_compute_mp_order_status")
+                                       store=True, compute="_compute_mp_order_status")
     mp_order_status_notes = fields.Char(string="MP Order Status Notes", compute="_compute_mp_order_status")
 
     # MP Order Transaction & Payment

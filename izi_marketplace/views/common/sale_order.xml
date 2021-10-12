@@ -9,8 +9,18 @@
       <field name="arch" type="xml">
         <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
           <separator/>
+          <filter string="New" name="new" domain="[('mp_order_status','=', 'new')]"/>
+          <filter string="Waiting Payment" name="waiting" domain="[('mp_order_status','=', 'waiting')]"/>
+          <filter string="To Cancel" name="to_cancel" domain="[('mp_order_status','=', 'to_cancel')]"/>
+          <filter string="Cancelled" name="cancel" domain="[('mp_order_status','=', 'cancel')]"/>
+          <filter string="To Process" name="to_process" domain="[('mp_order_status','=', 'to_process')]"/>
+          <filter string="In Process" name="in_process" domain="[('mp_order_status','=', 'in_process')]"/>
+          <filter string="To Ship" name="to_ship" domain="[('mp_order_status','=', 'to_ship')]"/>
+          <filter string="In Shipping" name="in_ship" domain="[('mp_order_status','=', 'in_ship')]"/>
+          <filter string="Done" name="done" domain="[('mp_order_status','=', 'done')]"/>
+          <filter string="Returned" name="return" domain="[('mp_order_status','=', 'return')]"/>
+          <group name="filter_per_mp"/>
           <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
-          <separator/>
           <filter name="group_by_marketplace_account" string="Marketplace Account" context="{'group_by': 'mp_account_id'}"/>
         </xpath>
       </field>
