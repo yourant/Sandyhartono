@@ -47,6 +47,7 @@
         'views/common/mp_shopee_shop.xml',
         'views/common/mp_shopee_logistic.xml',
         'views/common/sale_order.xml',
+        'views/common/mp_map_product_line.xml',
         # wizard
 
         # report paperformat
