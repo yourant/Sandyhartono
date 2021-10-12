@@ -11,5 +11,16 @@
                 </xpath>
             </field>
         </record>
+
+        <record id="izi_shopee.search_sale_order" model="ir.ui.view">
+            <field name="name">Marketplace Order Search View</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='filter_per_mp']" position="inside">
+                    <filter string="Shopee" name="filter_to_shopee" domain="[('marketplace','=', 'shopee')]"/>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>
