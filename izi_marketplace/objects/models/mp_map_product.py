@@ -111,7 +111,7 @@ class MarketplaceMapProduct(models.Model):
             'product_id': product.id or None,
             'mp_product_id': None,
             'mp_product_variant_id': None,
-            'generated_by_mapping': True if product else False
+            'generated_by_mapping': True if product.exists() else False
         }
         if record._name == 'mp.product':
             map_line_data.update({
