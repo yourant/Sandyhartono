@@ -9,6 +9,7 @@ from Cryptodome.Cipher import PKCS1_OAEP, AES
 from Cryptodome.Hash import SHA256
 from Cryptodome.PublicKey import RSA
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
@@ -55,6 +56,11 @@ class SaleOrder(models.Model):
     tp_order_status = fields.Selection(string="Tokopedia Order Status", selection=TP_ORDER_STATUSES,
                                        required_if_marketplace="tokopedia")
     tp_invoice_url = fields.Char(string="Tokpedia Invoice URL", required=False)
+
+    @api.multi
+    @api.depends('tp_order_status')
+    def _compute_mp_order_status(self):
+        super(SaleOrder, self)._compute_mp_order_status()
 
     @classmethod
     def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
@@ -138,9 +144,8 @@ class SaleOrder(models.Model):
 
         records = super(SaleOrder, self)._finish_create_records(records)
 
-        tp_order_detail_raws, tp_order_detail_sanitizeds = [], []
-
         if mp_account.marketplace == 'tokopedia':
+            tp_order_detail_raws, tp_order_detail_sanitizeds = [], []
             for record in records:
                 tp_order_raw = json.loads(record.raw, strict=False)
                 tp_order_details = [
@@ -267,6 +272,27 @@ class SaleOrder(models.Model):
         return None
 
     @api.multi
-    @api.depends('tp_order_status')
-    def _compute_mp_order_status(self):
-        super(SaleOrder, self)._compute_mp_order_status()
+    def tokopedia_generate_delivery_line(self):
+        tp_logistic_service_obj = self.env['mp.tokopedia.logistic.service']
+
+        for order in self:
+            delivery_line = order.order_line.filtered(lambda l: l.is_delivery)
+            if not delivery_line:
+                tp_order_raw = json.loads(order.raw, strict=False)
+                tp_order_shipping = json_digger(tp_order_raw, 'order_info/shipping_info')
+                tp_logistic_service_id = str(tp_order_shipping.get('sp_id'))
+                tp_logistic_service = tp_logistic_service_obj.search_mp_records('tokopedia', tp_logistic_service_id)
+                tp_logistic_name = '%s - %s' % (
+                    tp_logistic_service.logistic_id.shipper_name, tp_logistic_service.service_name)
+                delivery_product = tp_logistic_service.get_delivery_product()
+                if not delivery_product:
+                    raise ValidationError('Please define delivery product on "%s"' % tp_logistic_name)
+                order.write({
+                    'order_line': [(0, 0, {
+                        'product_id': delivery_product.id,
+                        'name': tp_logistic_name,
+                        'product_uom_qty': 1,
+                        'price_unit': tp_order_shipping.get('shipping_price', 0),
+                        'is_delivery': True
+                    })]
+                })

@@ -306,6 +306,7 @@ class MarketplaceAccount(models.Model):
                     )
                     _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
                     tp_data_detail_order = tp_order.get_order_detail(order_id=tp_order_id)
+                    tp_data_detail_order.update({'order_summary': tp_data_order})
                     tp_data_detail_orders.append(tp_data_detail_order)
                     tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(
                         raw_data=tp_data_detail_order, endpoint_key='sanitize_decrypt')
