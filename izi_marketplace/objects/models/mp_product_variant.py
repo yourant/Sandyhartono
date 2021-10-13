@@ -46,3 +46,44 @@ class MarketplaceProductVariant(models.Model):
             ('mp_product_variant_id', '=', self.id)
         ])
         return map_line.product_id
+
+    @api.multi
+    def _prepare_product_values(self):
+        product_obj = self.env['product.product']
+
+        self.ensure_one()
+        values = {}
+
+        # Get default values
+        fields_with_default = []
+        for fname, field in product_obj._fields.items():
+            if field.default and field.store:
+                fields_with_default.append(fname)
+        values.update(product_obj.default_get(fields_with_default))
+
+        # Set values from mp_product_variant
+        mp_product_variant_data = self.copy_data()[0]
+        fields_list = ['default_code', 'weight', 'volume']
+        values.update(dict([(fname, mp_product_variant_data.get(fname)) for fname in fields_list]))
+
+        if self._context.get('set_values'):
+            values.update(self._context.get('set_values'))
+
+        return values
+
+    @api.multi
+    def create_product(self, product_tmpl):
+        _logger = self.env['mp.base']._logger
+        product_obj = self.env['product.product']
+
+        self.ensure_one()
+
+        values = self._prepare_product_values()
+        values.update({'product_tmpl_id': product_tmpl.id})
+
+        _log_msg = 'Creating product.product of "%s"' % self.name
+        if self._context.get('_log_counter'):
+            _log_msg = '%s %s' % (self._context.get('_log_counter'), _log_msg)
+        _logger(self.marketplace, _log_msg)
+        product = product_obj.create(values)
+        return product

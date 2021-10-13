@@ -7,7 +7,7 @@ import logging
 from odoo import api, fields, models, sql_db
 from odoo.exceptions import ValidationError
 
-from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
+from odoo.addons.izi_marketplace.objects.utils.tools import json_digger, StringIteratorIO, clean_csv_value
 
 
 class MarketplaceBase(models.AbstractModel):
@@ -555,3 +555,68 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def _finish_update_records(self, records):
         return records
+
+    @api.model
+    def pg_select(self, table_name, columns, where=None, null_value=None):
+        """Do SELECT query from database directly and return its result."""
+
+        _sql = "SELECT %s FROM %s" % (",".join(columns), table_name)
+
+        if where:
+            _sql = "%s WHERE %s" % (_sql, where)
+
+        self._cr.execute(_sql)
+        results = self._cr.dictfetchall()
+        for result in results:
+            for field, value in result.items():
+                if value == 'False':
+                    result[field] = null_value
+        return results
+
+    @api.model
+    def pg_copy_from(self, column_name, record_datas, null_value=None):
+        """Convert list of dict to be CSV file-like object and then
+         import it to DB using PostgreSQL COPY FROM feature.
+
+         This is EXPERIMENTAL FEATURE, use it wisely!
+         """
+
+        for record_data in record_datas:
+            for field, value in record_data.items():
+                if not value:
+                    record_data[field] = null_value
+
+        # Prepare CSV file like object
+        records_string_iterator = StringIteratorIO(
+            ('|'.join(map(clean_csv_value, tuple(record_data.values()))) + '\n') for record_data in record_datas)
+
+        # Import CSV file like object into DB
+        self._cr._obj.copy_from(records_string_iterator, column_name, sep='|', columns=list(record_datas[0].keys()))
+
+    @api.model
+    def do_recompute(self, model, domain=None, records=None, skip_fields=None):
+        if not skip_fields:
+            skip_fields = []
+
+        if not domain:
+            domain = []
+
+        if not records:
+            records = model.search(domain)
+
+        # Get compute fields of the model
+        need_recompute_fields = []
+        for fname, field in model._fields.items():
+            if field.store and (field.compute or field.related) and fname not in skip_fields:
+                need_recompute_fields.append(field)
+
+        # Prepare to recompute
+        for need_recompute_field in need_recompute_fields:
+            records._recompute_todo(need_recompute_field)
+
+        # Do recompute
+        model.recompute()
+
+        # Finish recompute
+        for need_recompute_field in need_recompute_fields:
+            records._recompute_done(need_recompute_field)

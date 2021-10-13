@@ -3,6 +3,7 @@
 import logging
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 from odoo.addons.izi_marketplace.objects.utils.tools.csv import clean_csv_value
 from odoo.addons.izi_marketplace.objects.utils.tools import StringIteratorIO
@@ -40,6 +41,7 @@ class MarketplaceMapProduct(models.Model):
     state = fields.Selection(string="Status", selection=MAP_STATES, required=True, default="draft")
     debug_force_mapping_without_company = fields.Boolean(string="Force Mapping Without Company", default=False,
                                                          help="Force update raw field only")
+
     # noinspection PyUnresolvedReferences
 
     @api.model
@@ -195,6 +197,99 @@ class MarketplaceMapProduct(models.Model):
 
         # After creating new map lines, then let's process existing map line that we retrieved previously
         unmapped_map_lines = existing_map_lines.filtered(lambda ml: ml.state == 'unmapped')
+        _logger.info("Processing %s unmapped map lines..." % len(unmapped_map_lines))
+        _notify('info', "Processing %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=True)
+        processed, skipped = unmapped_map_lines.do_mapping()
+        _logger.info("Processed %s map lines..." % processed)
+        _notify('info', "Processed %s map lines..." % processed, notif_sticky=True)
+        _logger.info("Skipped %s map lines..." % skipped)
+        _notify('info', "Skipped %s map lines..." % skipped, notif_sticky=True)
+
+    @api.multi
+    def action_generate_product(self):
+        product_tmpl_obj = self.env['product.template']
+        product_obj = self.env['product.product']
+        _notify = self.env['mp.base']._notify
+
+        self.ensure_one()
+
+        # Generate mapping first to make sure
+        self.action_generate()
+
+        # Get Unmapped map_lines and its mp_products
+        unmapped_map_lines = self.map_line_ids.filtered(lambda ml: ml.state == 'unmapped')
+        mp_products = unmapped_map_lines.mapped('mp_product_id') | unmapped_map_lines.mapped(
+            'mp_product_variant_id').mapped('mp_product_id')
+        # Get mp_products without variant
+        mp_products_without_variant = mp_products.filtered(lambda mpp: not mpp.mp_product_variant_ids)
+        # Get mp_products with variant
+        mp_products_with_variant = mp_products.filtered(lambda mpp: mpp.mp_product_variant_ids)
+
+        # Check if product variant is enabled
+        if mp_products_with_variant.exists() and not self.user_has_groups('product.group_product_variant'):
+            raise UserError("There are MP Products with variant but you don't have access to "
+                            "manage product variant in Odoo, please enable Product Variant feature!")
+
+        # Process mp_products
+        _logger.info("Creating products for %s unmapped map lines..." % len(unmapped_map_lines))
+
+        # Process mp_products_without_variant: Create product.template
+        set_values = {
+            'generated_by_mapping': True,
+            'product_map_ref': '%s,%s' % (self._name, self.id),
+        }
+        product_tmpl_datas = [
+            mp_product.with_context({'set_values': set_values})._prepare_product_tmpl_values()
+            for mp_product in mp_products_without_variant
+        ]
+        self.env['mp.base'].pg_copy_from('product_template', product_tmpl_datas)
+        product_tmpls = product_tmpl_obj.search([('product_map_ref', '=', '%s,%s' % (self._name, self.id))])
+        self.env['mp.base'].do_recompute(product_tmpl_obj, records=product_tmpls,
+                                         skip_fields=['barcode', 'default_code', 'standard_price', 'volume', 'weight'])
+
+        # Process mp_products_without_variant: Create product.product
+        product_fields_list = ['id AS product_tmpl_id', 'default_code', 'weight', 'volume']
+        product_datas = self.env['mp.base'].pg_select('product_template', product_fields_list,
+                                                      where="product_map_ref = '%s,%s'" % (self._name, self.id))
+        product_datas = [dict(product_data, **dict(set_values, **{
+            'active': True
+        })) for product_data in product_datas]
+        self.env['mp.base'].pg_copy_from('product_product', product_datas)
+        self.env['mp.base'].do_recompute(product_obj, domain=[('product_tmpl_id', 'in', product_tmpls.ids)])
+
+        # Process mp_products_with_variant: Create product.template
+        product_tmpl_datas = [
+            mp_product.with_context({'set_values': dict(set_values, **{
+                'mp_product_ids_ref': str(mp_product.id)
+            })})._prepare_product_tmpl_values()
+            for mp_product in mp_products_with_variant
+        ]
+        self.env['mp.base'].pg_copy_from('product_template', product_tmpl_datas)
+        product_tmpls = product_tmpl_obj.search(
+            [('product_map_ref', '=', '%s,%s' % (self._name, self.id)), ('mp_product_ids_ref', '!=', False)])
+        product_tmpls = product_tmpls.filtered(lambda pt: any(
+            [int(mp_product_id) in mp_products_with_variant.ids for mp_product_id in pt.mp_product_ids_ref.split(',')]))
+        self.env['mp.base'].do_recompute(product_tmpl_obj, records=product_tmpls,
+                                         skip_fields=['barcode', 'default_code', 'standard_price', 'volume', 'weight'])
+
+        # Process mp_products_with_variant: Create product.product
+        product_fields_list = ['mp_product_id', 'default_code', 'weight', 'volume']
+        product_datas = self.env['mp.base'].pg_select('mp_product_variant', product_fields_list,
+                                                      where="mp_product_id IN (%s)" % ','.join(
+                                                          [str(mp_product_id)
+                                                           for mp_product_id in mp_products_with_variant.ids]))
+        for product_data in product_datas:
+            mp_product_id = str(product_data.pop('mp_product_id'))
+            product_tmpl = product_tmpls.filtered(lambda pt: mp_product_id in pt.mp_product_ids_ref.split(','))
+            product_data.update({
+                'active': True,
+                'generated_by_mapping': True,
+                'product_tmpl_id': product_tmpl.id
+            })
+        self.env['mp.base'].pg_copy_from('product_product', product_datas)
+        self.env['mp.base'].do_recompute(product_obj, domain=[('product_tmpl_id', 'in', product_tmpls.ids)])
+
+        # Do mapping
         _logger.info("Processing %s unmapped map lines..." % len(unmapped_map_lines))
         _notify('info', "Processing %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=True)
         processed, skipped = unmapped_map_lines.do_mapping()
