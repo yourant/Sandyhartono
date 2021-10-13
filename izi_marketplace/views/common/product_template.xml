@@ -7,8 +7,8 @@
       <field name="inherit_id" ref="product.product_template_form_view"/>
       <field name="arch" type="xml">
         <xpath expr="//page[@name='general_information']" position="inside">
-          <notebook>
-            <page string="Marketplace" attrs="{'invisible':[('map_line_ids', '=', [])]}">
+          <notebook attrs="{'invisible':[('map_line_ids', '=', [])]}">
+            <page string="Marketplace Product">
               <group name="marketplace" string="Marketplace Products">
                 <field name="map_line_ids" nolabel="1">
                   <tree order="marketplace">
