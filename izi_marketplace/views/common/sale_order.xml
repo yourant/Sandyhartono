@@ -9,6 +9,8 @@
       <field name="arch" type="xml">
         <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
           <separator/>
+          <group name="filter_per_mp"/>
+          <separator/>
           <filter string="New" name="new" domain="[('mp_order_status','=', 'new')]"/>
           <filter string="Waiting Payment" name="waiting" domain="[('mp_order_status','=', 'waiting')]"/>
           <filter string="To Cancel" name="to_cancel" domain="[('mp_order_status','=', 'to_cancel')]"/>
@@ -19,8 +21,6 @@
           <filter string="In Shipping" name="in_ship" domain="[('mp_order_status','=', 'in_ship')]"/>
           <filter string="Done" name="done" domain="[('mp_order_status','=', 'done')]"/>
           <filter string="Returned" name="return" domain="[('mp_order_status','=', 'return')]"/>
-          <separator/>
-          <group name="filter_per_mp"/>
           <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
           <filter name="group_by_marketplace_account" string="Marketplace Account" context="{'group_by': 'mp_account_id'}"/>
         </xpath>
