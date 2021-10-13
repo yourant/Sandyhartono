@@ -160,6 +160,7 @@ class SaleOrder(models.Model):
             }
             check_existing_records = order_line_obj.check_existing_records(**check_existing_records_params)
             order_line_obj.handle_result_check_existing_records(check_existing_records)
+        return records
 
     @classmethod
     def _add_rec_mp_order_status(cls, mp_order_statuses=None, mp_order_status_notes=None):

@@ -14,12 +14,16 @@
                 <field name="shipper_name"/>
               </h1>
             </div>
+            <group>
+              <field name="product_id" domain="[('type', '=', 'service')]"/>
+            </group>
             <notebook>
               <page string="Service(s)">
                 <field name="service_ids">
-                  <tree>
+                  <tree editable="top" create="0" delete="0">
                     <field name="service_name"/>
                     <field name="service_desc"/>
+                    <field name="product_id" domain="[('type', '=', 'service')]"/>
                   </tree>
                 </field>
               </page>
