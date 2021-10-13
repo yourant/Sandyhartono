@@ -28,6 +28,7 @@
         'base',
         'sale_management',
         'stock',
+        'delivery',
         # third party addons
         'web_widget_image_url',
         'web_notify',
