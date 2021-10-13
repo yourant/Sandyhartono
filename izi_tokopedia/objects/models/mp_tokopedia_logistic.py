@@ -18,6 +18,8 @@ class MPTokopediaLogistic(models.Model):
     logo = fields.Char(string="Logo", readonly=True)
     service_ids = fields.One2many(comodel_name="mp.tokopedia.logistic.service", inverse_name="logistic_id",
                                   string="Services")
+    product_id = fields.Many2one(comodel_name="product.product", string="Delivery Product", required=False,
+                                 default=lambda self: self._get_default_product_id())
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -34,6 +36,13 @@ class MPTokopediaLogistic(models.Model):
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(MPTokopediaLogistic, cls)._add_rec_mp_field_mapping(mp_field_mappings)
+
+    @api.model
+    def _get_default_product_id(self):
+        mp_delivery_product_tmpl = self.env.ref('izi_marketplace.product_tmpl_mp_delivery', raise_if_not_found=False)
+        if mp_delivery_product_tmpl:
+            return mp_delivery_product_tmpl.product_variant_id.id
+        return False
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):
@@ -94,6 +103,7 @@ class MPTokopediaLogisticService(models.Model):
     service_id = fields.Char(string="Service ID", readonly=True)
     service_name = fields.Char(string="Service Name", readonly=True)
     service_desc = fields.Char(string="Service Description", readonly=True)
+    product_id = fields.Many2one(comodel_name="product.product", string="Delivery Product", required=False)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -116,3 +126,12 @@ class MPTokopediaLogisticService(models.Model):
         context = self._context
         domain = ['&', ('logistic_id', '=', context.get('logistic_id'))] + domain
         return super(MPTokopediaLogisticService, self).search_read(domain, fields, offset, limit, order)
+
+    @api.multi
+    def get_delivery_product(self):
+        self.ensure_one()
+        if self.product_id:
+            return self.product_id
+        if self.logistic_id.product_id:
+            return self.logistic_id.product_id
+        return self.env['product.product']

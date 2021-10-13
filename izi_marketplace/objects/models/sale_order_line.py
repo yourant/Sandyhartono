@@ -9,6 +9,11 @@ class SaleOrderLine(models.Model):
     _name = 'sale.order.line'
     _inherit = ['sale.order.line', 'mp.base']
 
+    mp_account_id = fields.Many2one(required=False)
+    is_insurance = fields.Boolean(string="Is a Insurance", default=False)
+    is_discount = fields.Boolean(string="Is a Discount", default=False)
+    is_adjustment = fields.Boolean(string="Is a Adjustment", default=False)
+
     @api.model
     def _finish_mapping_raw_data(self, sanitized_data, values):
         sanitized_data, values = super(SaleOrderLine, self)._finish_mapping_raw_data(sanitized_data, values)

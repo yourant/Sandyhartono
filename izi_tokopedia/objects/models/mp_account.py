@@ -294,16 +294,19 @@ class MarketplaceAccount(models.Model):
             for tp_data_order in tp_data_orders:
                 tp_invoice_number = tp_data_order.get('invoice_ref_num')
                 tp_order_id = tp_data_order.get('order_id')
-                existing_order = order_obj.search_mp_records('tokopedia', str(tp_order_id))
+                existing_order = order_obj.search_mp_records('tokopedia', str(tp_order_id)).exists()
 
                 # If no existing order OR mp status changed on existing order, then fetch new detail order
-                if not existing_order.exists() or (existing_order.exists() and (
-                        existing_order.mp_order_status != str(tp_data_order['order_status']))):
+                no_existing_order = not existing_order
+                mp_status_changed = existing_order and (
+                            existing_order.mp_order_status != str(tp_data_order['order_status']))
+                if no_existing_order or mp_status_changed:
                     notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
                         str(len(tp_data_detail_orders) + 1), len(tp_data_orders), tp_invoice_number
                     )
                     _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
                     tp_data_detail_order = tp_order.get_order_detail(order_id=tp_order_id)
+                    tp_data_detail_order.update({'order_summary': tp_data_order})
                     tp_data_detail_orders.append(tp_data_detail_order)
                     tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(
                         raw_data=tp_data_detail_order, endpoint_key='sanitize_decrypt')

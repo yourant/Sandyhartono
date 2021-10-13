@@ -102,6 +102,18 @@ class SaleOrder(models.Model):
             })
         return sanitized_data, values
 
+    @api.model
+    def _finish_create_records(self, records):
+        records = super(SaleOrder, self)._finish_create_records(records)
+        records.generate_delivery_line()
+        return records
+
+    @api.model
+    def _finish_update_records(self, records):
+        records = super(SaleOrder, self)._finish_update_records(records)
+        records.generate_delivery_line()
+        return records
+
     @api.multi
     def _compute_mp_order_status(self):
         for order in self:
@@ -178,3 +190,9 @@ class SaleOrder(models.Model):
         partner_shipping = self.lookup_partner_shipping(values, default_customer=mp_account.partner_id)
         # Finally return the partner shipping and its parent as customer
         return partner_shipping, partner_shipping.parent_id
+
+    @api.multi
+    def generate_delivery_line(self):
+        for order in self:
+            if hasattr(order, '%s_generate_delivery_line' % order.marketplace):
+                getattr(order, '%s_generate_delivery_line' % order.marketplace)()
