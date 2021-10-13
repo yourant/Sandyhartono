@@ -23,6 +23,11 @@
             <button name="action_start" string="Start Mapping" class="oe_highlight" type="object" states="draft"/>
             <button name="action_edit" string="Edit Mapping" class="oe_highlight" type="object" states="mapping"/>
             <button name="action_generate" string="Generate Mapping" type="object" states="mapping"/>
+            <button name="action_generate_product" string="Generate Product for Unmapped Lines" type="object"
+                    class="btn-danger" states="mapping"
+                    confirm="DANGER ALERT: This action may causing duplicate data of your master product data,
+                    please make sure that unmapped lines are really need to create the master product!
+                    This action can not be undone, do you want to continue?"/>
             <field name="state" widget="statusbar" statusbar_visible="draft,mapping"/>
           </header>
           <sheet>

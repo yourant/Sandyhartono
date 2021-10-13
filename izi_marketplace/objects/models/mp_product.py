@@ -94,6 +94,57 @@ class MarketplaceProduct(models.Model):
         return map_line.product_id
 
     @api.multi
+    def _prepare_product_tmpl_values(self):
+        product_tmpl_obj = self.env['product.template']
+
+        self.ensure_one()
+        values = {}
+
+        # Get default values
+        fields_with_default = []
+        for fname, field in product_tmpl_obj._fields.items():
+            if field.default and field.store:
+                fields_with_default.append(fname)
+        values.update(product_tmpl_obj.default_get(fields_with_default))
+
+        # Set custom values
+        values.update({'type': 'product'})
+
+        # Set values from mp_product
+        mp_product_data = self.copy_data()[0]
+        mp_fields_list = ['name', 'default_code', 'list_price', 'description_sale', 'weight', 'volume']
+        values.update(dict([(mp_fname, mp_product_data.get(mp_fname)) for mp_fname in mp_fields_list]))
+
+        if self._context.get('set_values'):
+            values.update(self._context.get('set_values'))
+
+        return values
+
+    @api.multi
+    def create_product_tmpl(self):
+        _logger = self.env['mp.base']._logger
+        product_tmpl_obj = self.env['product.template']
+
+        self.ensure_one()
+
+        values = self._prepare_product_tmpl_values()
+
+        _log_msg = 'Creating product.template of "%s"' % self.name
+        if self._context.get('_log_counter'):
+            _log_msg = '%s %s' % (self._context.get('_log_counter'), _log_msg)
+        _logger(self.marketplace, _log_msg)
+
+        # Check is it have variant?
+        if self.mp_product_variant_ids.exists():
+            product_tmpl = product_tmpl_obj.with_context({'create_product_product': False})
+            for mp_product_variant in self.mp_product_variant_ids:
+                mp_product_variant.create_product(product_tmpl)
+        else:
+            product_tmpl = product_tmpl_obj.create(values)
+
+        return product_tmpl
+
+    @api.multi
     def get_main_image(self):
         self.ensure_one()
         if self.mp_product_image_ids.exists():
