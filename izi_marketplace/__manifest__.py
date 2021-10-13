@@ -41,6 +41,7 @@
 
         # data
         'data/functions.xml',
+        'data/product.xml',
 
         # global action
         'views/action/action.xml',
