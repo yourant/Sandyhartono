@@ -237,18 +237,25 @@ class MarketplaceAccount(models.Model):
                 'limit': mp_account_ctx.get('order_limit'),
                 'time_range': time_range
             })
-            sp_data_raw, sp_data_sanitized = sp_order.get_order_list(**order_params)
+            sp_data_raw = sp_order.get_order_list(**order_params)
         elif kwargs.get('params') == 'by_mp_invoice_number':
             order_params.update({
                 'order_id': kwargs.get('mp_invoice_number')
             })
-            sp_data_raw, sp_data_sanitized = sp_order.get_order_detail(**order_params)
+            sp_data_raw = sp_order.get_order_detail(**order_params)
+
+        sp_order_raws, sp_order_sanitizeds = [], []
+        for data in sp_data_raw:
+            sp_order_data_raw, sp_order_data_sanitized = sale_order_obj.with_context(
+                mp_account_ctx)._prepare_mapping_raw_data(raw_data=data)
+            sp_order_raws.append(sp_order_data_raw)
+            sp_order_sanitizeds.append(sp_order_data_sanitized)
 
         check_existing_records_params = {
             'identifier_field': 'sp_order_id',
-            'raw_data': sp_data_raw,
-            'mp_data': sp_data_sanitized,
-            'multi': isinstance(sp_data_sanitized, list)
+            'raw_data': sp_order_raws,
+            'mp_data': sp_order_sanitizeds,
+            'multi': isinstance(sp_order_sanitizeds, list)
         }
         check_existing_records = sale_order_obj.with_context(mp_account_ctx).check_existing_records(
             **check_existing_records_params)

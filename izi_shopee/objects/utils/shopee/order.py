@@ -17,9 +17,25 @@ class ShopeeOrder(ShopeeAPI):
     def get_order_detail(self, *args, **kwargs):
         return getattr(self, '%s_get_order_detail' % self.api_version)(*args, **kwargs)
 
+    def v2_get_shipping_doc_info(self, **kwargs):
+        params = {
+            'order_sn': kwargs.get('order_sn'),
+            'package_number': kwargs.get('package_number')
+        }
+        prepared_request = self.build_request('shipping_doc_info',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'params': params
+                                              })
+        raw_data = self.process_response('shipping_doc_info', self.request(**prepared_request))
+        return raw_data
+
     def v2_get_order_detail(self, **kwargs):
         response_field = ['item_list', 'recipient_address', 'note,shipping_carrier', 'pay_time',
-                          'buyer_user_id', 'buyer_username', 'payment_method', 'package_list']
+                          'buyer_user_id', 'buyer_username', 'payment_method', 'package_list', 'tracking_number']
         order_id_list = []
         if kwargs.get('sp_data', False):
             sp_data = kwargs.get('sp_data')
@@ -41,8 +57,23 @@ class ShopeeOrder(ShopeeAPI):
                                               ** {
                                                   'params': params
                                               })
-        raw_data, order_data = self.process_response('order_detail', self.request(**prepared_request))
-        return raw_data['order_list'], order_data
+        raw_data = self.process_response('order_detail', self.request(**prepared_request))
+
+        temp_raw_data = raw_data['order_list']
+        for index, data in enumerate(temp_raw_data):
+            if data['order_status'] == 'PROCESSED':
+                shipping_info = getattr(self, '%s_get_shipping_doc_info' %
+                                        self.api_version)(**{
+                                            'order_sn': data['order_sn'],
+                                            'package_number': data['package_list'][0]['package_number']
+                                        })
+                raw_data['order_list'][index].update(shipping_info)
+            else:
+                raw_data['order_list'][index].update({
+                    'shipping_document_info': False
+                })
+
+        return raw_data['order_list']
 
     def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_range=None):
         date_ranges = self.pagination_date_range(from_date, to_date)
@@ -76,9 +107,9 @@ class ShopeeOrder(ShopeeAPI):
                         params = {
                             'sp_data': response_data['order_list']
                         }
-                        raw_data, sp_data = getattr(self, '%s_get_order_detail' %
-                                                    self.api_version)(**params)
-                        self.order_data.extend(sp_data)
+                        raw_data = getattr(self, '%s_get_order_detail' %
+                                           self.api_version)(**params)
+                        # self.order_data.extend(sp_data)
                         self.order_data_raw.extend(raw_data)
                         self._logger.info("Order: Imported %d of unlimited." % len(self.order_data))
                         if not response_data['next_cursor']:
@@ -89,4 +120,5 @@ class ShopeeOrder(ShopeeAPI):
                         unlimited = False
 
         self._logger.info("Order: Finished %d record(s) imported." % len(self.order_data))
-        return self.order_data_raw, self.order_data
+        # return self.order_data_raw, self.order_data
+        return self.order_data_raw
