@@ -24,7 +24,8 @@ class ShopeeEndpoint(object):
             'product_info': ('GET', '/api/v2/product/get_item_base_info'),
             'product_variant_list': ('GET', '/api/v2/product/get_model_list'),
             'order_list': ('GET', '/api/v2/order/get_order_list'),
-            'order_detail': ('GET', '/api/v2/order/get_order_detail')
+            'order_detail': ('GET', '/api/v2/order/get_order_detail'),
+            'shipping_doc_info': ('GET', '/api/v2/logistics/get_shipping_document_info'),
         }
     }
 
@@ -61,7 +62,7 @@ class ShopeeEndpoint(object):
 
         return sign
 
-    def build_request(self, endpoint_key, partner_id, partner_key, shop_id, access_token=False, **kwargs):
+    def v2_build_request(self, endpoint_key, partner_id, partner_key, shop_id, access_token=False, **kwargs):
         headers = dict({
             'Content-Length': '0',
             'User-Agent': 'PostmanRuntime/7.17.1',
