@@ -8,6 +8,7 @@ import json
 
 from odoo import api, fields, models
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
+from odoo.exceptions import ValidationError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 
@@ -167,9 +168,30 @@ class SaleOrder(models.Model):
 
         return records
 
-    # @api.model
-    # def shopee_get_sanitizers(self, mp_field_mapping):
-    #     default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='response')
-    #     return {
-    #         'order_detail': default_sanitizer
-    #     }
+    @api.multi
+    def shopee_generate_delivery_line(self):
+        sp_logistic_obj = self.env['mp.shopee.logistic']
+
+        for order in self:
+            delivery_line = order.order_line.filtered(lambda l: l.is_delivery)
+            if not delivery_line:
+                sp_order_raw = json.loads(order.raw, strict=False)
+                sp_order_shipping = json_digger(sp_order_raw, 'package_list')[0]
+                sp_logistic_name = str(sp_order_shipping.get('shipping_carrier'))
+                sp_logistic = sp_logistic_obj.search([('logistics_channel_name', 'ilike', sp_logistic_name)])
+                delivery_product = sp_logistic.get_delivery_product()
+                if not delivery_product:
+                    raise ValidationError('Please define delivery product on "%s"' % sp_logistic_name)
+
+                shipping_fee = sp_order_raw.get('actual_shipping_fee', 0)
+                if shipping_fee == 0:
+                    shipping_fee = sp_order_raw.get('estimated_shipping_fee', 0)
+                order.write({
+                    'order_line': [(0, 0, {
+                        'product_id': delivery_product.id,
+                        'name': sp_logistic_name,
+                        'product_uom_qty': 1,
+                        'price_unit': shipping_fee,
+                        'is_delivery': True
+                    })]
+                })

@@ -24,6 +24,8 @@ class MPShopeeLogistic(models.Model):
     item_max_width = fields.Float(string="Item Max Width", readonly=True)
     item_max_length = fields.Float(string="Item Max Length", readonly=True)
     item_max_unit = fields.Char(string="Item Max Unit", readonly=True)
+    product_id = fields.Many2one(comodel_name="product.product", string="Delivery Product", required=False,
+                                 default=lambda self: self._get_default_product_id())
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -71,6 +73,13 @@ class MPShopeeLogistic(models.Model):
         }
 
     @api.model
+    def _get_default_product_id(self):
+        mp_delivery_product_tmpl = self.env.ref('izi_marketplace.product_tmpl_mp_delivery', raise_if_not_found=False)
+        if mp_delivery_product_tmpl:
+            return mp_delivery_product_tmpl.product_variant_id.id
+        return False
+
+    @api.model
     def _finish_mapping_raw_data(self, sanitized_data, values):
         sanitized_data, values = super(MPShopeeLogistic, self)._finish_mapping_raw_data(sanitized_data, values)
         mp_account = self.get_mp_account_from_context()
@@ -78,3 +87,12 @@ class MPShopeeLogistic(models.Model):
             'shop_id': mp_account.sp_shop_id.id
         })
         return sanitized_data, values
+
+    @api.multi
+    def get_delivery_product(self):
+        self.ensure_one()
+        if self.product_id:
+            return self.product_id
+        if self.logistic_id.product_id:
+            return self.logistic_id.product_id
+        return self.env['product.product']

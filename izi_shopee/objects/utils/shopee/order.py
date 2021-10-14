@@ -35,7 +35,8 @@ class ShopeeOrder(ShopeeAPI):
 
     def v2_get_order_detail(self, **kwargs):
         response_field = ['item_list', 'recipient_address', 'note,shipping_carrier', 'pay_time',
-                          'buyer_user_id', 'buyer_username', 'payment_method', 'package_list', 'tracking_number']
+                          'buyer_user_id', 'buyer_username', 'payment_method', 'package_list', 'actual_shipping_fee',
+                          'estimated_shipping_fee', 'actual_shipping_fee_confirmed', 'total_amount']
         order_id_list = []
         if kwargs.get('sp_data', False):
             sp_data = kwargs.get('sp_data')
