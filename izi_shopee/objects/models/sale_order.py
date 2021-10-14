@@ -3,9 +3,13 @@
 
 from datetime import datetime, timezone
 import time
+import json
+
 
 from odoo import api, fields, models
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
+
+from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 
 
 class SaleOrder(models.Model):
@@ -25,6 +29,7 @@ class SaleOrder(models.Model):
 
     sp_order_status = fields.Selection(string="Shopee Order Status", selection=SP_ORDER_STATUSES, required=False)
     sp_order_id = fields.Char(string="Shopee Order ID", readonly=True)
+    sp_package_number = fields.Char(string="Shopee Package Number", readonly=True)
 
     @classmethod
     def _add_rec_mp_order_status(cls, mp_order_statuses=None, mp_order_status_notes=None):
@@ -69,23 +74,23 @@ class SaleOrder(models.Model):
 
         marketplace = 'shopee'
         mp_field_mapping = {
-            'mp_invoice_number': ('order_list/order_sn', None),
-            'sp_order_id': ('order_list/order_sn', None),
-            'sp_order_status': ('order_list/order_status', None),
-            'mp_buyer_id': ('order_list/buyer_user_id', lambda env, r: str(r)),
-            'mp_buyer_username': ('order_list/buyer_username', None),
-            'mp_payment_method_info': ('order_list/payment_method', None),
-            'mp_delivery_carrier_name': ('order_list/shipping_carrier', None),
-            'mp_order_notes': ('order_list/note', None),
-            'mp_cancel_reason': ('order_list/cancel_reason', None),
-            'mp_recipient_address_city': ('order_list/recipient_address/city', None),
-            'mp_recipient_address_name': ('order_list/recipient_address/name', None),
-            'mp_recipient_address_district': ('order_list/recipient_address/district', None),
-            'mp_recipient_address_country': ('order_list/recipient_address/region', None),
-            'mp_recipient_address_zipcode': ('order_list/recipient_address/zipcode', None),
-            'mp_recipient_address_phone': ('order_list/recipient_address/phone', None),
-            'mp_recipient_address_state': ('order_list/recipient_address/state', None),
-            'mp_recipient_address_full': ('order_list/recipient_address/full_address', None),
+            'mp_invoice_number': ('order_sn', None),
+            'sp_order_id': ('order_sn', None),
+            'sp_order_status': ('order_status', None),
+            'mp_buyer_id': ('buyer_user_id', lambda env, r: str(r)),
+            'mp_buyer_username': ('buyer_username', None),
+            'mp_payment_method_info': ('payment_method', None),
+            'mp_delivery_carrier_name': ('shipping_carrier', None),
+            'mp_order_notes': ('note', None),
+            'mp_cancel_reason': ('cancel_reason', None),
+            'mp_recipient_address_city': ('recipient_address/city', None),
+            'mp_recipient_address_name': ('recipient_address/name', None),
+            'mp_recipient_address_district': ('recipient_address/district', None),
+            'mp_recipient_address_country': ('recipient_address/region', None),
+            'mp_recipient_address_zipcode': ('recipient_address/zipcode', None),
+            'mp_recipient_address_phone': ('recipient_address/phone', None),
+            'mp_recipient_address_state': ('recipient_address/state', None),
+            'mp_recipient_address_full': ('recipient_address/full_address', None),
         }
 
         def _convert_timestamp_to_datetime(env, data):
@@ -94,31 +99,75 @@ class SaleOrder(models.Model):
             else:
                 return None
 
+        def _get_package_number(env, data):
+            if data:
+                return data[0]['package_number']
+            else:
+                return None
+
+        def _get_tracking_number(env, data):
+            if data:
+                return data['tracking_number']
+            else:
+                return None
+
         mp_field_mapping.update({
-            'mp_payment_date': ('order_list/pay_time', _convert_timestamp_to_datetime),
-            'mp_order_date': ('order_list/create_time', _convert_timestamp_to_datetime),
-            'mp_order_last_update_date': ('order_list/update_time', _convert_timestamp_to_datetime),
-            'mp_shipping_deadline': ('order_list/ship_by_date', _convert_timestamp_to_datetime)
+            'mp_payment_date': ('pay_time', _convert_timestamp_to_datetime),
+            'mp_order_date': ('create_time', _convert_timestamp_to_datetime),
+            'mp_order_last_update_date': ('update_time', _convert_timestamp_to_datetime),
+            'mp_shipping_deadline': ('ship_by_date', _convert_timestamp_to_datetime),
+            'sp_package_number': ('package_list', _get_package_number),
+            'mp_awb_number': ('shipping_document_info', _get_tracking_number)
+
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(SaleOrder, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
     @api.model
-    def shopee_get_sanitizers(self, mp_field_mapping):
-        default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='response')
-        return {
-            'order_detail': default_sanitizer
-        }
+    def _finish_create_records(self, records):
+        mp_account = self.get_mp_account_from_context()
+        mp_account_ctx = mp_account.generate_context()
+
+        order_line_obj = self.env['sale.order.line'].with_context(mp_account_ctx)
+
+        records = super(SaleOrder, self)._finish_create_records(records)
+
+        sp_order_detail_raws, sp_order_detail_sanitizeds = [], []
+
+        if mp_account.marketplace == 'shopee':
+            for record in records:
+                sp_order_raw = json.loads(record.raw, strict=False)
+                list_field = ['item_id', 'item_name', 'item_sku', 'model_id', 'model_name', 'model_sku']
+
+                item_list = sp_order_raw['item_list']
+                for item in item_list:
+                    item['item_info'] = dict([(key, item[key]) for key in list_field])
+
+                sp_order_details = [
+                    # Insert order_id into tp_order_detail_raw
+                    dict(sp_order_detail_raw, **dict([('order_id', record.id)]))
+                    for sp_order_detail_raw in json_digger(sp_order_raw, 'item_list')
+                ]
+                sp_data_raw, sp_data_sanitized = order_line_obj.with_context(
+                    mp_account_ctx)._prepare_mapping_raw_data(raw_data=sp_order_details)
+                sp_order_detail_raws.extend(sp_data_raw)
+                sp_order_detail_sanitizeds.extend(sp_data_sanitized)
+
+            check_existing_records_params = {
+                'identifier_field': 'sp_order_item_id',
+                'raw_data': sp_order_detail_raws,
+                'mp_data': sp_order_detail_sanitizeds,
+                'multi': isinstance(sp_order_detail_sanitizeds, list)
+            }
+            check_existing_records = order_line_obj.with_context(
+                mp_account_ctx).check_existing_records(**check_existing_records_params)
+            order_line_obj.with_context(
+                mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
     # @api.model
-    # def _finish_mapping_raw_data(self, sanitized_data, values):
-    #     sanitized_data, values = super(SaleOrder, self)._finish_mapping_raw_data(sanitized_data, values)
-    #     mp_account = self.get_mp_account_from_context()
-    #     partner, shipping_address = self.get_mp_partner(mp_account, values)
-    #     values.update({
-    #         'partner_id': partner.id,
-    #         'partner_shipping_id': shipping_address.id,
-    #         'partner_invoice_id': partner.id
-    #     })
-    #     return sanitized_data, values
+    # def shopee_get_sanitizers(self, mp_field_mapping):
+    #     default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='response')
+    #     return {
+    #         'order_detail': default_sanitizer
+    #     }
