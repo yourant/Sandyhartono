@@ -165,6 +165,8 @@ class SaleOrder(models.Model):
             order_line_obj.with_context(
                 mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
+        return records
+
     # @api.model
     # def shopee_get_sanitizers(self, mp_field_mapping):
     #     default_sanitizer = self.get_default_sanitizer(mp_field_mapping, root_path='response')

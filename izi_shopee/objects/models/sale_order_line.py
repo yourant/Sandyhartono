@@ -7,7 +7,7 @@ from odoo import api, fields, models
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    sp_order_item_id = fields.Char(string="Shopee Order Item ID", required_if_marketplace="tokopedia")
+    sp_order_item_id = fields.Char(string="Shopee Order Item ID", required_if_marketplace="shopee")
 
     @classmethod
     def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
