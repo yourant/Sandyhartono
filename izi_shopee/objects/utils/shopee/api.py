@@ -16,7 +16,7 @@ class ShopeeAPI(object):
         self.api_version = api_version
         self.api_tz = pytz.timezone('Asia/Jakarta')
         self.endpoints = ShopeeEndpoint(sp_account, api_version=api_version)
-        self.build_request = self.endpoints.build_request
+        self.build_request = getattr(self.endpoints, '%s_build_request' % api_version)
         self.request = requests.request
         self.validators = dict({
             'default': validate_response
@@ -28,9 +28,15 @@ class ShopeeAPI(object):
         self.pagination_get_pages = pagination_get_pages
         self.pagination_date_range = pagination_date_range
 
-    def process_response(self, endpoint_key, response):
+    def process_response(self, endpoint_key, response, **kwargs):
         validator = self.validators.get(endpoint_key, self.validators['default'])
         sanitizer = self.sanitizers.get(endpoint_key, self.sanitizers['default'])
+        if kwargs.get('no_validate') and kwargs.get('no_sanitize'):
+            return response
+        elif kwargs.get('no_validate'):
+            return sanitizer(response)
+        elif kwargs.get('no_sanitize'):
+            return validator(response)
         return sanitizer(validator(response))
 
     def from_api_timestamp(self, api_ts, as_tz='UTC'):

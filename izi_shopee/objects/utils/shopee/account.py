@@ -58,12 +58,12 @@ class ShopeeAccount(object):
                 payload.update({'refresh_token': self.refresh_token})
             else:
                 payload.update({'code': self.code})
-            prepared_request = self.endpoints.build_request('token_renew' if self.refresh_token else 'token_get',
-                                                            self.partner_id, self.partner_key, self.shop_id,
-                                                            **{
-                                                                'headers': headers,
-                                                                'json': payload
-                                                            })
+            prepared_request = self.endpoints.v2_build_request('token_renew' if self.refresh_token else 'token_get',
+                                                               self.partner_id, self.partner_key, self.shop_id,
+                                                               **{
+                                                                   'headers': headers,
+                                                                   'json': payload
+                                                               })
             response = validate_response(requests.request(**prepared_request))
             _logger.info('\n%s' % (json.dumps(response.json(), indent=2)))
             return response.json()
