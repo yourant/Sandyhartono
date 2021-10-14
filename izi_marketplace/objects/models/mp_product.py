@@ -108,7 +108,10 @@ class MarketplaceProduct(models.Model):
         values.update(product_tmpl_obj.default_get(fields_with_default))
 
         # Set custom values
-        values.update({'type': 'product'})
+        values.update({
+            'type': 'product',
+            'company_id': self.company_id.id
+        })
 
         # Set values from mp_product
         mp_product_data = self.copy_data()[0]

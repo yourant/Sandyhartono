@@ -192,6 +192,7 @@ class MarketplaceMapProduct(models.Model):
                               mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]))
             # Do recompute to fill missing field's values
             mp_map_product_line_obj.recompute()
+            self.map_line_ids = [(6, 0, mp_map_product_line_obj.search([('map_id', '=', self.id)]).ids)]
             _logger.info("Created %s mapping lines." % len(map_line_datas))
             _notify('info', "Created %s mapping lines." % len(map_line_datas), notif_sticky=True)
 
@@ -394,6 +395,7 @@ class MarketplaceMapProductLine(models.Model):
             self.state = 'mapped'
         else:
             self.state = 'unmapped'
+        self.generated_by_mapping = False
 
     @api.model
     def get_product_or_variant(self, map_line):
@@ -413,7 +415,8 @@ class MarketplaceMapProductLine(models.Model):
             'product_id': map_line.product_id.id or None,
             'mp_product_id': map_line.mp_product_id.id or None,
             'mp_product_variant_id': map_line.mp_product_variant_id.id or None,
-            'map_type': map_line.map_type
+            'map_type': map_line.map_type,
+            'generated_by_mapping': map_line.generated_by_mapping
         }
         return current_map_line_data != map_line_data
 
