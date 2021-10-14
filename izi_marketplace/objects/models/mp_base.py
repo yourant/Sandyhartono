@@ -574,7 +574,7 @@ class MarketplaceBase(models.AbstractModel):
         return results
 
     @api.model
-    def pg_copy_from(self, column_name, record_datas, null_value=None):
+    def pg_copy_from(self, table_name, record_datas, null_value=None):
         """Convert list of dict to be CSV file-like object and then
          import it to DB using PostgreSQL COPY FROM feature.
 
@@ -591,7 +591,7 @@ class MarketplaceBase(models.AbstractModel):
             ('|'.join(map(clean_csv_value, tuple(record_data.values()))) + '\n') for record_data in record_datas)
 
         # Import CSV file like object into DB
-        self._cr._obj.copy_from(records_string_iterator, column_name, sep='|', columns=list(record_datas[0].keys()))
+        self._cr._obj.copy_from(records_string_iterator, table_name, sep='|', columns=list(record_datas[0].keys()))
 
     @api.model
     def do_recompute(self, model, domain=None, records=None, skip_fields=None):
