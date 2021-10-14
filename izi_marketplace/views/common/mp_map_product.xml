@@ -24,7 +24,7 @@
             <button name="action_edit" string="Edit Mapping" class="oe_highlight" type="object" states="mapping"/>
             <button name="action_generate" string="Generate Mapping" type="object" states="mapping"/>
             <button name="action_generate_product" string="Generate Product for Unmapped Lines" type="object"
-                    class="btn-danger" states="mapping"
+                    class="btn-danger" states="mapping" groups="base.group_no_one"
                     confirm="DANGER ALERT: This action may causing duplicate data of your master product data,
                     please make sure that unmapped lines are really need to create the master product!
                     This action can not be undone, do you want to continue?"/>
