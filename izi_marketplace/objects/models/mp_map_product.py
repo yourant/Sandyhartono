@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import logging
+import uuid
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
@@ -192,7 +193,7 @@ class MarketplaceMapProduct(models.Model):
                               mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]))
             # Do recompute to fill missing field's values
             mp_map_product_line_obj.recompute()
-            self.map_line_ids = [(6, 0, mp_map_product_line_obj.search([('map_id', '=', self.id)]).ids)]
+            self.invalidate_cache()
             _logger.info("Created %s mapping lines." % len(map_line_datas))
             _notify('info', "Created %s mapping lines." % len(map_line_datas), notif_sticky=True)
 
@@ -422,18 +423,50 @@ class MarketplaceMapProductLine(models.Model):
 
     @api.multi
     def do_mapping(self):
-        mappings = [(map_line,
-                     map_line.map_id.with_context({'index': index, 'count': len(self)}).generate_map_line_data(
-                         self.get_product_or_variant(map_line))) for index, map_line in enumerate(self)]
+        get_product_or_variant = self.get_product_or_variant
+        check_need_update = self.check_need_update
+        pg_copy_from = self.env['mp.base'].pg_copy_from
+
+        mappings = [
+            (map_line, map_line.map_id.with_context({'index': index, 'count': len(self)})
+             .generate_map_line_data(get_product_or_variant(map_line))) for index, map_line in enumerate(self)
+        ]
+
+        need_update_mappings = list(filter(lambda m: m, map(lambda m: m if check_need_update(*m) else False, mappings)))
         processed, skipped = 0, 0
-        for index, mapping in enumerate(mappings):
-            _log_counter = "(%s/%s)" % (index + 1, len(mappings))
-            if self.check_need_update(*mapping):
-                _logger.info("%s map line processed." % _log_counter)
-                map_line, map_line_data = mapping
-                map_line.write(map_line_data)
-                processed += 1
-            else:
-                _logger.info("%s map line skipped." % _log_counter)
-                skipped += 1
+
+        if not need_update_mappings:
+            skipped = len(mappings)
+            return processed, skipped
+
+        def _prepare_map_line_data(mapping):
+            map_line, map_line_data = mapping
+            return dict(dict([('id', map_line.id)]), **map_line_data)
+
+        map_line_datas = list(map(_prepare_map_line_data, need_update_mappings))
+
+        # Prepare SQL Query
+        tmp_map_line_columns = [
+            "id int4", "map_id int4", "mp_account_id int4", "marketplace varchar", "state varchar", "product_id int4",
+            "mp_product_id int4", "mp_product_variant_id int4", "generated_by_mapping bool", "map_type varchar"]
+        _tmp_tbl_name = 'tmp_map_line_%s' % uuid.uuid4().hex[:8]
+        map_line_update_columns = [
+            "%(col)s = %(tmp_tbl)s.%(col)s" % {'col': col, 'tmp_tbl': _tmp_tbl_name}
+            for col in map_line_datas[0].keys() if col != 'id'
+        ]
+        _sql_create_temp_table = "CREATE TEMP TABLE %s (%s);" % (_tmp_tbl_name, ','.join(tmp_map_line_columns))
+        _sql_update_map_line_table = "UPDATE mp_map_product_line " \
+                                     "SET %(col)s FROM %(tmp_tbl)s WHERE mp_map_product_line.id = %(tmp_tbl)s.id;" % {
+                                         'col': ','.join(map_line_update_columns), 'tmp_tbl': _tmp_tbl_name}
+        _sql_drop_temp_table = "DROP TABLE %s;" % _tmp_tbl_name
+
+        # Execute SQL Query
+        self._cr.execute(_sql_create_temp_table)
+        pg_copy_from(_tmp_tbl_name, map_line_datas)
+        self._cr.execute(_sql_update_map_line_table)
+        self._cr.execute(_sql_drop_temp_table)
+
+        processed = len(map_line_datas)
+        skipped = len(mappings) - processed
+
         return processed, skipped
