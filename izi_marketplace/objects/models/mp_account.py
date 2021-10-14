@@ -123,6 +123,31 @@ class MarketplaceAccount(models.Model):
             return getattr(self, '%s_get_products' % self.marketplace)()
 
     @api.multi
+    def action_map_product(self):
+        product_map_obj = self.env['mp.map.product']
+
+        self.ensure_one()
+
+        product_map = product_map_obj.search([
+            ('marketplace', '=', self.marketplace),
+            ('mp_account_id', '=', self.id),
+        ])
+
+        if not product_map.exists():
+            product_map = product_map_obj.create({
+                'name': 'Product Mapping - %s' % self.name,
+                'marketplace': self.marketplace,
+                'mp_account_id': self.id,
+            })
+
+        action = self.env.ref('izi_marketplace.action_window_mp_map_product').read()[0]
+        action.update({
+            'res_id': product_map.id,
+            'views': [(self.env.ref('izi_marketplace.form_mp_map_product').id, 'form')],
+        })
+        return action
+
+    @api.multi
     def action_view_mp_product(self):
         self.ensure_one()
         action = self.env.ref('izi_marketplace.action_window_mp_product_view_per_marketplace').read()[0]

@@ -36,7 +36,9 @@
                     states="authenticated"/>
             <button name="action_get_products" string="2. Get Products" class="oe_highlight" type="object"
                     states="authenticated"/>
-            <button name="%(izi_marketplace.action_window_wiz_mp_order)d" string="3. Get Orders" class="oe_highlight"
+            <button name="action_map_product" string="3. Map Products" class="oe_highlight" type="object"
+                    states="authenticated"/>
+            <button name="%(izi_marketplace.action_window_wiz_mp_order)d" string="4. Get Orders" class="oe_highlight"
                     type="action" states="authenticated" context="{'default_mp_account_id': active_id}"/>
             <button name="action_reauth" string="Re-Authenticate" type="object" states="authenticated"/>
             <field name="state" widget="statusbar" statusbar_visible="new,authenticated"/>
