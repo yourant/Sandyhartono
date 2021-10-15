@@ -42,6 +42,9 @@ def pagination_date_range(from_date, to_date, max_interval_day=3):
     one_second = relativedelta(seconds=1)
     interval_day = relativedelta(days=max_interval_day)
 
+    if from_date == to_date:
+        return [(from_date, to_date)]
+
     while from_date < to_date:
         total_days = (to_date - from_date).days
 
