@@ -262,8 +262,8 @@ class SaleOrder(models.Model):
                                      retried, max_retry, invoice_number, str(e)), level='warning')
                     time.sleep(1)
                     mp_account.tokopedia_register_public_key()
-                    tp_data_detail_order = tp_order.get_order_detail(
-                        order_id=raw_data_with_encrypted_content['order_id'])
+                    tp_data_detail_order = merge_dict(raw_data_with_encrypted_content, tp_order.get_order_detail(
+                        order_id=raw_data_with_encrypted_content['order_id']))
                     return self.tokopedia_decrypt_order(tp_data_detail_order, private_key, retried=retried)
                 else:
                     self._logger('tokopedia',
@@ -289,10 +289,32 @@ class SaleOrder(models.Model):
                     raise ValidationError('Please define delivery product on "%s"' % tp_logistic_name)
                 order.write({
                     'order_line': [(0, 0, {
+                        'sequence': 999,
                         'product_id': delivery_product.id,
                         'name': tp_logistic_name,
                         'product_uom_qty': 1,
                         'price_unit': tp_order_shipping.get('shipping_price', 0),
                         'is_delivery': True
+                    })]
+                })
+
+    @api.multi
+    def tokopedia_generate_insurance_line(self):
+        for order in self:
+            insurance_line = order.order_line.filtered(lambda l: l.is_insurance)
+            if not insurance_line:
+                tp_order_raw = json.loads(order.raw, strict=False)
+                insurance_cost = json_digger(tp_order_raw, 'order_summary/amt/insurance_cost', default=0)
+                insurance_product = order.mp_account_id.insurance_product_id
+                if not insurance_product:
+                    raise ValidationError(
+                        'Please define insurance product on this marketplace account: "%s"' % order.mp_account_id.name)
+                order.write({
+                    'order_line': [(0, 0, {
+                        'sequence': 999,
+                        'product_id': insurance_product.id,
+                        'product_uom_qty': 1,
+                        'price_unit': insurance_cost,
+                        'is_insurance': True
                     })]
                 })

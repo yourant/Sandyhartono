@@ -298,8 +298,7 @@ class MarketplaceAccount(models.Model):
 
                 # If no existing order OR mp status changed on existing order, then fetch new detail order
                 no_existing_order = not existing_order
-                mp_status_changed = existing_order and (
-                            existing_order.mp_order_status != str(tp_data_order['order_status']))
+                mp_status_changed = existing_order.mp_order_status != str(tp_data_order['order_status'])
                 if no_existing_order or mp_status_changed:
                     notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
                         str(len(tp_data_detail_orders) + 1), len(tp_data_orders), tp_invoice_number
