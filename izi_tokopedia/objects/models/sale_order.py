@@ -93,6 +93,9 @@ class SaleOrder(models.Model):
             'mp_order_date': (
                 'create_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
             ),
+            'date_order': (
+                'create_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
+            ),
             'mp_order_last_update_date': (
                 'update_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
             ),
