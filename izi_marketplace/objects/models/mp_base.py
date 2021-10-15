@@ -557,6 +557,24 @@ class MarketplaceBase(models.AbstractModel):
         return records
 
     @api.model
+    def pg_create_table(self, table_name, columns, temp=False):
+        """Do CREATE TABLE query to database directly."""
+
+        _sql = "CREATE %s %s (%s)" % (
+            "TEMP TABLE" if temp else "TABLE",
+            table_name,
+            ', '.join(columns)
+        )
+        self._cr.execute(_sql)
+
+    @api.model
+    def pg_drop_table(self, table_name):
+        """Do DROP TABLE query to database directly."""
+
+        _sql = "DROP TABLE %s" % table_name
+        self._cr.execute(_sql)
+
+    @api.model
     def pg_select(self, table_name, columns, where=None, null_value=None):
         """Do SELECT query from database directly and return its result."""
 
@@ -572,6 +590,21 @@ class MarketplaceBase(models.AbstractModel):
                 if value == 'False':
                     result[field] = null_value
         return results
+
+    @api.model
+    def pg_update(self, table_name, update_columns, from_table=None, where=None):
+        """Do UPDATE query to database directly."""
+
+        # noinspection SqlWithoutWhere
+        _sql = "UPDATE %s SET %s" % (table_name, ', '.join(update_columns))
+
+        if from_table:
+            _sql = "%s FROM %s" % (_sql, from_table)
+
+        if where:
+            _sql = "%s WHERE %s" % (_sql, where)
+
+        self._cr.execute(_sql)
 
     @api.model
     def pg_copy_from(self, table_name, record_datas, null_value=None):

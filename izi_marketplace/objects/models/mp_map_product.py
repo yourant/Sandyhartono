@@ -234,6 +234,7 @@ class MarketplaceMapProduct(models.Model):
 
         # Process mp_products
         _logger.info("Creating products for %s unmapped map lines..." % len(unmapped_map_lines))
+        _notify('info', "Creating products for %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=True)
 
         # Process mp_products_without_variant: Create product.template
         set_values = {
@@ -425,7 +426,6 @@ class MarketplaceMapProductLine(models.Model):
     def do_mapping(self):
         get_product_or_variant = self.get_product_or_variant
         check_need_update = self.check_need_update
-        pg_copy_from = self.env['mp.base'].pg_copy_from
 
         mappings = [
             (map_line, map_line.map_id.with_context({'index': index, 'count': len(self)})
@@ -446,25 +446,22 @@ class MarketplaceMapProductLine(models.Model):
         map_line_datas = list(map(_prepare_map_line_data, need_update_mappings))
 
         # Prepare SQL Query
+        tmp_tbl_name = 'tmp_map_line_%s' % uuid.uuid4().hex[:8]
         tmp_map_line_columns = [
             "id int4", "map_id int4", "mp_account_id int4", "marketplace varchar", "state varchar", "product_id int4",
-            "mp_product_id int4", "mp_product_variant_id int4", "generated_by_mapping bool", "map_type varchar"]
-        _tmp_tbl_name = 'tmp_map_line_%s' % uuid.uuid4().hex[:8]
+            "mp_product_id int4", "mp_product_variant_id int4", "generated_by_mapping bool", "map_type varchar"
+        ]
         map_line_update_columns = [
-            "%(col)s = %(tmp_tbl)s.%(col)s" % {'col': col, 'tmp_tbl': _tmp_tbl_name}
+            "%(col)s = %(tmp_tbl)s.%(col)s" % {'col': col, 'tmp_tbl': tmp_tbl_name}
             for col in map_line_datas[0].keys() if col != 'id'
         ]
-        _sql_create_temp_table = "CREATE TEMP TABLE %s (%s);" % (_tmp_tbl_name, ','.join(tmp_map_line_columns))
-        _sql_update_map_line_table = "UPDATE mp_map_product_line " \
-                                     "SET %(col)s FROM %(tmp_tbl)s WHERE mp_map_product_line.id = %(tmp_tbl)s.id;" % {
-                                         'col': ','.join(map_line_update_columns), 'tmp_tbl': _tmp_tbl_name}
-        _sql_drop_temp_table = "DROP TABLE %s;" % _tmp_tbl_name
 
         # Execute SQL Query
-        self._cr.execute(_sql_create_temp_table)
-        pg_copy_from(_tmp_tbl_name, map_line_datas)
-        self._cr.execute(_sql_update_map_line_table)
-        self._cr.execute(_sql_drop_temp_table)
+        self.env['mp.base'].pg_create_table(tmp_tbl_name, tmp_map_line_columns, temp=True)
+        self.env['mp.base'].pg_copy_from(tmp_tbl_name, map_line_datas)
+        self.env['mp.base'].pg_update("mp_map_product_line", map_line_update_columns, from_table=tmp_tbl_name,
+                                      where="mp_map_product_line.id = %s.id" % tmp_tbl_name)
+        self.env['mp.base'].pg_drop_table(tmp_tbl_name)
 
         processed = len(map_line_datas)
         skipped = len(mappings) - processed
