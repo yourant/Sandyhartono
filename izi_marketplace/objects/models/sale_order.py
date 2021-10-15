@@ -74,6 +74,10 @@ class SaleOrder(models.Model):
     mp_recipient_address_country = fields.Char(string="Recipient Country", readonly=True)
     mp_recipient_address_zip = fields.Char(string="Recipient ZIP", readonly=True)
 
+    # MP Amounts
+    mp_amount_total = fields.Monetary(string="MP Total", readonly=True)
+    mp_amount_total_info = fields.Char(string="MP Total Info", compute="_compute_mp_amount_total_info")
+
     @classmethod
     def _build_model_attributes(cls, pool):
         super(SaleOrder, cls)._build_model_attributes(pool)
@@ -141,6 +145,14 @@ class SaleOrder(models.Model):
                     order.mp_order_status_notes = mp_order_status_notes.get(order.mp_order_status, default_notes)
                 else:
                     order.mp_order_status_notes = False
+
+    @api.multi
+    def _compute_mp_amount_total_info(self):
+        for order in self:
+            order.mp_amount_total_info = False
+            if order.amount_total != order.mp_amount_total:
+                order.mp_amount_total_info = "WARNING: Amount total of Sale Order is different with amount total of " \
+                                             "marketplace order! "
 
     @api.model
     def lookup_partner_shipping(self, order_values, default_customer=None):

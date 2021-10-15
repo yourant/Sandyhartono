@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 
+import pytz
 from odoo import api, fields, models, sql_db
 from odoo.exceptions import ValidationError
 
@@ -295,6 +296,12 @@ class MarketplaceBase(models.AbstractModel):
     @api.model
     def generate_signature(self, raw):
         return hashlib.md5(json.dumps(raw).encode()).hexdigest()
+
+    @api.model
+    def datetime_convert_tz(self, dt, dt_tz, to_tz):
+        dt_tz = pytz.timezone(dt_tz)
+        to_tz = pytz.timezone(to_tz)
+        return dt_tz.localize(dt).astimezone(to_tz)
 
     @api.model
     def enable_currencies(self, xml_ids):

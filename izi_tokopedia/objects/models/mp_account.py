@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import json
+from datetime import datetime
 
 from Cryptodome.PublicKey import RSA
+from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models
 
 from odoo.addons.izi_marketplace.objects.utils.tools import mp, json_digger
@@ -271,6 +273,7 @@ class MarketplaceAccount(models.Model):
         order_obj = self.env['sale.order'].with_context(mp_account_ctx)
         _notify = self.env['mp.base']._notify
         _logger = self.env['mp.base']._logger
+        datetime_convert_tz = self.env['mp.base'].datetime_convert_tz
 
         self.ensure_one()
 
@@ -291,17 +294,17 @@ class MarketplaceAccount(models.Model):
                 'limit': mp_account_ctx.get('order_limit')
             })
             tp_data_orders = tp_order.get_order_list(**params)
-            for tp_data_order in tp_data_orders:
+            for index, tp_data_order in enumerate(tp_data_orders):
                 tp_invoice_number = tp_data_order.get('invoice_ref_num')
                 tp_order_id = tp_data_order.get('order_id')
                 existing_order = order_obj.search_mp_records('tokopedia', str(tp_order_id)).exists()
 
                 # If no existing order OR mp status changed on existing order, then fetch new detail order
                 no_existing_order = not existing_order
-                mp_status_changed = existing_order.mp_order_status != str(tp_data_order['order_status'])
-                if no_existing_order or mp_status_changed:
+                mp_status_changed = existing_order.tp_order_status != str(tp_data_order['order_status'])
+                if no_existing_order or mp_status_changed or mp_account_ctx.get('force_update'):
                     notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
-                        str(len(tp_data_detail_orders) + 1), len(tp_data_orders), tp_invoice_number
+                        str(index + 1), len(tp_data_orders), tp_invoice_number
                     )
                     _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
                     tp_data_detail_order = tp_order.get_order_detail(order_id=tp_order_id)
@@ -319,6 +322,20 @@ class MarketplaceAccount(models.Model):
             mp_invoice_number = kwargs.get('mp_invoice_number')
             params.update({'invoice_num': mp_invoice_number})
             tp_data_detail_order = tp_order.get_order_detail(**params)
+
+            # Get order summary
+            tp_order_create_time = datetime.fromisoformat(tp_data_detail_order['create_time'][:-1].split('.')[0])
+            tp_order_create_time_utc = datetime_convert_tz(tp_order_create_time, 'Asia/Jakarta', 'UTC')
+            order_summary_params = {
+                'from_date': tp_order_create_time_utc.replace(tzinfo=None) - relativedelta(seconds=3),
+                'to_date': tp_order_create_time_utc.replace(tzinfo=None) + relativedelta(seconds=3),
+                'shop_id': self.tp_shop_id.shop_id,
+                'limit': mp_account_ctx.get('order_limit'),
+            }
+            tp_data_orders = tp_order.get_order_list(**order_summary_params)
+            tp_data_order = list(filter(lambda o: o['invoice_ref_num'] == mp_invoice_number, tp_data_orders))[0]
+            tp_data_detail_order.update({'order_summary': tp_data_order})
+
             tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(
                 raw_data=tp_data_detail_order, endpoint_key='sanitize_decrypt')
             tp_data_raws.extend(tp_data_raw)

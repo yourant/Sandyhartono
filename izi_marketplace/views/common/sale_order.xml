@@ -22,7 +22,8 @@
           <filter string="Done" name="done" domain="[('mp_order_status','=', 'done')]"/>
           <filter string="Returned" name="return" domain="[('mp_order_status','=', 'return')]"/>
           <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
-          <filter name="group_by_marketplace_account" string="Marketplace Account" context="{'group_by': 'mp_account_id'}"/>
+          <filter name="group_by_marketplace_account" string="Marketplace Account"
+                  context="{'group_by': 'mp_account_id'}"/>
         </xpath>
       </field>
     </record>
@@ -70,6 +71,16 @@
       <field name="arch" type="xml">
         <xpath expr="//field[@name='order_line']/.." position="after">
           <page string="Marketplace" name="izi_info">
+            <div attrs="{'invisible': ['|', ('mp_amount_total_info', '=', False), ('mp_amount_total_info', '=', '')]}">
+              <div class="alert alert-warning text-center o_form_header">
+                <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
+                <div>
+                  <strong>
+                    <field name="mp_amount_total_info"/>
+                  </strong>
+                </div>
+              </div>
+            </div>
             <div>
               <!-- For Action Button -->
             </div>
@@ -106,6 +117,9 @@
                 <field name="mp_delivery_type" readonly="1" string="Delivery Type"/>
                 <field name="mp_accept_deadline" readonly="1"/>
                 <field name="mp_shipping_deadline" readonly="1"/>
+              </group>
+              <group string="Amounts Information">
+                <field name="mp_amount_total"/>
               </group>
             </group>
           </page>

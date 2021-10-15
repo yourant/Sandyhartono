@@ -86,33 +86,12 @@ class SaleOrder(models.Model):
             'mp_invoice_number': ('invoice_number', None),
             'tp_invoice_url': ('invoice_url', None),
             'mp_payment_method_info': ('payment_info/gateway_name', None),
-            'mp_payment_date': (
-                'payment_info/payment_date',
-                lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
-            ),
-            'mp_order_date': (
-                'create_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
-            ),
-            'date_order': (
-                'create_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
-            ),
-            'mp_order_last_update_date': (
-                'update_time', lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
-            ),
-            'mp_accept_deadline': (
-                'shipment_fulfillment/accept_deadline',
-                lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
-            ),
 
             # MP Order Shipment
             'mp_awb_number': ('order_info/shipping_info/awb', None),
             'mp_delivery_carrier_name': ('order_info/shipping_info/logistic_name', None),
             'mp_delivery_carrier_type': ('order_info/shipping_info/logistic_service', None),
             'shipping_id': ('order_info/shipping_info/shipping_id', lambda env, r: str(r)),
-            'mp_shipping_deadline': (
-                'shipment_fulfillment/confirm_shipping_deadline',
-                lambda env, r: fields.Datetime.to_string(datetime.fromisoformat(r[:-1].split('.')[0]))
-            ),
 
             # MP Buyer Info
             'mp_buyer_id': ('buyer_info/buyer_id', lambda env, r: str(r)),
@@ -131,9 +110,26 @@ class SaleOrder(models.Model):
             'tp_order_detail': ('order_info/order_detail', None),
 
             # MP Order Amount
-            'open_amt': ('open_amt', None),  # Amount Total
+            'mp_amount_total': ('order_summary/amt/ttl_amount', None),  # Amount Total
             'item_price': ('item_price', None),  # Amount Total (Items Only)
         }
+
+        def _handle_isoformat_to_dt_str(env, data):
+            isoformat = data[:-1].split('.')[0]
+            dt = env['mp.base'].datetime_convert_tz(datetime.fromisoformat(isoformat), 'Asia/Jakarta', 'UTC')
+            return fields.Datetime.to_string(dt)
+
+        mp_field_mapping.update({
+            # MP Order Transaction & Payment
+            'mp_payment_date': ('payment_info/payment_date', _handle_isoformat_to_dt_str),
+            'mp_order_date': ('create_time', _handle_isoformat_to_dt_str),
+            'date_order': ('create_time', _handle_isoformat_to_dt_str),
+            'mp_order_last_update_date': ('update_time', _handle_isoformat_to_dt_str),
+            'mp_accept_deadline': ('shipment_fulfillment/accept_deadline', _handle_isoformat_to_dt_str),
+
+            # MP Order Shipment
+            'mp_shipping_deadline': ('shipment_fulfillment/confirm_shipping_deadline', _handle_isoformat_to_dt_str),
+        })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(SaleOrder, cls)._add_rec_mp_field_mapping(mp_field_mappings)
