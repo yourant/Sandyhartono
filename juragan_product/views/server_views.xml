@@ -102,25 +102,9 @@
                             </tree>
                         </field>
                         <br/>
-						<button class="btn-izi" type="object" name="start_product_mapping" string="Map Product" />
-						<button class="btn-izi-danger" type="object" name="delete_product_mapping" string="Delete" icon="fa-trash" />
-                        <field name="product_mapping_ids">
-                            <tree editable="bottom" delete="0" create="0">
-                                <field name="product_product_izi_id" string="IZIID" readonly="1"/>
-                                <field name="reference" string="Marketplace Product" readonly="1"/>
-                                <field name="product_id" string="Odoo Product" domain="[('izi_id', '=', False)]"/>
-                                <field name="order_product_id" string="Product in Order"/>
-                            </tree>
-                        </field>
-                        <!-- TODO: Comment out Location Mapping -->
-						<!-- <button type="object" name="start_location_mapping" string="Start Location Mapping" />
-                        <field name="location_mapping_ids">
-                            <tree editable="bottom" delete="0" create="0">
-                                <field name="location_id" string="Location" domain="[('usage', '=', 'internal')]"/>
-                                <field name="reference" string="Reference" readonly="1"/>
-                            </tree>
-                        </field>
-                        <br/> -->
+						<button class="btn-izi" type="object" name="start_product_mapping" string="Map Product" invisible="1"/>
+						<button class="btn-izi-danger" type="object" name="delete_product_mapping" string="Delete" icon="fa-trash" invisible="1"/>
+						<button class="btn-izi" type="object" name="action_view_product_mapping_view" string="Product Mapping"/>
                     </page>
                 </page>
             </field>

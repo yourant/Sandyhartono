@@ -1342,57 +1342,40 @@ class WebhookServer(models.Model):
             if not mp_account:
                 raise UserError('Marketplace Account not found!')
 
-            # Get Partner From Account or Search Partner With Same Phone / Mobile Or Email
-            partner = False
-            if mp_account.partner_id:
-                partner = mp_account.partner_id
-            if not partner and values.get('mp_buyer_id'):
-                partner = self.env['res.partner'].sudo().search([('buyer_id', '=', values.get('mp_buyer_id'))], limit=1)
-            if not partner and values.get('mp_buyer_username'):
-                partner = self.env['res.partner'].sudo().search([('buyer_username', '=', values.get('mp_buyer_username'))], limit=1)
-            if not partner and values.get('mp_buyer_phone'):
-                partner = self.env['res.partner'].sudo().search([('phone', '=', values.get('mp_buyer_phone'))], limit=1)
-            if not partner and values.get('mp_buyer_email'):
-                partner = self.env['res.partner'].sudo().search([('email', '=', values.get('mp_buyer_email'))], limit=1)
+            # CUSTOM FASTPRINT -> ONLY CREATE PARENT PARTNER, NOT DELIVERY PARTNER
+            # Get Partner From Account or Search Partner With Same Phone / Mobile Or Email For Tokopedia
+            _logger.info('Create Customer')
+            partner = self.env['res.partner'].sudo().search([('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
+            if not partner:
+                partner = self.env['res.partner'].sudo().search([('street', '=', values.get('mp_recipient_address_full').upper())], limit=1)
 
-            # Create Partner From Buyer Information
+            res_country = self.env['res.country'].sudo().search([('name', '=ilike', values.get('mp_recipient_address_country'))], limit=1)
+            if not res_country:
+                res_country = self.env['res.country'].sudo().search([('code', '=ilike', values.get('mp_recipient_address_country'))], limit=1)
+            
+            res_country_state = self.env['res.country.state'].sudo().search([('name', '=ilike', values.get('mp_recipient_address_state'))], limit=1)
+            if not res_country_state:
+                res_country_state = self.env['res.country.state'].sudo().search([('code', '=ilike', values.get('mp_recipient_address_state'))], limit=1)
+
             if not partner:
                 partner = self.env['res.partner'].sudo().create({
-                    'name': values.get('mp_buyer_name'),
-                    'buyer_id': values.get('mp_buyer_id'),
-                    'buyer_username': values.get('mp_buyer_username'),
-                    'phone': values.get('mp_buyer_phone'),
-                    'email': values.get('mp_buyer_email'),
-                })
-                
-            # Create Shipping Address Under That Partner
-            shipping_address = False
-            if values.get('mp_recipient_address_phone'):
-                shipping_address = self.env['res.partner'].sudo().search([('parent_id', '=', partner.id), ('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
-            
-            # if not shipping_address:
-            #     shipping_address = self.env['res.partner'].sudo().search(
-            #         [('name', '=', values.get('mp_recipient_address_name')), ('parent_id', '=', partner.id)], limit=1)
-
-            if not shipping_address:
-                shipping_address = self.env['res.partner'].sudo().create({
-                    'type': 'delivery',
-                    'parent_id': partner.id,
+                    'name': values.get('mp_recipient_address_name').upper() if (values.get('mp_recipient_address_name') != None and values.get('mp_recipient_address_name') != False) else False,
+                    'street': values.get('mp_recipient_address_full').upper() if (values.get('mp_recipient_address_full') != None and values.get('mp_recipient_address_full') != False) else False,
+                    'city': values.get('mp_recipient_address_city').upper() if (values.get('mp_recipient_address_city') != None and values.get('mp_recipient_address_city') != False) else False,
                     'phone': values.get('mp_recipient_address_phone'),
-                    'name': values.get('mp_recipient_address_name'),
-                    'street': values.get('mp_recipient_address_full'),
-                    'city': values.get('mp_recipient_address_city'),
-                    'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
                     'zip': values.get('mp_recipient_address_zipcode'),
+                    'state_id': res_country_state.id if res_country_state else False,
+                    'country_id': res_country.id if res_country else False,
                 })
             else:
-                shipping_address.sudo().write({
-                    'name': values.get('mp_recipient_address_name'),
-                    'street': values.get('mp_recipient_address_full'),
-                    'city': values.get('mp_recipient_address_city'),
-                    'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
+                partner.sudo().write({
+                    'name': values.get('mp_recipient_address_name').upper() if (values.get('mp_recipient_address_name') != None and values.get('mp_recipient_address_name') != False) else False,
+                    'street': values.get('mp_recipient_address_full').upper() if (values.get('mp_recipient_address_full') != None and values.get('mp_recipient_address_full') != False) else False,
+                    'city': values.get('mp_recipient_address_city').upper() if (values.get('mp_recipient_address_city') != None and values.get('mp_recipient_address_city') != False) else False,
+                    'phone': values.get('mp_recipient_address_phone'),
                     'zip': values.get('mp_recipient_address_zipcode'),
-                    'type': 'delivery',
+                    'state_id': res_country_state.id if res_country_state else False,
+                    'country_id': res_country.id if res_country else False,
                 })
 
             # Sale Order only update order_status and resi
@@ -1419,7 +1402,6 @@ class WebhookServer(models.Model):
                 'shipping_date': res['shipping_date'],
                 'mp_accept_deadline': res['mp_accept_deadline'],
                 'partner_id': partner.id,
-                'partner_shipping_id': shipping_address.id,
                 'partner_invoice_id': partner.id,
                 'company_id': res['company_id'],
             }
@@ -1481,14 +1463,19 @@ class WebhookServer(models.Model):
             mp_lazada_id = values.get('mp_lazada_id', False)
             mp_blibli_id = values.get('mp_blibli_id', False)
             mp_account = False
+            marketplace = False
             if mp_tokopedia_id:
                 mp_account = self.env['mp.tokopedia'].sudo().browse(mp_tokopedia_id)
+                marketplace = 'TOKOPEDIA'
             elif mp_shopee_id:
                 mp_account = self.env['mp.shopee'].sudo().browse(mp_shopee_id)
+                marketplace = 'SHOPEE'
             elif mp_lazada_id:
                 mp_account = self.env['mp.lazada'].sudo().browse(mp_lazada_id)
+                marketplace = 'LAZADA'
             elif mp_blibli_id:
                 mp_account = self.env['mp.blibli'].sudo().browse(mp_blibli_id)
+                marketplace = 'BLIBLI'
             if not mp_account:
                 raise UserError('Marketplace Account not found!')
             
@@ -1500,64 +1487,42 @@ class WebhookServer(models.Model):
             if mp_account.company_id:
                 res['company_id'] = mp_account.company_id.id
 
+            # CUSTOM FASTPRINT -> ONLY CREATE PARENT PARTNER, NOT DELIVERY PARTNER
             # Get Partner From Account or Search Partner With Same Phone / Mobile Or Email For Tokopedia
             _logger.info('Create Customer')
-            partner = False
-            if mp_account.partner_id:
-                partner = mp_account.partner_id
-            if not partner and values.get('mp_buyer_id'):
-                partner = self.env['res.partner'].sudo().search([('buyer_id', '=', values.get('mp_buyer_id'))], limit=1)
-            if not partner and values.get('mp_buyer_username'):
-                partner = self.env['res.partner'].sudo().search([('buyer_username', '=', values.get('mp_buyer_username'))], limit=1)
-            if not partner and values.get('mp_buyer_phone'):
-                partner = self.env['res.partner'].sudo().search([('phone', '=', values.get('mp_buyer_phone'))], limit=1)
-            if not partner and values.get('mp_buyer_email'):
-                partner = self.env['res.partner'].sudo().search([('email', '=', values.get('mp_buyer_email'))], limit=1)
+            partner = self.env['res.partner'].sudo().search([('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
+            if not partner:
+                partner = self.env['res.partner'].sudo().search([('street', '=', values.get('mp_recipient_address_full').upper())], limit=1)
 
-            # Create Partner From Buyer Information
+            res_country = self.env['res.country'].sudo().search([('name', '=ilike', values.get('mp_recipient_address_country'))], limit=1)
+            if not res_country:
+                res_country = self.env['res.country'].sudo().search([('code', '=ilike', values.get('mp_recipient_address_country'))], limit=1)
+            
+            res_country_state = self.env['res.country.state'].sudo().search([('name', '=ilike', values.get('mp_recipient_address_state'))], limit=1)
+            if not res_country_state:
+                res_country_state = self.env['res.country.state'].sudo().search([('code', '=ilike', values.get('mp_recipient_address_state'))], limit=1)
+
             if not partner:
                 partner = self.env['res.partner'].sudo().create({
-                    'name': values.get('mp_buyer_name'),
-                    'buyer_id': values.get('mp_buyer_id'),
-                    'buyer_username': values.get('mp_buyer_username'),
-                    'phone': values.get('mp_buyer_phone'),
-                    'email': values.get('mp_buyer_email'),
-                })
-            # Create Shipping Address Under That Partner
-            _logger.info('Create Shipping Address')
-            _logger.info('Data Shipping Address %s %s - %s' % (values.get('mp_recipient_address_phone'), values.get('mp_recipient_address_name'), partner.name))
-            shipping_address = False
-            
-            if values.get('mp_recipient_address_phone'):
-                shipping_address = self.env['res.partner'].sudo().search([('parent_id', '=', partner.id), ('phone', '=', values.get('mp_recipient_address_phone'))], limit=1)
-            
-            # if not shipping_address:
-            #     shipping_address = self.env['res.partner'].sudo().search(
-            #         [('name', '=', values.get('mp_recipient_address_name')), ('parent_id', '=', partner.id)], limit=1)
-
-            if not shipping_address and self.is_shipping_address:
-                shipping_address = self.env['res.partner'].sudo().create({
-                    'type': 'delivery',
-                    'parent_id': partner.id,
+                    'name': values.get('mp_recipient_address_name').upper() if (values.get('mp_recipient_address_name') != None and values.get('mp_recipient_address_name') != False) else False,
+                    'street': values.get('mp_recipient_address_full').upper() if (values.get('mp_recipient_address_full') != None and values.get('mp_recipient_address_full') != False) else False,
+                    'city': values.get('mp_recipient_address_city').upper() if (values.get('mp_recipient_address_city') != None and values.get('mp_recipient_address_city') != False) else False,
                     'phone': values.get('mp_recipient_address_phone'),
-                    'name': values.get('mp_recipient_address_name'),
-                    'street': values.get('mp_recipient_address_full'),
-                    'city': values.get('mp_recipient_address_city'),
-                    'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
                     'zip': values.get('mp_recipient_address_zipcode'),
+                    'state_id': res_country_state.id if res_country_state else False,
+                    'country_id': res_country.id if res_country else False,
                 })
             else:
-                shipping_address.sudo().write({
-                    'name': values.get('mp_recipient_address_name'),
-                    'street': values.get('mp_recipient_address_full'),
-                    'city': values.get('mp_recipient_address_city'),
-                    'street2': values.get('mp_recipient_address_district', '') + ' ' + values.get('mp_recipient_address_city', '') + ' ' + values.get('mp_recipient_address_state', '') + ' ' + values.get('mp_recipient_address_country', ''),
+                partner.sudo().write({
+                    'name': values.get('mp_recipient_address_name').upper() if (values.get('mp_recipient_address_name') != None and values.get('mp_recipient_address_name') != False) else False,
+                    'street': values.get('mp_recipient_address_full').upper() if (values.get('mp_recipient_address_full') != None and values.get('mp_recipient_address_full') != False) else False,
+                    'city': values.get('mp_recipient_address_city').upper() if (values.get('mp_recipient_address_city') != None and values.get('mp_recipient_address_city') != False) else False,
+                    'phone': values.get('mp_recipient_address_phone'),
                     'zip': values.get('mp_recipient_address_zipcode'),
-                    'type': 'delivery',
+                    'state_id': res_country_state.id if res_country_state else False,
+                    'country_id': res_country.id if res_country else False,
                 })
-            # Replace Values
             res['partner_id'] = partner.id
-            res['partner_shipping_id'] = shipping_address.id if shipping_address else partner.id
             res['partner_invoice_id'] = partner.id
 
             # Add Order Component
@@ -1679,6 +1644,14 @@ class WebhookServer(models.Model):
                             }))
 
             res['order_line'] = values['order_line']
+
+            # CUSTOM FASTPRINT -> SET CRM TEAM 
+            res['team_id'] = 6
+
+            # CUSTOM FASTPRINT -> SET NOTE ORDER
+            res['note'] = '- PAID VIA %s %s\n' % (marketplace, self.env['res.company'].sudo().search([('id', '=', values.get('company_id'))], limit=1).name)
+            res['note'] += '- %s\n' % (res['mp_invoice_number'])
+
             _logger.info('Preparation Done')
         return res
 

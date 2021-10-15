@@ -100,6 +100,7 @@
                                 <field name="mp_recipient_address_full" readonly="1"/>
                             </group>
                             <group string="Delivery Information">
+                                <field name="mp_delivery_weight" readonly="1" string="Weight (Kg)"/>
                                 <field name="mp_delivery_carrier_name" readonly="1"/>
                                 <field name="mp_delivery_carrier_type" readonly="1" string="Delivery Carrier Type"/>
                                 <field name="mp_awb_number" readonly="1"/>
@@ -114,6 +115,9 @@
                                             <field name="address_id"/>
                                     </tree>
                                 </field>
+                            </group>
+                            <group string="Additional Information">
+                                <field name="mp_notes" readonly="1" string="Notes"/>
                             </group>
                         </group>
                     </page>

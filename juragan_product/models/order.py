@@ -345,6 +345,7 @@ class SaleOrder(models.Model):
     tp_cancel_request_status = fields.Integer('Request Cancel Reason Status')
     tp_comment = fields.Text('Comment')
     mp_delivery_weight = fields.Float(string='Weight (KG)')
+    mp_notes = fields.Text(string='Notes')
 
     # Shopee
     mp_shopee_id = fields.Many2one('mp.shopee', string='Shopee Account', ondelete='cascade')
@@ -509,13 +510,6 @@ class SaleOrder(models.Model):
                         res = server.action_orders('accept_order', [order.izi_id], refresh=False)
                         if not (res and res.get('code') == 200):
                             raise UserError('Failed to Accept Order Tokopedia. %s' % str(res))
-                    # # Second, Get No Resi
-                    # res = server.action_orders('get_label', [order.izi_id])
-                    # if not (res and res.get('code') == 200):
-                    #     # raise UserError('Failed to Get No Resi Tokopedia. %s' % str(res))
-                    #     _logger.error('Failed to Get No Resi Tokopedia. %s' % str(res))
-                    # elif res.get('data') and res.get('data').get('awb_number'):
-                    #     order.mp_awb_number = res['data']['awb_number'][0]
         return super(SaleOrder, self).action_confirm()
 
     # TODO: Where is Shopee and Lazada Code?

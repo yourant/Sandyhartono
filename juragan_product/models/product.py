@@ -24,6 +24,10 @@ class ProductMapping(models.Model):
     name = fields.Char()
     default_code = fields.Char()
     product_id = fields.Many2one('product.product', 'Product')
+    product_id_set_by = fields.Selection([
+        ('system', 'System'), 
+        ('user', 'User'),
+    ], string='Set By')
     order_product_id = fields.Many2one('product.product', 'Product in Order')
     server_id = fields.Many2one('webhook.server', 'Server')
 
@@ -31,6 +35,14 @@ class ProductMapping(models.Model):
     _sql_constraints = [
         ('product_unique', 'unique(product_id, server_id)', 'You cannot select same products on product mapping.')
     ]
+
+    def write(self, vals):
+        for rec in self:
+            if not self._context.get('product_mapping_system'):
+                vals['product_id_set_by'] = 'user' if vals['product_id'] != False else False
+                super(ProductMapping, rec).write(vals)
+        return True
+        
 
 class WarehouseMapping(models.Model):
     _name = 'warehouse.mapping'
@@ -385,6 +397,7 @@ class ProductProduct(models.Model):
     izi_md5 = fields.Char()
 
     product_staging_ids = fields.Many2many('product.staging')
+    product_mapping_ids = fields.One2many('product.mapping', 'product_id')
 
     def init(self):     
         self.env.cr.execute("DROP INDEX IF EXISTS product_product_combination_unique")
@@ -1124,6 +1137,7 @@ class WebhookServer(models.Model):
                             product_product = pp_by_name[pd['name']]
                         if not product_product and pd['default_code'] in pp_by_default_code:
                             product_product = pp_by_default_code[pd['default_code']]
+
                         # Create or Update
                         if pd['id'] not in pm_by_izi_id:
                             values = {
@@ -1133,13 +1147,15 @@ class WebhookServer(models.Model):
                                 'name': pd['name'],
                                 'default_code': pd['default_code'],
                                 'server_id': self.id,
+                                'product_id_set_by': False,
                             }
                             # Check product_product
                             if product_product:
                                 if product_product.id not in mapped_product_ids:
                                     mapped_product_ids.append(product_product.id)
                                     values['product_id'] = product_product.id
-                            self.env['product.mapping'].sudo().create(values)
+                                    values['product_id_set_by'] = 'system'
+                            self.env['product.mapping'].sudo().with_context(product_mapping_system=True).create(values)
                         else:
                             values = {
                                 'product_product_izi_id': pd['id'],
@@ -1148,12 +1164,16 @@ class WebhookServer(models.Model):
                                 'name': pd['name'],
                                 'default_code': pd['default_code'],
                                 'server_id': self.id,
+                                'product_id_set_by': pm_by_izi_id[pd['id']].product_id_set_by if pm_by_izi_id[pd['id']].product_id_set_by != False else False,
                             }
                             if not pm_by_izi_id[pd['id']].product_id and product_product:
                                 if product_product.id not in mapped_product_ids:
                                     mapped_product_ids.append(product_product.id)
                                     values['product_id'] = product_product.id
-                            pm_by_izi_id[pd['id']].write(values)
+                                    values['product_id_set_by'] = 'system'
+                            elif pm_by_izi_id[pd['id']].product_id and product_product and pm_by_izi_id[pd['id']].product_id_set_by == False:
+                                values['product_id_set_by'] = 'system'
+                            pm_by_izi_id[pd['id']].with_context(product_mapping_system=True).write(values)
 
                             # pop product mapping, for checking data later
                             pm_by_izi_id.pop(pd['id'])
@@ -2134,4 +2154,15 @@ class WebhookServer(models.Model):
                 # #### self.env.cr.commit()
         return res
 
-        
+    def action_view_product_mapping_view(self):
+        self.ensure_one()
+        self.start_product_mapping()
+        action = self.env.ref(
+            'juragan_product.action_window_product_mapping_view').read()[0]
+        action.update({
+            'domain': [('server_id', '=', self.id)],
+            'context': {
+                'default_server_id': self.id
+            }
+        })
+        return action
