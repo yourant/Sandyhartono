@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="izi_marketplace.form_sale_order"/>
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='order_status']" position="inside">
-                    <field name="sp_order_status" readonly="1"/>
+                    <field name="sp_order_status" readonly="1" attrs="{'invisible':[('marketplace', '!=', 'shopee')]}"/>
                 </xpath>
             </field>
         </record>
