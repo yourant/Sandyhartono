@@ -4,7 +4,7 @@ import collections
 from copy import deepcopy
 
 
-def json_digger(data, tree_path):
+def json_digger(data, tree_path, default=None):
     if isinstance(data, list):
         result = []
         for d in data:
@@ -17,7 +17,7 @@ def json_digger(data, tree_path):
             try:
                 return data[current_tree]
             except KeyError:
-                return None
+                return default
         tree_path = '/'.join(tree)
         return json_digger(data[current_tree], tree_path)
     else:
