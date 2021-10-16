@@ -174,9 +174,9 @@ class SaleOrder(models.Model):
                     ('parent_id', '=', default_customer.id),
                     ('phone', '=', order_values.get('mp_recipient_address_phone'))
                 ], limit=1)
-                if not partner_shipping.exists():  # Then create new child partner of default customer
-                    partner_shipping_values.update({'parent_id': default_customer.id, 'type': 'delivery'})
-                    partner_shipping = partner_obj.create(partner_shipping_values)
+            if not partner_shipping.exists():  # Then create new child partner of default customer
+                partner_shipping_values.update({'parent_id': default_customer.id, 'type': 'delivery'})
+                partner_shipping = partner_obj.create(partner_shipping_values)
         else:  # Then look for child partner (delivery address) first
             if order_values.get('mp_recipient_address_phone'):
                 partner_shipping = partner_obj.search([
