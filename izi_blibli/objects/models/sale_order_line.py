@@ -7,14 +7,14 @@ from odoo import api, fields, models
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    bli_order_detail_id = fields.Char(string="Blibli Order Detail ID", required_if_marketplace="blibli")
+    bli_order_item_id = fields.Char(string="Blibli Order Item ID", required_if_marketplace="blibli")
 
     @classmethod
     def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
         if not mp_external_id_fields:
             mp_external_id_fields = []
 
-        mp_external_id_fields.append(('blibli', 'bli_order_detail_id'))
+        mp_external_id_fields.append(('blibli', 'bli_order_item_id'))
         super(SaleOrderLine, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
@@ -24,8 +24,8 @@ class SaleOrderLine(models.Model):
 
         marketplace = 'blibli'
         mp_field_mapping = {
-            'order_id': ('orderNo', None),
-            'bli_order_detail_id': ('orderItemNo', lambda env, r: str(r)),
+            'order_id': ('order_id', None),
+            'bli_order_item_id': ('orderItemNo', lambda env, r: str(r)),
             'name': ('productName', None),
             'price_unit': ('productPrice', None),
             'bli_weight': ('itemWeightInKg', None),
@@ -49,7 +49,7 @@ class SaleOrderLine(models.Model):
 
             return product.id
 
-        mp_field_mapping.update({'product_id': ('product_id', _handle_product_id)})
+        mp_field_mapping.update({'product_id': ('gdnItemSku', _handle_product_id)})
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(SaleOrderLine, cls)._add_rec_mp_field_mapping(mp_field_mappings)
