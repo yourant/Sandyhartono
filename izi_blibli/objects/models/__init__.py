@@ -8,3 +8,4 @@ from . import mp_product_image
 from . import mp_product_variant
 from . import mp_blibli_shop
 from . import sale_order
+from . import sale_order_line

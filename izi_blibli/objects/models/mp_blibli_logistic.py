@@ -70,3 +70,12 @@ class MPBlibliLogistic(models.Model):
             'shop_id': mp_account.bli_shop_id.id
         })
         return sanitized_data, values
+
+    @api.multi
+    def get_delivery_product(self):
+        self.ensure_one()
+        if self.product_id:
+            return self.product_id
+        if self.logistic_id.product_id:
+            return self.logistic_id.product_id
+        return self.env['product.product']

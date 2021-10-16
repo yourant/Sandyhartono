@@ -55,6 +55,7 @@ class MarketplaceAccount(models.Model):
             })
 
     @api.multi
+    @mp.blibli.capture_error
     def blibli_get_logistic(self):
         mp_account_ctx = self.generate_context()
         mp_blibli_logistic_obj = self.env['mp.blibli.logistic'].with_context(mp_account_ctx)
@@ -77,6 +78,7 @@ class MarketplaceAccount(models.Model):
         #     bli_data_raw, bli_data_sanitized, isinstance(bli_data_sanitized, list))
 
     @api.multi
+    @mp.blibli.capture_error
     def blibli_get_shop(self):
         self.ensure_one()
         mp_account_ctx = self.generate_context()
@@ -123,6 +125,7 @@ class MarketplaceAccount(models.Model):
         }
 
     @api.multi
+    @mp.blibli.capture_error
     def blibli_get_mp_product(self):
         mp_product_obj = self.env['mp.product']
 
@@ -150,6 +153,7 @@ class MarketplaceAccount(models.Model):
             mp_product_obj.log_skip(self.marketplace, check_existing_records['need_skip_records'])
 
     @api.multi
+    @mp.blibli.capture_error
     def blibli_get_mp_product_variant(self):
         mp_product_obj = self.env['mp.product']
         mp_product_variant_obj = self.env['mp.product.variant']
@@ -207,12 +211,21 @@ class MarketplaceAccount(models.Model):
                 'to_date': kwargs.get('to_date'),
                 'limit': mp_account_ctx.get('order_limit')
             })
-            bli_data_raw, bli_data_sanitized = bli_order.get_order_list(**params)
+            bli_data_raw = bli_order.get_order_list(**params)
         elif kwargs.get('params') == 'by_mp_invoice_number':
-            params.update({
-                'order_id': kwargs.get('mp_invoice_number')
-            })
-            bli_data_raw, bli_data_sanitized = bli_order.get_order_detail(**params)
+            pass
+            # params.update({
+            #     'order_id': kwargs.get('mp_invoice_number')
+            # })
+            # bli_data_raw, bli_data_sanitized = bli_order.get_order_detail(**params)
+
+        bli_order_raws, bli_data_sanitized = [], []
+        for data in bli_data_raw:
+            bli_order_data_raw, bli_order_data_sanitized = sale_order_obj.with_context(
+                mp_account_ctx)._prepare_mapping_raw_data(raw_data=data)
+            bli_order_raws.append(bli_order_data_raw)
+            bli_data_sanitized.append(bli_order_data_sanitized)
+
         check_existing_records_params = {
             'identifier_field': 'bli_order_id',
             'raw_data': bli_data_raw,
