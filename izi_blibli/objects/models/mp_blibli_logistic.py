@@ -17,6 +17,8 @@ class MPBlibliLogistic(models.Model):
     is_selected = fields.Boolean(string='Enabled', readonly=True, mp_raw=True)
     geolocation = fields.Boolean(string='Geolocation', readonly=True)
     logistics_code = fields.Char(string="Logistic Code", readonly=True)
+    product_id = fields.Many2one(comodel_name="product.product", string="Delivery Product", required=False,
+                                 default=lambda self: self._get_default_product_id())
 
     @classmethod
     def _build_model_attributes(cls, pool):
@@ -70,6 +72,13 @@ class MPBlibliLogistic(models.Model):
             'shop_id': mp_account.bli_shop_id.id
         })
         return sanitized_data, values
+
+    @api.model
+    def _get_default_product_id(self):
+        mp_delivery_product_tmpl = self.env.ref('izi_marketplace.product_tmpl_mp_delivery', raise_if_not_found=False)
+        if mp_delivery_product_tmpl:
+            return mp_delivery_product_tmpl.product_variant_id.id
+        return False
 
     @api.multi
     def get_delivery_product(self):

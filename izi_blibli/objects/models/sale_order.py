@@ -6,6 +6,7 @@ import time
 import json
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
 from odoo.exceptions import ValidationError
@@ -73,8 +74,8 @@ class SaleOrder(models.Model):
 
         marketplace = 'blibli'
         mp_field_mapping = {
-            'mp_invoice_number': ('orderNo', None),
-            'bli_order_id': ('orderNo', None),
+            'mp_invoice_number': ('orderNo', lambda env, r: str(r)),
+            'bli_order_id': ('orderNo', lambda env, r: str(r)),
             'bli_order_status': ('orderStatus', None),
             'mp_buyer_username': ('customerFullName', None),
             'bli_package_number': ('packageId', None),
