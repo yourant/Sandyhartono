@@ -38,9 +38,14 @@ class ProductMapping(models.Model):
 
     def write(self, vals):
         for rec in self:
-            if not self._context.get('product_mapping_system'):
-                vals['product_id_set_by'] = 'user' if vals['product_id'] != False else False
-                super(ProductMapping, rec).write(vals)
+            if self._context.get('product_mapping_by_scheduller'):
+                pass
+            elif not self._context.get('product_mapping_system'):
+                if 'product_id' in vals:
+                    vals['product_id_set_by'] = 'user' if vals['product_id'] != False else False
+                else:
+                    vals['product_id_set_by'] = 'user'
+            super(ProductMapping, rec).write(vals)
         return True
         
 
