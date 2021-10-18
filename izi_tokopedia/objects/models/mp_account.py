@@ -327,8 +327,8 @@ class MarketplaceAccount(models.Model):
             tp_order_create_time = datetime.fromisoformat(tp_data_detail_order['create_time'][:-1].split('.')[0])
             tp_order_create_time_utc = datetime_convert_tz(tp_order_create_time, 'Asia/Jakarta', 'UTC')
             order_summary_params = {
-                'from_date': tp_order_create_time_utc.replace(tzinfo=None) - relativedelta(seconds=3),
-                'to_date': tp_order_create_time_utc.replace(tzinfo=None) + relativedelta(seconds=3),
+                'from_date': tp_order_create_time_utc.replace(tzinfo=None) - relativedelta(minutes=1),
+                'to_date': tp_order_create_time_utc.replace(tzinfo=None) + relativedelta(minutes=1),
                 'shop_id': self.tp_shop_id.shop_id,
                 'limit': mp_account_ctx.get('order_limit'),
             }
