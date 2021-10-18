@@ -227,7 +227,8 @@ class MarketplaceAccount(models.Model):
         if self.mp_token_id.state == 'valid':
             account_params = {'access_token': self.mp_token_id.name}
         sp_account = self.shopee_get_account(**account_params)
-        sp_order = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
+        sp_order_v2 = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
+        sp_order_v1 = ShopeeOrder(sp_account, api_version="v1")
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
         if kwargs.get('params') == 'by_date_range':
@@ -237,15 +238,29 @@ class MarketplaceAccount(models.Model):
                 'limit': mp_account_ctx.get('order_limit'),
                 'time_range': time_range
             })
-            sp_data_raw = sp_order.get_order_list(**order_params)
+            sp_data_raw = sp_order_v2.get_order_list(**order_params)
         elif kwargs.get('params') == 'by_mp_invoice_number':
             order_params.update({
                 'order_id': kwargs.get('mp_invoice_number')
             })
-            sp_data_raw = sp_order.get_order_detail(**order_params)
+            sp_data_raw = sp_order_v2.get_order_detail(**order_params)
 
         sp_order_raws, sp_order_sanitizeds = [], []
         for data in sp_data_raw:
+            # get awb url
+            if data['shipping_document_info']:
+                if data['shipping_document_info']['tracking_number']:
+                    awb_data = sp_order_v1.get_airways_bill(**{'order_sn': data['order_sn']})
+                    data['awb_url'] = awb_data.get(data['order_sn'], False)
+                else:
+                    data['awb_url'] = False
+            else:
+                data['awb_url'] = False
+
+            # get_income
+            income_data = sp_order_v1.get_income(**{'order_sn': data['order_sn']})
+            data.update({'order_income': income_data.get('order_income', False)})
+
             sp_order_data_raw, sp_order_data_sanitized = sale_order_obj.with_context(
                 mp_account_ctx)._prepare_mapping_raw_data(raw_data=data)
             sp_order_raws.append(sp_order_data_raw)
@@ -259,16 +274,18 @@ class MarketplaceAccount(models.Model):
         }
         check_existing_records = sale_order_obj.with_context(mp_account_ctx).check_existing_records(
             **check_existing_records_params)
-        if time_range == 'create_time':
-            check_existing_records.pop('need_update_records')
-        elif time_range == 'update_time':
-            check_existing_records.pop('need_create_records')
+
+        # NEED EVALUATE
+        # if time_range == 'create_time':
+        # check_existing_records.pop('need_update_records')
+        # elif time_range == 'update_time':
+        # check_existing_records.pop('need_create_records')
         sale_order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    @ api.multi
     def shopee_get_orders(self, **kwargs):
         self.ensure_one()
-        self.shopee_get_sale_order(time_range='create_time', **kwargs)
+        # self.shopee_get_sale_order(time_range='create_time', **kwargs)
         self.shopee_get_sale_order(time_range='update_time', **kwargs)
         return {
             'type': 'ir.actions.client',

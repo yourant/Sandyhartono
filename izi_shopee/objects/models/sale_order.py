@@ -92,6 +92,8 @@ class SaleOrder(models.Model):
             'mp_recipient_address_phone': ('recipient_address/phone', None),
             'mp_recipient_address_state': ('recipient_address/state', None),
             'mp_recipient_address_full': ('recipient_address/full_address', None),
+            'mp_amount_total': ('total_amount', None),
+            'mp_awb_url': ('awb_url', None),
         }
 
         def _convert_timestamp_to_datetime(env, data):
@@ -178,7 +180,7 @@ class SaleOrder(models.Model):
                 sp_order_raw = json.loads(order.raw, strict=False)
                 sp_order_shipping = json_digger(sp_order_raw, 'package_list')[0]
                 sp_logistic_name = str(sp_order_shipping.get('shipping_carrier'))
-                sp_logistic = sp_logistic_obj.search([('logistics_channel_name', 'ilike', sp_logistic_name)])
+                sp_logistic = sp_logistic_obj.search([('logistics_channel_name', '=', sp_logistic_name)])
                 delivery_product = sp_logistic.get_delivery_product()
                 if not delivery_product:
                     raise ValidationError('Please define delivery product on "%s"' % sp_logistic_name)

@@ -17,6 +17,45 @@ class ShopeeOrder(ShopeeAPI):
     def get_order_detail(self, *args, **kwargs):
         return getattr(self, '%s_get_order_detail' % self.api_version)(*args, **kwargs)
 
+    def get_airways_bill(self, *args, **kwargs):
+        return getattr(self, '%s_get_awb' % self.api_version)(*args, **kwargs)
+
+    def get_income(self, *args, **kwargs):
+        return getattr(self, '%s_get_income' % self.api_version)(*args, **kwargs)
+
+    def v1_get_income(self, **kwargs):
+        body = {
+            'ordersn': kwargs.get('order_sn'),
+        }
+        prepared_request = self.build_request('get_my_income',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              ** {
+                                                  'json': body
+                                              })
+        response = self.process_response('get_my_income', self.request(**prepared_request), no_sanitize=True)
+        return response.json()
+
+    def v1_get_awb(self, **kwargs):
+        body = {
+            'ordersn_list': [kwargs.get('order_sn')],
+        }
+        prepared_request = self.build_request('get_awb_url',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              ** {
+                                                  'json': body
+                                              })
+        response = self.process_response('get_awb_url', self.request(**prepared_request), no_sanitize=True)
+        raw_data = response.json()
+        awb_dict = {}
+        if raw_data.get('result', False):
+            for data in raw_data['result']['airway_bills']:
+                awb_dict[data['ordersn']] = data['airway_bill']
+        return awb_dict
+
     def v2_get_shipping_doc_info(self, **kwargs):
         params = {
             'order_sn': kwargs.get('order_sn'),
