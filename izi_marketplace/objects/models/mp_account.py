@@ -61,6 +61,9 @@ class MarketplaceAccount(models.Model):
     warehouse_id = fields.Many2one('stock.warehouse', string='Default Warehouse Marketplace')
     insurance_product_id = fields.Many2one(comodel_name="product.product", string="Default Insurance Product",
                                            default=lambda self: self._get_default_insurance_product_id())
+    global_discount_product_id = fields.Many2one(comodel_name="product.product",
+                                                 string="Default Global Discount Product",
+                                                 default=lambda self: self._get_default_global_discount_product_id())
     debug_force_update = fields.Boolean(string="Force Update", default=False,
                                         help="Force update even there is no changes from marketplace")
     debug_force_update_raw = fields.Boolean(string="Force Update Raw", default=False, help="Force update raw field.")
@@ -92,6 +95,14 @@ class MarketplaceAccount(models.Model):
         mp_insurance_product_tmpl = self.env.ref('izi_marketplace.product_tmpl_mp_insurance', raise_if_not_found=False)
         if mp_insurance_product_tmpl:
             return mp_insurance_product_tmpl.product_variant_id.id
+        return False
+
+    @api.model
+    def _get_default_global_discount_product_id(self):
+        mp_global_discount_product_tmpl = self.env.ref('izi_marketplace.product_tmpl_mp_global_discount',
+                                                       raise_if_not_found=False)
+        if mp_global_discount_product_tmpl:
+            return mp_global_discount_product_tmpl.product_variant_id.id
         return False
 
     @api.multi
