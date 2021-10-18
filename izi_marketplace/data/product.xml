@@ -18,5 +18,14 @@
       <field name="purchase_ok" eval="False"/>
       <field name="company_id" eval="False"/>
     </record>
+
+    <record id="izi_marketplace.product_tmpl_mp_global_discount" model="product.template">
+      <field name="name">Marketplace Global Discount</field>
+      <field name="type">service</field>
+      <field name="list_price">0</field>
+      <field name="sale_ok" eval="False"/>
+      <field name="purchase_ok" eval="False"/>
+      <field name="company_id" eval="False"/>
+    </record>
   </data>
 </odoo>
