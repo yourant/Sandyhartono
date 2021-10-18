@@ -11,7 +11,7 @@ class SaleOrderLine(models.Model):
 
     mp_account_id = fields.Many2one(required=False)
     is_insurance = fields.Boolean(string="Is a Insurance", default=False)
-    is_discount = fields.Boolean(string="Is a Discount", default=False)
+    is_global_discount = fields.Boolean(string="Is a Global Discount", default=False)
     is_adjustment = fields.Boolean(string="Is a Adjustment", default=False)
 
     @api.model

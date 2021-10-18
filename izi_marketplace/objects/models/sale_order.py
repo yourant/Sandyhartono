@@ -111,6 +111,7 @@ class SaleOrder(models.Model):
         records = super(SaleOrder, self)._finish_create_records(records)
         records.generate_delivery_line()
         records.generate_insurance_line()
+        records.generate_global_discount_line()
         return records
 
     @api.model
@@ -118,6 +119,7 @@ class SaleOrder(models.Model):
         records = super(SaleOrder, self)._finish_update_records(records)
         records.generate_delivery_line()
         records.generate_insurance_line()
+        records.generate_global_discount_line()
         return records
 
     @api.multi
@@ -216,3 +218,9 @@ class SaleOrder(models.Model):
         for order in self:
             if hasattr(order, '%s_generate_insurance_line' % order.marketplace):
                 getattr(order, '%s_generate_insurance_line' % order.marketplace)()
+
+    @api.multi
+    def generate_global_discount_line(self):
+        for order in self:
+            if hasattr(order, '%s_generate_global_discount_line' % order.marketplace):
+                getattr(order, '%s_generate_global_discount_line' % order.marketplace)()
