@@ -304,16 +304,41 @@ class SaleOrder(models.Model):
             if not insurance_line:
                 tp_order_raw = json.loads(order.raw, strict=False)
                 insurance_cost = json_digger(tp_order_raw, 'order_summary/amt/insurance_cost', default=0)
-                insurance_product = order.mp_account_id.insurance_product_id
-                if not insurance_product:
-                    raise ValidationError(
-                        'Please define insurance product on this marketplace account: "%s"' % order.mp_account_id.name)
-                order.write({
-                    'order_line': [(0, 0, {
-                        'sequence': 999,
-                        'product_id': insurance_product.id,
-                        'product_uom_qty': 1,
-                        'price_unit': insurance_cost,
-                        'is_insurance': True
-                    })]
-                })
+                if insurance_cost > 0:
+                    insurance_product = order.mp_account_id.insurance_product_id
+                    if not insurance_product:
+                        raise ValidationError(
+                            'Please define insurance product on this marketplace account: "%s"' % order.mp_account_id.name)
+                    order.write({
+                        'order_line': [(0, 0, {
+                            'sequence': 999,
+                            'product_id': insurance_product.id,
+                            'product_uom_qty': 1,
+                            'price_unit': insurance_cost,
+                            'is_insurance': True
+                        })]
+                    })
+
+    @api.multi
+    def tokopedia_generate_global_discount_line(self):
+        for order in self:
+            global_discount_line = order.order_line.filtered(lambda l: l.is_global_discount)
+            if not global_discount_line:
+                tp_order_raw = json.loads(order.raw, strict=False)
+                total_global_discount = json_digger(tp_order_raw, 'order_summary/promo_order_detail/total_discount',
+                                                    default=0)
+                if total_global_discount > 0:
+                    global_discount_product = order.mp_account_id.global_discount_product_id
+                    if not global_discount_product:
+                        raise ValidationError(
+                            'Please define global discount product on'
+                            ' this marketplace account: "%s"' % order.mp_account_id.name)
+                    order.write({
+                        'order_line': [(0, 0, {
+                            'sequence': 999,
+                            'product_id': global_discount_product.id,
+                            'product_uom_qty': 1,
+                            'price_unit': total_global_discount,
+                            'is_global_discount': True
+                        })]
+                    })
