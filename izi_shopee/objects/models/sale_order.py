@@ -190,6 +190,7 @@ class SaleOrder(models.Model):
                     shipping_fee = sp_order_raw.get('estimated_shipping_fee', 0)
                 order.write({
                     'order_line': [(0, 0, {
+                        'sequence': 999,
                         'product_id': delivery_product.id,
                         'name': sp_logistic_name,
                         'product_uom_qty': 1,
@@ -197,3 +198,27 @@ class SaleOrder(models.Model):
                         'is_delivery': True
                     })]
                 })
+
+    @api.multi
+    def shopee_generate_adjusment_line(self):
+        for order in self:
+            adjustment_line = order.order_line.filtered(lambda l: l.is_adjustment)
+            if not adjustment_line:
+                sp_order_raw = json.loads(order.raw, strict=False)
+                total_adjustment = json_digger(sp_order_raw, 'order_income/buyer_transaction_fee',
+                                               default=0)
+                if total_adjustment > 0:
+                    adjustment_product = order.mp_account_id.adjustment_product_id
+                    if not adjustment_product:
+                        raise ValidationError(
+                            'Please define global discount product on'
+                            ' this marketplace account: "%s"' % order.mp_account_id.name)
+                    order.write({
+                        'order_line': [(0, 0, {
+                            'sequence': 999,
+                            'product_id': adjustment_product.id,
+                            'product_uom_qty': 1,
+                            'price_unit': total_adjustment,
+                            'is_adjustment': True
+                        })]
+                    })

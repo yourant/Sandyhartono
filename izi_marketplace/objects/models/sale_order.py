@@ -112,6 +112,7 @@ class SaleOrder(models.Model):
         records.generate_delivery_line()
         records.generate_insurance_line()
         records.generate_global_discount_line()
+        records.generate_adjusment_line()
         return records
 
     @api.model
@@ -120,6 +121,7 @@ class SaleOrder(models.Model):
         records.generate_delivery_line()
         records.generate_insurance_line()
         records.generate_global_discount_line()
+        records.generate_adjusment_line()
         return records
 
     @api.multi
@@ -224,3 +226,9 @@ class SaleOrder(models.Model):
         for order in self:
             if hasattr(order, '%s_generate_global_discount_line' % order.marketplace):
                 getattr(order, '%s_generate_global_discount_line' % order.marketplace)()
+
+    @api.multi
+    def generate_adjusment_line(self):
+        for order in self:
+            if hasattr(order, '%s_generate_adjusment_line' % order.marketplace):
+                getattr(order, '%s_generate_adjusment_line' % order.marketplace)()
