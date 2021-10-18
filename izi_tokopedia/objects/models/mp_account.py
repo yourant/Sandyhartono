@@ -284,6 +284,7 @@ class MarketplaceAccount(models.Model):
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
 
+        skipped = 0
         params, tp_data_detail_orders = {}, []
         tp_data_raws, tp_data_sanitizeds = [], []
         if kwargs.get('params') == 'by_date_range':
@@ -314,6 +315,8 @@ class MarketplaceAccount(models.Model):
                         raw_data=tp_data_detail_order, endpoint_key='sanitize_decrypt')
                     tp_data_raws.extend(tp_data_raw)
                     tp_data_sanitizeds.extend(tp_data_sanitized)
+                else:
+                    skipped += 1
 
             _logger(self.marketplace, 'Processed %s order(s) from %s of total orders imported!' % (
                 len(tp_data_detail_orders), len(tp_data_orders)
@@ -343,15 +346,19 @@ class MarketplaceAccount(models.Model):
 
             _logger(self.marketplace, 'Processed order %s!' % mp_invoice_number, notify=True, notif_sticky=True)
 
-        check_existing_records_params = {
-            'identifier_field': 'tp_order_id',
-            'raw_data': tp_data_raws,
-            'mp_data': tp_data_sanitizeds,
-            'multi': isinstance(tp_data_sanitizeds, list)
-        }
-        check_existing_records = order_obj.with_context(mp_account_ctx).check_existing_records(
-            **check_existing_records_params)
-        order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+        if tp_data_raws:
+            check_existing_records_params = {
+                'identifier_field': 'tp_order_id',
+                'raw_data': tp_data_raws,
+                'mp_data': tp_data_sanitizeds,
+                'multi': isinstance(tp_data_sanitizeds, list)
+            }
+            check_existing_records = order_obj.with_context(mp_account_ctx).check_existing_records(
+                **check_existing_records_params)
+            order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+        else:
+            _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
+                    notif_sticky=True)
 
     @api.multi
     def tokopedia_get_orders(self, **kwargs):
