@@ -64,6 +64,9 @@ class MarketplaceAccount(models.Model):
     global_discount_product_id = fields.Many2one(comodel_name="product.product",
                                                  string="Default Global Discount Product",
                                                  default=lambda self: self._get_default_global_discount_product_id())
+    adjustment_product_id = fields.Many2one(comodel_name="product.product",
+                                            string="Default Adjustment Product",
+                                            default=lambda self: self._get_default_adjustment_product_id())
     debug_force_update = fields.Boolean(string="Force Update", default=False,
                                         help="Force update even there is no changes from marketplace")
     debug_force_update_raw = fields.Boolean(string="Force Update Raw Only", default=False,
@@ -104,6 +107,14 @@ class MarketplaceAccount(models.Model):
                                                        raise_if_not_found=False)
         if mp_global_discount_product_tmpl:
             return mp_global_discount_product_tmpl.product_variant_id.id
+        return False
+
+    @api.model
+    def _get_default_adjustment_product_id(self):
+        mp_adjustment_product_tmpl = self.env.ref('izi_marketplace.product_tmpl_mp_adjustment',
+                                                  raise_if_not_found=False)
+        if mp_adjustment_product_tmpl:
+            return mp_adjustment_product_tmpl.product_variant_id.id
         return False
 
     @api.multi
