@@ -6,7 +6,7 @@
     "name": """IZI Marketplace: Tokopedia""",
     "summary": """Integrating Odoo with Marketplace: Tokopedia""",
     "category": "Sales",
-    "version": "11.0.0.2.0",
+    "version": "11.0.0.3.0",
     "development_status": "Alpha",  # Options: Alpha|Beta|Production/Stable|Mature
     "auto_install": False,
     "installable": True,
