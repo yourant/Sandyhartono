@@ -342,3 +342,29 @@ class SaleOrder(models.Model):
                             'is_global_discount': True
                         })]
                     })
+
+    @api.multi
+    def tokopedia_generate_adjusment_line(self):
+        for order in self:
+            adjustment_line = order.order_line.filtered(lambda l: l.is_adjustment)
+            if not adjustment_line:
+                tp_order_raw = json.loads(order.raw, strict=False)
+                tp_amt = json_digger(tp_order_raw, 'order_summary/amt', default={})
+                adjustment_amount = tp_amt['ttl_amount'] - sum([value for key, value in tp_amt.items() if
+                                                                key in ['ttl_product_price', 'shipping_cost',
+                                                                        'insurance_cost']])
+                if adjustment_amount > 0:
+                    adjustment_product = order.mp_account_id.adjustment_product_id
+                    if not adjustment_product:
+                        raise ValidationError(
+                            'Please define adjustment product on'
+                            ' this marketplace account: "%s"' % order.mp_account_id.name)
+                    order.write({
+                        'order_line': [(0, 0, {
+                            'sequence': 999,
+                            'product_id': adjustment_product.id,
+                            'product_uom_qty': 1,
+                            'price_unit': adjustment_amount,
+                            'is_global_discount': True
+                        })]
+                    })
