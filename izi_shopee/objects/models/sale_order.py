@@ -94,6 +94,7 @@ class SaleOrder(models.Model):
             'mp_recipient_address_full': ('recipient_address/full_address', None),
             'mp_amount_total': ('total_amount', None),
             'mp_awb_url': ('awb_url', None),
+            'mp_expected_income': ('order_income/escrow_amount', None)
         }
 
         def _convert_timestamp_to_datetime(env, data):
@@ -141,11 +142,11 @@ class SaleOrder(models.Model):
         if mp_account.marketplace == 'shopee':
             for record in records:
                 sp_order_raw = json.loads(record.raw, strict=False)
-                list_field = ['item_id', 'item_name', 'item_sku', 'model_id', 'model_name', 'model_sku']
+                list_item_field = ['item_id', 'item_name', 'item_sku', 'model_id', 'model_name', 'model_sku']
 
                 item_list = sp_order_raw['item_list']
                 for item in item_list:
-                    item['item_info'] = dict([(key, item[key]) for key in list_field])
+                    item['item_info'] = dict([(key, item[key]) for key in list_item_field])
 
                 sp_order_details = [
                     # Insert order_id into tp_order_detail_raw
@@ -220,5 +221,37 @@ class SaleOrder(models.Model):
                             'product_uom_qty': 1,
                             'price_unit': total_adjustment,
                             'is_adjustment': True
+                        })]
+                    })
+
+    @api.multi
+    def shopee_generate_global_discount_line(self):
+        for order in self:
+            adjustment_line = order.order_line.filtered(lambda l: l.is_adjustment)
+            if not adjustment_line:
+                sp_order_raw = json.loads(order.raw, strict=False)
+                seller_discount = json_digger(sp_order_raw, 'order_income/seller_discount',
+                                              default=0)
+                shopee_discount = json_digger(sp_order_raw, 'order_income/shopee_discount',
+                                              default=0)
+                voucher_from_seller = json_digger(sp_order_raw, 'order_income/voucher_from_seller',
+                                                  default=0)
+                voucher_from_shopee = json_digger(sp_order_raw, 'order_income/voucher_from_shopee',
+                                                  default=0)
+
+                total_discount = seller_discount + shopee_discount + voucher_from_seller + voucher_from_shopee
+                if total_discount > 0:
+                    discount_product = order.mp_account_id.global_discount_product_id
+                    if not discount_product:
+                        raise ValidationError(
+                            'Please define global discount product on'
+                            ' this marketplace account: "%s"' % order.mp_account_id.name)
+                    order.write({
+                        'order_line': [(0, 0, {
+                            'sequence': 999,
+                            'product_id': discount_product.id,
+                            'product_uom_qty': -1,
+                            'price_unit': total_discount,
+                            'is_global_discount': True
                         })]
                     })
