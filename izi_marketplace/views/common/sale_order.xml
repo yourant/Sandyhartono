@@ -71,6 +71,9 @@
       <field name="arch" type="xml">
         <xpath expr="//field[@name='order_line']/.." position="after">
           <page string="Marketplace" name="izi_info">
+            <field name="marketplace" string="Marketplace" invisible="1"/>
+            <field name="mp_can_be_accepted" invisible="1"/>
+            <field name="mp_can_be_rejected" invisible="1"/>
             <div attrs="{'invisible': ['|', ('mp_amount_total_info', '=', False), ('mp_amount_total_info', '=', '')]}">
               <div class="alert alert-warning text-center o_form_header">
                 <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
@@ -81,12 +84,16 @@
                 </div>
               </div>
             </div>
-            <div>
-              <!-- For Action Button -->
+            <div style="margin: 5px">
+              <button name="mp_action_accept" string="Accept" class="btn-info" type="object" icon="fa-check-circle"
+                      attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('mp_can_be_accepted', '=', False)]}"
+                      style="margin-right: 5px;"/>
+              <button name="mp_action_reject" string="Reject" class="btn-danger" type="object" icon="fa-times-circle"
+                      attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('mp_can_be_rejected', '=', False)]}"
+                      style="margin-right: 5px;"/>
             </div>
             <group name="marketplace_info">
               <group string="Account Information">
-                <field name="marketplace" string="Marketplace" invisible="1"/>
                 <field name="mp_invoice_number" readonly="1"/>
                 <field name="mp_account_id" readonly="1"/>
                 <field name="mp_buyer_username" readonly="1"/>
