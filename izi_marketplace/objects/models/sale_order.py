@@ -78,6 +78,7 @@ class SaleOrder(models.Model):
     # MP Amounts
     mp_amount_total = fields.Monetary(string="MP Total", readonly=True)
     mp_amount_total_info = fields.Char(string="MP Total Info", compute="_compute_mp_amount_total_info")
+    mp_expected_income = fields.Monetary(string="Seller Expected Income", readonly=True)
 
     # MP Action Abilities
     mp_can_be_accepted = fields.Boolean(string="Can be Accepted?", compute="_compute_mp_actions")
