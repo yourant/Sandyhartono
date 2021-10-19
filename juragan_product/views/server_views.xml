@@ -105,6 +105,7 @@
 						<button class="btn-izi" type="object" name="start_product_mapping" string="Map Product" invisible="1"/>
 						<button class="btn-izi-danger" type="object" name="delete_product_mapping" string="Delete" icon="fa-trash" invisible="1"/>
 						<button class="btn-izi" type="object" name="action_view_product_mapping_view" string="Product Mapping"/>
+						<button class="btn-izi" type="object" name="trigger_import_product_izi" string="Update Product IZI"/>
                     </page>
                 </page>
             </field>

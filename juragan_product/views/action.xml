@@ -10,11 +10,14 @@
                     <field name="reference" string="Product Marketplace" filter_domain="[('reference','ilike',self)]"/>
                     <field name="product_id" string="Product Odoo" filter_domain="[('product_id','ilike',self)]"/>
                     <field name="order_product_id" string="Product in Order" filter_domain="[('order_product_id','ilike',self)]"/>
-                    <field name="product_id_set_by" string="Product Odoo Set By" filter_domain="[('product_id_set_by','ilike',self)]"/>
                     <separator/>
-                    <filter string="Product Odoo Mapped by System" name="product_id_set_by" domain="[('product_id_set_by','=', 'system')]"/>
-                    <filter string="Product Odoo Mapped by User" name="product_id_set_by" domain="[('product_id_set_by','=', 'user')]"/>
-                    <filter string="Product odoo not Mapped" name="product_id_set_by" domain="[('product_id_set_by','=', False)]"/>
+                    <filter string="Product Odoo Not Mapped" name="status_product_id" domain="[('status_product_id','=', 'not_map')]"/>
+                    <filter string="Product Odoo System Mapped" name="status_product_id" domain="[('status_product_id','=', 'system_map')]"/>
+                    <filter string="Product odoo User Mapped" name="status_product_id" domain="[('status_product_id','=', 'user_map')]"/>
+                    <separator/>
+                    <filter string="Product in Order Not Mapped" name="status_order_product_id" domain="[('status_order_product_id','=', 'not_map')]"/>
+                    <filter string="Product in Order System Mapped" name="status_order_product_id" domain="[('status_order_product_id','=', 'system_map')]"/>
+                    <filter string="Product in Order User Mapped" name="status_order_product_id" domain="[('status_order_product_id','=', 'user_map')]"/>
                 </search>
             </field>
         </record>
@@ -28,8 +31,9 @@
                     <field name="product_product_izi_id" string="IZI ID" readonly="1"/>
                     <field name="reference" string="Product Marketplace" readonly="1"/>
                     <field name="product_id" string="Product Odoo" domain="[('product_mapping_ids', '=', False)]"/>
+                    <field name="status_product_id" string="Status Product Odoo" readonly="1"/>
                     <field name="order_product_id" string="Product in Order"/>
-                    <field name="product_id_set_by" string="Product Odoo Mapped by" readonly="1"/>
+                    <field name="status_order_product_id" string="Status Product in Order" readonly="1"/>
                 </tree>
             </field>
         </record>

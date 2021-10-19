@@ -24,13 +24,22 @@ class ProductMapping(models.Model):
     name = fields.Char()
     default_code = fields.Char()
     product_id = fields.Many2one('product.product', 'Product')
-    product_id_set_by = fields.Selection([
-        ('system', 'System'), 
-        ('user', 'User'),
-    ], string='Set By')
     order_product_id = fields.Many2one('product.product', 'Product in Order')
     server_id = fields.Many2one('webhook.server', 'Server')
-
+    status_product_id = fields.Selection([
+        ('not_map', 'Not Mapped'), 
+        ('system_map', 'System Mapped'),
+        ('user_map', 'User Mapped'),
+        ('system_del', 'System Deleted'),
+        ('user_del', 'User Deleted'),
+    ], string='Status Product Odoo', default='not_map')
+    status_order_product_id = fields.Selection([
+        ('not_map', 'Not Mapped'), 
+        ('system_map', 'System Mapped'),
+        ('user_map', 'User Mapped'),
+        ('system_del', 'System Deleted'),
+        ('user_del', 'User Deleted'),
+    ], string='Status Product in Order', default='not_map')
 
     _sql_constraints = [
         ('product_unique', 'unique(product_id, server_id)', 'You cannot select same products on product mapping.')
@@ -39,12 +48,12 @@ class ProductMapping(models.Model):
     def write(self, vals):
         for rec in self:
             if self._context.get('product_mapping_by_scheduller'):
-                pass
+                continue
             elif not self._context.get('product_mapping_system'):
                 if 'product_id' in vals:
-                    vals['product_id_set_by'] = 'user' if vals['product_id'] != False else False
-                else:
-                    vals['product_id_set_by'] = 'user'
+                    vals['status_product_id'] = 'user_map' if vals['product_id'] != False else 'user_del'
+                if 'order_product_id' in vals:
+                    vals['status_order_product_id'] = 'user_map' if vals['order_product_id'] != False else 'user_del'
             super(ProductMapping, rec).write(vals)
         return True
         
@@ -1152,14 +1161,13 @@ class WebhookServer(models.Model):
                                 'name': pd['name'],
                                 'default_code': pd['default_code'],
                                 'server_id': self.id,
-                                'product_id_set_by': False,
                             }
                             # Check product_product
                             if product_product:
                                 if product_product.id not in mapped_product_ids:
                                     mapped_product_ids.append(product_product.id)
                                     values['product_id'] = product_product.id
-                                    values['product_id_set_by'] = 'system'
+                                    values['status_product_id'] = 'system_map'
                             self.env['product.mapping'].sudo().with_context(product_mapping_system=True).create(values)
                         else:
                             values = {
@@ -1169,15 +1177,12 @@ class WebhookServer(models.Model):
                                 'name': pd['name'],
                                 'default_code': pd['default_code'],
                                 'server_id': self.id,
-                                'product_id_set_by': pm_by_izi_id[pd['id']].product_id_set_by if pm_by_izi_id[pd['id']].product_id_set_by != False else False,
                             }
                             if not pm_by_izi_id[pd['id']].product_id and product_product:
                                 if product_product.id not in mapped_product_ids:
                                     mapped_product_ids.append(product_product.id)
                                     values['product_id'] = product_product.id
-                                    values['product_id_set_by'] = 'system'
-                            elif pm_by_izi_id[pd['id']].product_id and product_product and pm_by_izi_id[pd['id']].product_id_set_by == False:
-                                values['product_id_set_by'] = 'system'
+                                    values['status_product_id'] = 'system_map'
                             pm_by_izi_id[pd['id']].with_context(product_mapping_system=True).write(values)
 
                             # pop product mapping, for checking data later
