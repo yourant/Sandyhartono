@@ -134,6 +134,37 @@ class SaleOrder(models.Model):
         mp_field_mappings.append((marketplace, mp_field_mapping))
         super(SaleOrder, cls)._add_rec_mp_field_mapping(mp_field_mappings)
 
+    @classmethod
+    def _add_rec_mp_order_status(cls, mp_order_statuses=None, mp_order_status_notes=None):
+        if not mp_order_statuses:
+            mp_order_statuses = []
+        if not mp_order_status_notes:
+            mp_order_status_notes = []
+
+        marketplace, tp_order_status_field = 'tokopedia', 'tp_order_status'
+        tp_order_statuses = {
+            'waiting': ['11', '100', '103', '200'],
+            'cancel': ['0', '2', '3', '4', '5', '10', '15', '690', '691', '695', '698', '699'],
+            'to_process': ['220', '221'],
+            'in_process': [],
+            'to_ship': ['400'],
+            'in_ship': ['450', '500', '501', '520', '530', '540'],
+            'done': ['600', '601', '700', '701'],
+            'return': ['550']
+        }
+        mp_order_statuses.append((marketplace, (tp_order_status_field, tp_order_statuses)))
+        mp_order_status_notes.append((marketplace, dict(cls.TP_ORDER_STATUSES)))
+        super(SaleOrder, cls)._add_rec_mp_order_status(mp_order_statuses, mp_order_status_notes)
+
+    @classmethod
+    def _add_rec_mp_order_action(cls, mp_order_actions=None):
+        if not mp_order_actions:
+            mp_order_actions = []
+
+        marketplace, tp_order_actions = 'tokopedia', ['accept', 'reject']
+        mp_order_actions.append((marketplace, tp_order_actions))
+        super(SaleOrder, cls)._add_rec_mp_order_action(mp_order_actions)
+
     @api.model
     def _finish_create_records(self, records):
         mp_account = self.get_mp_account_from_context()
@@ -165,28 +196,6 @@ class SaleOrder(models.Model):
             check_existing_records = order_line_obj.check_existing_records(**check_existing_records_params)
             order_line_obj.handle_result_check_existing_records(check_existing_records)
         return records
-
-    @classmethod
-    def _add_rec_mp_order_status(cls, mp_order_statuses=None, mp_order_status_notes=None):
-        if not mp_order_statuses:
-            mp_order_statuses = []
-        if not mp_order_status_notes:
-            mp_order_status_notes = []
-
-        marketplace, tp_order_status_field = 'tokopedia', 'tp_order_status'
-        tp_order_statuses = {
-            'waiting': ['11', '100', '103', '200'],
-            'cancel': ['0', '2', '3', '4', '5', '10', '15', '690', '691', '695', '698', '699'],
-            'to_process': ['220', '221'],
-            'in_process': [],
-            'to_ship': ['400'],
-            'in_ship': ['450', '500', '501', '520', '530', '540'],
-            'done': ['600', '601', '700', '701'],
-            'return': ['550']
-        }
-        mp_order_statuses.append((marketplace, (tp_order_status_field, tp_order_statuses)))
-        mp_order_status_notes.append((marketplace, dict(cls.TP_ORDER_STATUSES)))
-        super(SaleOrder, cls)._add_rec_mp_order_status(mp_order_statuses, mp_order_status_notes)
 
     @api.model
     def tokopedia_get_sanitizers(self, mp_field_mapping):

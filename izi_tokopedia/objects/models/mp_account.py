@@ -353,9 +353,8 @@ class MarketplaceAccount(models.Model):
                 'mp_data': tp_data_sanitizeds,
                 'multi': isinstance(tp_data_sanitizeds, list)
             }
-            check_existing_records = order_obj.with_context(mp_account_ctx).check_existing_records(
-                **check_existing_records_params)
-            order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+            check_existing_records = order_obj.check_existing_records(**check_existing_records_params)
+            order_obj.handle_result_check_existing_records(check_existing_records)
         else:
             _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
                     notif_sticky=True)
