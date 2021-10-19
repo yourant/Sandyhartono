@@ -82,7 +82,7 @@
                 </div>
               </div>
             </div>
-            <div>
+            <div name="mp_actions">
               <!-- For Action Button -->
             </div>
             <group name="marketplace_info">
