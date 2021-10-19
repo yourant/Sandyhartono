@@ -123,6 +123,7 @@
               </group>
               <group string="Amounts Information">
                 <field name="mp_amount_total"/>
+                <field name="mp_expected_income"/>
               </group>
             </group>
           </page>
