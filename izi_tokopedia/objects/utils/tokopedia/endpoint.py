@@ -15,6 +15,7 @@ class TokopediaEndpoint(object):
             'shop_info': ('GET', '/v1/shop/fs/{fs_id}/shop-info'),
             'product_info': ('GET', '/inventory/v1/fs/{fs_id}/product/info'),
             'logistic_active_info': ('GET', '/v1/logistic/fs/{fs_id}/active-info'),
+            'order_accept': ('POST', '/v1/order/{order_id}/fs/{fs_id}/ack')
         },
         'v2': {
             'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info'),

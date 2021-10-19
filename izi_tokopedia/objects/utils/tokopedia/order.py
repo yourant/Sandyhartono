@@ -108,3 +108,13 @@ class TokopediaOrder(TokopediaAPI):
                 "Order: Too many requests, Tokopedia asking to waiting for %s second(s)" % str(tp_limit_rate_reset))
             time.sleep(tp_limit_rate_reset + 1)
         return self.process_response('order_detail', response)
+
+    def action_accept_order(self, *args, **kwargs):
+        return getattr(self, '%s_action_accept_order' % self.api_version)(*args, **kwargs)
+
+    def v1_action_accept_order(self, order_id):
+        self.endpoints.tp_account.order_id = order_id
+        prepared_request = self.build_request('order_accept', params={}, force_params=True)
+        response = self.request(**prepared_request)
+        response_data = self.process_response('default', response)
+        return response_data

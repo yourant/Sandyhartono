@@ -11,6 +11,7 @@ from Cryptodome.PublicKey import RSA
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
+from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 
@@ -368,3 +369,14 @@ class SaleOrder(models.Model):
                             'is_global_discount': True
                         })]
                     })
+
+    @api.multi
+    @mp.tokopedia.capture_error
+    def tokopedia_accept_order(self):
+        for order in self:
+            tp_account = order.mp_account_id.tokopedia_get_account()
+            tp_order = TokopediaOrder(tp_account)
+
+            action_status = tp_order.action_accept_order(order.mp_external_id)
+            if action_status == "success":
+                order.action_confirm()
