@@ -64,7 +64,6 @@ class SaleOrderLine(models.Model):
         mp_field_mapping.update({
             'product_id': ('item_info', _handle_product_id),
             'sp_sku': ('item_info', _handle_product_sku),
-
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
