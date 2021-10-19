@@ -9,7 +9,6 @@ class SaleOrder(models.Model):
     _inherit = ['sale.order', 'mp.base']
     _rec_mp_order_statuses = {}
     _rec_mp_order_status_notes = {}
-    _rec_mp_order_actions = {}
 
     MP_ORDER_STATUSES = [
         ('new', 'New'),
@@ -80,15 +79,10 @@ class SaleOrder(models.Model):
     mp_amount_total_info = fields.Char(string="MP Total Info", compute="_compute_mp_amount_total_info")
     mp_expected_income = fields.Monetary(string="Seller Expected Income", readonly=True)
 
-    # MP Action Abilities
-    mp_can_be_accepted = fields.Boolean(string="Can be Accepted?", compute="_compute_mp_actions")
-    mp_can_be_rejected = fields.Boolean(string="Can be Rejected?", compute="_compute_mp_actions")
-
     @classmethod
     def _build_model_attributes(cls, pool):
         super(SaleOrder, cls)._build_model_attributes(pool)
         cls._add_rec_mp_order_status()
-        cls._add_rec_mp_order_action()
 
     @classmethod
     def _add_rec_mp_order_status(cls, mp_order_statuses=None, mp_order_status_notes=None):
@@ -96,11 +90,6 @@ class SaleOrder(models.Model):
             cls._rec_mp_order_statuses = dict(cls._rec_mp_order_statuses, **dict(mp_order_statuses))
         if mp_order_status_notes:
             cls._rec_mp_order_status_notes = dict(cls._rec_mp_order_status_notes, **dict(mp_order_status_notes))
-
-    @classmethod
-    def _add_rec_mp_order_action(cls, mp_order_actions=None):
-        if mp_order_actions:
-            cls._rec_mp_order_actions = dict(cls._rec_mp_order_actions, **dict(mp_order_actions))
 
     @api.model
     def _finish_mapping_raw_data(self, sanitized_data, values):
@@ -161,13 +150,6 @@ class SaleOrder(models.Model):
                     order.mp_order_status_notes = mp_order_status_notes.get(order.mp_order_status, default_notes)
                 else:
                     order.mp_order_status_notes = False
-
-    @api.multi
-    def _compute_mp_actions(self):
-        for order in self:
-            mp_actions = order._rec_mp_order_actions.get(order.marketplace, [])
-            order.mp_can_be_accepted = 'accept' in mp_actions
-            order.mp_can_be_rejected = 'reject' in mp_actions
 
     @api.multi
     def _compute_mp_amount_total_info(self):
@@ -251,15 +233,3 @@ class SaleOrder(models.Model):
         for order in self:
             if hasattr(order, '%s_generate_adjusment_line' % order.marketplace):
                 getattr(order, '%s_generate_adjusment_line' % order.marketplace)()
-
-    @api.multi
-    def mp_action_accept(self):
-        for order in self:
-            if hasattr(order, '%s_action_accept' % order.marketplace):
-                getattr(order, '%s_action_accept' % order.marketplace)()
-
-    @api.multi
-    def mp_action_reject(self):
-        for order in self:
-            if hasattr(order, '%s_action_reject' % order.marketplace):
-                getattr(order, '%s_action_reject' % order.marketplace)()

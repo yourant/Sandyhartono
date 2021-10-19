@@ -156,15 +156,6 @@ class SaleOrder(models.Model):
         mp_order_status_notes.append((marketplace, dict(cls.TP_ORDER_STATUSES)))
         super(SaleOrder, cls)._add_rec_mp_order_status(mp_order_statuses, mp_order_status_notes)
 
-    @classmethod
-    def _add_rec_mp_order_action(cls, mp_order_actions=None):
-        if not mp_order_actions:
-            mp_order_actions = []
-
-        marketplace, tp_order_actions = 'tokopedia', ['accept', 'reject']
-        mp_order_actions.append((marketplace, tp_order_actions))
-        super(SaleOrder, cls)._add_rec_mp_order_action(mp_order_actions)
-
     @api.model
     def _finish_create_records(self, records):
         mp_account = self.get_mp_account_from_context()
