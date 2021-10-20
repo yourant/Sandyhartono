@@ -366,7 +366,7 @@ class SaleOrder(models.Model):
                             'product_id': adjustment_product.id,
                             'product_uom_qty': 1,
                             'price_unit': adjustment_amount,
-                            'is_global_discount': True
+                            'is_adjustment': True
                         })]
                     })
 
