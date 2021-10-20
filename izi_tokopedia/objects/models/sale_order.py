@@ -120,6 +120,10 @@ class SaleOrder(models.Model):
             dt = env['mp.base'].datetime_convert_tz(datetime.fromisoformat(isoformat), 'Asia/Jakarta', 'UTC')
             return fields.Datetime.to_string(dt)
 
+        def _handle_order_notes(env, data):
+            order_notes = ["%s: %s" % (product['name'], product['notes']) for product in data if product['notes']]
+            return "\n".join(order_notes)
+
         mp_field_mapping.update({
             # MP Order Transaction & Payment
             'mp_payment_date': ('payment_info/payment_date', _handle_isoformat_to_dt_str),
@@ -127,6 +131,7 @@ class SaleOrder(models.Model):
             'date_order': ('create_time', _handle_isoformat_to_dt_str),
             'mp_order_last_update_date': ('update_time', _handle_isoformat_to_dt_str),
             'mp_accept_deadline': ('shipment_fulfillment/accept_deadline', _handle_isoformat_to_dt_str),
+            'mp_order_notes': ('order_summary/products', _handle_order_notes),
 
             # MP Order Shipment
             'mp_shipping_deadline': ('shipment_fulfillment/confirm_shipping_deadline', _handle_isoformat_to_dt_str),

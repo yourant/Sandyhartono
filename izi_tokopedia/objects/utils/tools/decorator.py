@@ -2,7 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import functools
 
-from requests import HTTPError
+from requests import HTTPError, ConnectionError as RequestsConnectionError
 from odoo.exceptions import UserError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import mp
@@ -20,7 +20,7 @@ class TokopediaDecorator(object):
                 raise UserError(tp_error.args)
             except HTTPError as http_error:
                 raise UserError(http_error.args)
-            except ConnectionError as conn_error:
+            except RequestsConnectionError as conn_error:
                 raise UserError(conn_error.args)
 
         return wrapper_decorator
