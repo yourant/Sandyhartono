@@ -118,3 +118,29 @@ class TokopediaOrder(TokopediaAPI):
         response = self.request(**prepared_request)
         response_data = self.process_response('default', response)
         return response_data
+
+    def action_reject_order(self, *args, **kwargs):
+        return getattr(self, '%s_action_reject_order' % self.api_version)(*args, **kwargs)
+
+    def v1_action_reject_order(self, order_id, reason_code, reason, **kwargs):
+        self.endpoints.tp_account.order_id = order_id
+
+        reason_code = int(reason_code)
+        data = {
+            'reason_code': reason_code,
+            'reason': reason
+        }
+
+        if reason_code == 4:
+            if not kwargs.get('shop_close_end_date') or not kwargs.get('shop_close_note'):
+                raise TypeError("shop_close_end_date and shop_close_not is mandatory!")
+
+            data.update({
+                'shop_close_end_date': kwargs.get('shop_close_end_date'),
+                'shop_close_note': kwargs.get('shop_close_note')
+            })
+
+        prepared_request = self.build_request('order_reject', json=data, params={}, force_params=True)
+        response = self.request(**prepared_request)
+        response_data = self.process_response('default', response)
+        return response_data

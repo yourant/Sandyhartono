@@ -50,6 +50,7 @@
 
         # wizard
         'views/wizard/wiz_upload_public_key.xml',
+        'views/wizard/wiz_tp_order_reject.xml',
 
         # report paperformat
         # 'data/report_paperformat.xml',

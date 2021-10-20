@@ -380,3 +380,16 @@ class SaleOrder(models.Model):
             action_status = tp_order.action_accept_order(order.mp_external_id)
             if action_status == "success":
                 order.action_confirm()
+
+    @api.multi
+    def tokopedia_reject_order(self):
+        return {
+            'name': 'Reject Order(s)',
+            'view_mode': 'form',
+            'res_model': 'wiz.tp_order_reject',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                'default_order_ids': [(6, 0, self.ids)],
+            },
+        }
