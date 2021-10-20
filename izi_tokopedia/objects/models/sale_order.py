@@ -376,6 +376,19 @@ class SaleOrder(models.Model):
                     })
 
     @api.multi
+    def tokopedia_fetch_order(self):
+        wiz_mp_order_obj = self.env['wiz.mp.order']
+
+        self.ensure_one()
+
+        wiz_mp_order = wiz_mp_order_obj.create({
+            'mp_account_id': self.mp_account_id.id,
+            'params': 'by_mp_invoice_number',
+            'mp_invoice_number': self.mp_invoice_number
+        })
+        return wiz_mp_order.get_order()
+
+    @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_accept_order(self):
         for order in self:

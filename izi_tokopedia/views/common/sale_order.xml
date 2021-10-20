@@ -25,6 +25,8 @@
             <button name="tokopedia_reject_order" string="Reject Order" class="btn-danger" type="object"
                     icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_process')]}"
                     style="margin-right: 5px;"/>
+            <button name="tokopedia_fetch_order" string="Re-Fetch MP Order Data" type="object" icon="fa-refresh"
+                    context="{'force_update': True}"/>
           </div>
         </xpath>
       </field>
