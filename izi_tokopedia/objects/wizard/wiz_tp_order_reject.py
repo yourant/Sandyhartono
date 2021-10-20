@@ -56,3 +56,4 @@ class WizardTokopediaOrderReject(models.TransientModel):
             action_status = tp_order.action_reject_order(**kwargs)
             if action_status == "success":
                 order.action_cancel()
+                order.tokopedia_fetch_order()

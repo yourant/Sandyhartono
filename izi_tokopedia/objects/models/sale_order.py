@@ -398,6 +398,7 @@ class SaleOrder(models.Model):
             action_status = tp_order.action_accept_order(order.mp_external_id)
             if action_status == "success":
                 order.action_confirm()
+                order.tokopedia_fetch_order()
 
     @api.multi
     def tokopedia_reject_order(self):
