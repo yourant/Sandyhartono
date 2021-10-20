@@ -369,7 +369,8 @@ class MarketplaceBase(models.AbstractModel):
         record = record_obj.search([(mp_external_id_field, '=', values[identifier_field])])
         if record.exists():
             current_signature = self.generate_signature(sanitized_data)
-            if current_signature != record.signature or context.get('force_update'):
+            if current_signature != record.signature or context.get('force_update') or record.id in context.get(
+                    'force_update_ids', []):
                 self._logger(marketplace, log_msg_updating.format(**{
                     'num': context.get('index', 0) + 1,
                     'model': self._name,

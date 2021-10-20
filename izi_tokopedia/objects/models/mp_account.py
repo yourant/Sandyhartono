@@ -270,7 +270,7 @@ class MarketplaceAccount(models.Model):
     @mp.tokopedia.capture_error
     def tokopedia_get_sale_order(self, **kwargs):
         mp_account_ctx = self.generate_context()
-        order_obj = self.env['sale.order'].with_context(mp_account_ctx)
+        order_obj = self.env['sale.order'].with_context(dict(mp_account_ctx, **self._context.copy()))
         _notify = self.env['mp.base']._notify
         _logger = self.env['mp.base']._logger
         datetime_convert_tz = self.env['mp.base'].datetime_convert_tz
@@ -285,6 +285,7 @@ class MarketplaceAccount(models.Model):
                 notif_sticky=True)
 
         skipped = 0
+        force_update_ids = []
         params, tp_data_detail_orders = {}, []
         tp_data_raws, tp_data_sanitizeds = [], []
         if kwargs.get('params') == 'by_date_range':
@@ -304,6 +305,8 @@ class MarketplaceAccount(models.Model):
                 no_existing_order = not existing_order
                 mp_status_changed = existing_order.tp_order_status != str(tp_data_order['order_status'])
                 if no_existing_order or mp_status_changed or mp_account_ctx.get('force_update'):
+                    if existing_order:
+                        force_update_ids.append(existing_order.id)
                     notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
                         str(index + 1), len(tp_data_orders), tp_invoice_number
                     )
@@ -345,6 +348,11 @@ class MarketplaceAccount(models.Model):
             tp_data_sanitizeds.extend(tp_data_sanitized)
 
             _logger(self.marketplace, 'Processed order %s!' % mp_invoice_number, notify=True, notif_sticky=True)
+
+        if force_update_ids:
+            order_obj = order_obj.with_context(dict(order_obj._context.copy(), **{
+                'force_update_ids': force_update_ids
+            }))
 
         if tp_data_raws:
             check_existing_records_params = {
