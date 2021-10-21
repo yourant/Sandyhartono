@@ -53,7 +53,8 @@ class SaleOrder(models.Model):
     mp_awb_url = fields.Text(string="AWB URL", required=False, readonly=True)
     mp_delivery_carrier_name = fields.Char(string="Delivery Carrier Name", readonly=True)
     mp_delivery_carrier_type = fields.Char(string="Delivery Carrier Type", readonly=True)
-    mp_delivery_type = fields.Selection(string="Delivery Type", selection=MP_DELIVERY_TYPES, required=False)
+    mp_delivery_type = fields.Selection(
+        string="Delivery Type", selection=MP_DELIVERY_TYPES, required=False, readonly=True)
     mp_shipping_deadline = fields.Datetime(string="Maximum Shpping Date", readonly=True)
     mp_delivery_weight = fields.Float(string="Weight (KG)", readonly=True)
 
