@@ -22,5 +22,21 @@
                 </xpath>
             </field>
         </record>
+
+        <record id="izi_shopee.form_sale_order" model="ir.ui.view">
+            <field name="name">Sale Order Form View</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="izi_marketplace.form_sale_order"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@name='mp_actions']" position="inside">
+                    <div style="margin: 10px" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+                        <button name="shopee_drop_off" string="Drop Off" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ['drop off', 'both'])]}" style="margin-right: 5px;"/>
+                        <button name="shopee_pickup" string="Request Pickup" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ['pickup', 'both'])]}" style="margin-right: 5px;"/>
+                        <button name="shopee_reject_order" string="Reject Order" class="btn-danger" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'in_process')]}" style="margin-right: 5px;"/>
+                        <button name="shopee_get_awb" string="Get Airways Bill" class="btn-info" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_ship')]}" style="margin-right: 5px;"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>
