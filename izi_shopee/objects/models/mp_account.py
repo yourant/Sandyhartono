@@ -218,9 +218,11 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     @mp.shopee.capture_error
-    def shopee_get_sale_order(self, time_range, **kwargs):
+    def shopee_get_sale_order(self, time_range=False, **kwargs):
         sale_order_obj = self.env['sale.order']
         mp_account_ctx = self.generate_context()
+        if kwargs.get('force_update'):
+            mp_account_ctx.update({'force_update': kwargs.get('force_update')})
         _notify = self.env['mp.base']._notify
         account_params = {}
         order_params = {}
@@ -248,14 +250,14 @@ class MarketplaceAccount(models.Model):
         sp_order_raws, sp_order_sanitizeds = [], []
         for data in sp_data_raw:
             # get awb url
-            if data['shipping_document_info']:
-                if data['shipping_document_info']['tracking_number']:
-                    awb_data = sp_order_v1.get_airways_bill(**{'order_sn': data['order_sn']})
-                    data['awb_url'] = awb_data.get(data['order_sn'], False)
-                else:
-                    data['awb_url'] = False
-            else:
-                data['awb_url'] = False
+            # if data['shipping_document_info']:
+            #     if data['shipping_document_info']['tracking_number']:
+            #         awb_data = sp_order_v1.get_airways_bill(**{'order_sn': data['order_sn']})
+            #         data['awb_url'] = awb_data.get(data['order_sn'], False)
+            #     else:
+            #         data['awb_url'] = False
+            # else:
+            #     data['awb_url'] = False
 
             # get_income
             income_data = sp_order_v1.get_income(**{'order_sn': data['order_sn']})
