@@ -1111,6 +1111,7 @@ class WebhookServer(models.Model):
         pp_by_name = {}
         pp_by_default_code = {}
         pp_by_izi_id = {}
+        pp_by_barcode = {}
         product_products = self.env['product.product'].sudo().search([])
         for pp in product_products:
             if pp.izi_id:
@@ -1119,6 +1120,8 @@ class WebhookServer(models.Model):
                 pp_by_name[pp.name] = pp
             if pp.default_code and len(pp.default_code) > 3:
                 pp_by_default_code[pp.default_code] = pp
+            if pp.barcode and len(pp.barcode) > 3:
+                pp_by_barcode[pp.barcode] = pp
         
         loop = True
         offset = 0
@@ -1149,6 +1152,8 @@ class WebhookServer(models.Model):
                             product_product = pp_by_name[pd['name']]
                         if not product_product and pd['default_code'] in pp_by_default_code:
                             product_product = pp_by_default_code[pd['default_code']]
+                        if not product_product and pd['default_code'] in pp_by_barcode:
+                            product_product = pp_by_barcode[pd['default_code']]
 
                         # Create or Update
                         if pd['id'] not in pm_by_izi_id:
