@@ -4,11 +4,15 @@
 class TokopediaEndpoint(object):
     HOSTS = {
         'base': 'https://fs.tokopedia.net',
-        'accounts': 'https://accounts.tokopedia.com'
+        'accounts': 'https://accounts.tokopedia.com',
+        'seller': 'https://seller.tokopedia.com'
     }
 
     ENDPOINTS = {
         # api_version: {endpoint_key: (http_method, endpoint_url)}
+        'url': {
+            'order_shipping_label': ('GET', '/shipping-label'),
+        },
         'v1': {
             'token': ('POST', '/token?grant_type=client_credentials'),
             'register_key': ('POST', '/v1/fs/{fs_id}/register'),
@@ -16,7 +20,8 @@ class TokopediaEndpoint(object):
             'product_info': ('GET', '/inventory/v1/fs/{fs_id}/product/info'),
             'logistic_active_info': ('GET', '/v1/logistic/fs/{fs_id}/active-info'),
             'order_accept': ('POST', '/v1/order/{order_id}/fs/{fs_id}/ack'),
-            'order_reject': ('POST', '/v1/order/{order_id}/fs/{fs_id}/nack')
+            'order_reject': ('POST', '/v1/order/{order_id}/fs/{fs_id}/nack'),
+            'order_shipping_label': ('GET', '/v1/order/{order_id}/fs/{fs_id}/shipping-label'),
         },
         'v2': {
             'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info'),

@@ -2,6 +2,8 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import time
 
+from requests import PreparedRequest
+
 from .api import TokopediaAPI
 
 
@@ -43,9 +45,7 @@ class TokopediaOrder(TokopediaAPI):
                         'page': page,
                         'per_page': per_page
                     })
-                    prepared_request = self.build_request('order_list', **{
-                        'params': params
-                    })
+                    prepared_request = self.build_request('order_list', params=params)
                     response = self.request(**prepared_request)
                     response_data = self.process_response('default', response)
                     if response_data:
@@ -61,9 +61,7 @@ class TokopediaOrder(TokopediaAPI):
                         'page': pagination_page[0],
                         'per_page': pagination_page[1]
                     })
-                    prepared_request = self.build_request('order_list', **{
-                        'params': params
-                    })
+                    prepared_request = self.build_request('order_list', params=params)
                     response = self.request(**prepared_request)
                     response_data = self.process_response('order_list', response)
                     if response_data:
@@ -95,9 +93,7 @@ class TokopediaOrder(TokopediaAPI):
                 'invoice_num': invoice_num,
             })
 
-        prepared_request = self.build_request('order_detail', **{
-            'params': params
-        })
+        prepared_request = self.build_request('order_detail', params=params)
         response = self.request(**prepared_request)
         if show_log:
             self._logger.info(
@@ -144,3 +140,34 @@ class TokopediaOrder(TokopediaAPI):
         response = self.request(**prepared_request)
         response_data = self.process_response('default', response)
         return response_data
+
+    def action_get_shipping_label(self, *args, **kwargs):
+        return getattr(self, '%s_action_get_shipping_label' % self.api_version)(*args, **kwargs)
+
+    def v1_action_get_shipping_label(self, order_id, printed=0):
+        self.endpoints.tp_account.order_id = order_id
+
+        params = {'printed': printed}
+
+        prepared_request = self.build_request('order_shipping_label', params=params)
+        response = self.request(**prepared_request)
+        response_data = self.process_response('default', response, no_sanitize=True)
+        return response_data
+
+    def url_action_get_shipping_label(self, order_ids, printed=0):
+        if not isinstance(order_ids, list):
+            raise TypeError("order_ids should be in list format!")
+
+        if not order_ids:
+            raise TypeError("order_ids can not be empty!")
+
+        params = {
+            'order_id': ','.join(order_ids),
+            'mark_as_printed': printed
+        }
+
+        url = self.endpoints.get_url('order_shipping_label')
+        prepared_request_obj = PreparedRequest()
+        prepared_request_obj.prepare_url(url, params)
+        return prepared_request_obj.url
+
