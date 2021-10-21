@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_wiz_tp_order_get_label" model="ir.ui.view">
+      <field name="name">Wizard Tokopedia Order Get Label Form View</field>
+      <field name="model">wiz.tp_order_get_label</field>
+      <field name="arch" type="xml">
+        <form string="Wizard Tp Order Reject">
+          <sheet>
+            <group>
+              <field name="order_ids" widget="many2many_tags" readonly="1" force_save="1"/>
+              <field name="mark_printed"/>
+            </group>
+            <div class="alert alert-info o_form_header">
+              <i class="fa fa-info-circle" style="margin-right: 10px;"/>
+              <span>You'll be redirected to Tokopedia, please make sure you've already logged in. If you're not
+                redirected to shipping label page after login, please click again "Get Label" button below!</span>
+            </div>
+            <footer>
+              <button name="get_label" type="object" string="Get Label" class="btn-primary"/>
+              <button string="Cancel" class="btn-secondary" special="cancel"/>
+            </footer>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

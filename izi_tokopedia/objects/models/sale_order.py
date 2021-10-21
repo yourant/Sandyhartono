@@ -412,3 +412,16 @@ class SaleOrder(models.Model):
                 'default_order_ids': [(6, 0, self.ids)],
             },
         }
+
+    @api.multi
+    def tokopedia_get_label(self):
+        return {
+            'name': 'Get Shipping Label(s)',
+            'view_mode': 'form',
+            'res_model': 'wiz.tp_order_get_label',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                'default_order_ids': [(6, 0, self.ids)],
+            },
+        }
