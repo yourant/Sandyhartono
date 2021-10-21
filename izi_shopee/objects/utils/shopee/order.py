@@ -56,6 +56,21 @@ class ShopeeOrder(ShopeeAPI):
                 awb_dict[data['ordersn']] = data['airway_bill']
         return awb_dict
 
+    def v2_get_shipping_parameter(self, **kwargs):
+        params = {
+            'order_sn': kwargs.get('order_sn'),
+        }
+        prepared_request = self.build_request('shipping_parameter',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'params': params
+                                              })
+        raw_data = self.process_response('shipping_parameter', self.request(**prepared_request))
+        return raw_data
+
     def v2_get_shipping_doc_info(self, **kwargs):
         params = {
             'order_sn': kwargs.get('order_sn'),
@@ -101,16 +116,30 @@ class ShopeeOrder(ShopeeAPI):
 
         temp_raw_data = raw_data['order_list']
         for index, data in enumerate(temp_raw_data):
-            if data['order_status'] == 'PROCESSED':
-                shipping_info = getattr(self, '%s_get_shipping_doc_info' %
-                                        self.api_version)(**{
-                                            'order_sn': data['order_sn'],
-                                            'package_number': data['package_list'][0]['package_number']
-                                        })
-                raw_data['order_list'][index].update(shipping_info)
+
+            # get shipping type
+            if data['order_status'] in ['READY_TO_SHIP', 'PROCESSED']:
+                shipping_paramater = getattr(self, '%s_get_shipping_parameter' %
+                                             self.api_version)(**{
+                                                 'order_sn': data['order_sn'],
+                                             })
+                raw_data['order_list'][index].update({'shipping_paramater': shipping_paramater})
+
+                # get shipping document info
+                if data['order_status'] == 'PROCESSED':
+                    shipping_info = getattr(self, '%s_get_shipping_doc_info' %
+                                            self.api_version)(**{
+                                                'order_sn': data['order_sn'],
+                                                'package_number': data['package_list'][0]['package_number']
+                                            })
+                    raw_data['order_list'][index].update(shipping_info)
+                else:
+                    raw_data['order_list'][index].update({
+                        'shipping_document_info': False
+                    })
             else:
                 raw_data['order_list'][index].update({
-                    'shipping_document_info': False
+                    'shipping_paramater': False
                 })
 
         return raw_data['order_list']
