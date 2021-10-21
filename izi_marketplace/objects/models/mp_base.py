@@ -367,9 +367,18 @@ class MarketplaceBase(models.AbstractModel):
         return self.search([(mp_external_id_field, operator, mp_external_id)])
 
     @api.model
-    def check_existing_records(self, identifier_field, raw_data, mp_data, multi=False):
+    def check_existing_records(self, identifier_field=None, raw_data=None, mp_data=None, identifier_method=None,
+                               multi=False):
         mp_account_obj = self.env['mp.account']
         record_obj = self.env[self._name]
+
+        if not identifier_field and not identifier_method:
+            raise ValidationError('Please set identifier_field or identifier_method!')
+
+        if not raw_data:
+            raw_data = {}
+        if not mp_data:
+            mp_data = {}
 
         context = self._context.copy()
         if not context.get('mp_account_id'):
@@ -397,7 +406,7 @@ class MarketplaceBase(models.AbstractModel):
             for index, mp_data in enumerate(mp_datas):
                 context['index'] = index
                 existing_record = self.with_context(context).check_existing_records(identifier_field, raw_datas[index],
-                                                                                    mp_data)
+                                                                                    mp_data, identifier_method)
                 for key in existing_record.keys():
                     check_existing_records[key].append(existing_record[key])
 
@@ -427,8 +436,11 @@ class MarketplaceBase(models.AbstractModel):
             return check_existing_records
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
-        mp_external_id_field = self._field_lookup_mp_external_id(marketplace)
-        record = record_obj.search([(mp_external_id_field, '=', values[identifier_field])])
+        if identifier_field:
+            mp_external_id_field = self._field_lookup_mp_external_id(marketplace)
+            record = record_obj.search([(mp_external_id_field, '=', values[identifier_field])])
+        elif identifier_method:
+            record = identifier_method(record_obj, values)
         if record.exists():
             current_signature = self.generate_signature(sanitized_data)
             if current_signature != record.signature or context.get('force_update') or record.id in context.get(
