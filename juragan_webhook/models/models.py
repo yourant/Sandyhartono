@@ -1504,6 +1504,7 @@ class WebhookServer(models.Model):
 
             if not partner:
                 partner = self.env['res.partner'].sudo().create({
+                    'type': 'contact',
                     'name': values.get('mp_recipient_address_name').upper() if (values.get('mp_recipient_address_name') != None and values.get('mp_recipient_address_name') != False) else False,
                     'street': values.get('mp_recipient_address_full').upper() if (values.get('mp_recipient_address_full') != None and values.get('mp_recipient_address_full') != False) else False,
                     'city': values.get('mp_recipient_address_city').upper() if (values.get('mp_recipient_address_city') != None and values.get('mp_recipient_address_city') != False) else False,
@@ -1514,6 +1515,7 @@ class WebhookServer(models.Model):
                 })
             else:
                 partner.sudo().write({
+                    'type': 'contact',
                     'name': values.get('mp_recipient_address_name').upper() if (values.get('mp_recipient_address_name') != None and values.get('mp_recipient_address_name') != False) else False,
                     'street': values.get('mp_recipient_address_full').upper() if (values.get('mp_recipient_address_full') != None and values.get('mp_recipient_address_full') != False) else False,
                     'city': values.get('mp_recipient_address_city').upper() if (values.get('mp_recipient_address_city') != None and values.get('mp_recipient_address_city') != False) else False,
