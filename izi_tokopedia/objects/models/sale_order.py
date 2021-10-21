@@ -124,6 +124,12 @@ class SaleOrder(models.Model):
             order_notes = ["%s: %s" % (product['name'], product['notes']) for product in data if product['notes']]
             return "\n".join(order_notes)
 
+        def _handle_delivery_type(env, data):
+            tp_logistic_service_obj = env['mp.tokopedia.logistic.service']
+
+            tp_logistic_service = tp_logistic_service_obj.search_mp_records('tokopedia', data)
+            return tp_logistic_service.delivery_type
+
         mp_field_mapping.update({
             # MP Order Transaction & Payment
             'mp_payment_date': ('payment_info/payment_date', _handle_isoformat_to_dt_str),
@@ -134,6 +140,7 @@ class SaleOrder(models.Model):
             'mp_order_notes': ('order_summary/products', _handle_order_notes),
 
             # MP Order Shipment
+            'mp_delivery_type': ('order_info/shipping_info/sp_id', _handle_delivery_type),
             'mp_shipping_deadline': ('shipment_fulfillment/confirm_shipping_deadline', _handle_isoformat_to_dt_str),
         })
 

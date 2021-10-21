@@ -12,7 +12,6 @@ class MPTokopediaLogistic(models.Model):
     _rec_name = 'shipper_name'
     _rec_mp_external_id = 'shipper_id'
 
-    # shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Shop", required=True)
     shipper_id = fields.Char(string="Shipper ID", readonly=True)
     shipper_name = fields.Char(string="Shipper Name", readonly=True)
     logo = fields.Char(string="Logo", readonly=True)
@@ -98,11 +97,19 @@ class MPTokopediaLogisticService(models.Model):
     _rec_name = 'service_name'
     _rec_mp_external_id = 'service_id'
 
+    MP_DELIVERY_TYPES = [
+        ('pickup', 'Pickup'),
+        ('drop off', 'Drop Off'),
+        ('both', 'Pickup & Drop Off'),
+        ('send_to_warehouse', 'Send to Warehouse')
+    ]
+
     logistic_id = fields.Many2one(comodel_name="mp.tokopedia.logistic", string="Logistic", required=True,
                                   ondelete="restrict")
     service_id = fields.Char(string="Service ID", readonly=True)
     service_name = fields.Char(string="Service Name", readonly=True)
     service_desc = fields.Char(string="Service Description", readonly=True)
+    delivery_type = fields.Selection(string="Delivery Type", readonly=True, selection=MP_DELIVERY_TYPES)
     product_id = fields.Many2one(comodel_name="product.product", string="Delivery Product", required=False)
 
     @classmethod
@@ -115,7 +122,8 @@ class MPTokopediaLogisticService(models.Model):
             'logistic_id': ('logistic_id', None),
             'service_id': ('service_id', lambda env, r: str(r)),
             'service_name': ('service_name', None),
-            'service_desc': ('service_desc', None)
+            'service_desc': ('service_desc', None),
+            'delivery_type': ('type_name', None)
         }
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
