@@ -23,6 +23,9 @@ class ShopeeOrder(ShopeeAPI):
     def get_income(self, *args, **kwargs):
         return getattr(self, '%s_get_income' % self.api_version)(*args, **kwargs)
 
+    def action_ship_order(self, *args, **kwargs):
+        return getattr(self, '%s_ship_order' % self.api_version)(*args, **kwargs)
+
     def v1_get_income(self, **kwargs):
         body = {
             'ordersn': kwargs.get('order_sn'),
@@ -116,14 +119,14 @@ class ShopeeOrder(ShopeeAPI):
 
         temp_raw_data = raw_data['order_list']
         for index, data in enumerate(temp_raw_data):
-
+            shipping_parameter = False
+            shipping_info = False
             # get shipping type
             if data['order_status'] in ['READY_TO_SHIP', 'PROCESSED']:
-                shipping_paramater = getattr(self, '%s_get_shipping_parameter' %
+                shipping_parameter = getattr(self, '%s_get_shipping_parameter' %
                                              self.api_version)(**{
                                                  'order_sn': data['order_sn'],
                                              })
-                raw_data['order_list'][index].update({'shipping_paramater': shipping_paramater})
 
                 # get shipping document info
                 if data['order_status'] == 'PROCESSED':
@@ -132,15 +135,12 @@ class ShopeeOrder(ShopeeAPI):
                                                 'order_sn': data['order_sn'],
                                                 'package_number': data['package_list'][0]['package_number']
                                             })
-                    raw_data['order_list'][index].update(shipping_info)
-                else:
-                    raw_data['order_list'][index].update({
-                        'shipping_document_info': False
-                    })
-            else:
-                raw_data['order_list'][index].update({
-                    'shipping_paramater': False
-                })
+                    shipping_info = shipping_info['shipping_document_info']
+
+            raw_data['order_list'][index].update({
+                'shipping_paramater': shipping_parameter,
+                'shipping_document_info': shipping_info
+            })
 
         return raw_data['order_list']
 
@@ -191,3 +191,25 @@ class ShopeeOrder(ShopeeAPI):
         self._logger.info("Order: Finished %d record(s) imported." % len(self.order_data))
         # return self.order_data_raw, self.order_data
         return self.order_data_raw
+
+    def v2_ship_order(self, **kwargs):
+        payload = {
+            'order_sn': kwargs.get('order_sn'),
+            # 'package_number': kwargs.get('package_number'),
+        }
+        if kwargs.get('dropoff'):
+            payload.update({'dropoff': kwargs.get('dropoff')})
+        prepared_request = self.build_request('ship_order',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'json': payload
+                                              })
+        response = self.process_response('ship_order', self.request(**prepared_request), no_sanitize=True)
+        raw_data = response.json()
+        if raw_data['error']:
+            return 'failed'
+        else:
+            return 'success'

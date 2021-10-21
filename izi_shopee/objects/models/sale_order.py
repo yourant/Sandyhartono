@@ -8,9 +8,13 @@ import json
 
 from odoo import api, fields, models
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
+
+from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
+from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
+from odoo.addons.izi_shopee.objects.utils.shopee.order import ShopeeOrder
 
 
 class SaleOrder(models.Model):
@@ -173,8 +177,12 @@ class SaleOrder(models.Model):
                 sp_order_detail_raws.extend(sp_data_raw)
                 sp_order_detail_sanitizeds.extend(sp_data_sanitized)
 
+            def identify_order_line(record_obj, values):
+                return record_obj.search([('order_id', '=', values['order_id']),
+                                          ('product_id', '=', values['product_id'])], limit=1)
+
             check_existing_records_params = {
-                'identifier_field': 'sp_order_item_id',
+                'identifier_method': identify_order_line,
                 'raw_data': sp_order_detail_raws,
                 'mp_data': sp_order_detail_sanitizeds,
                 'multi': isinstance(sp_order_detail_sanitizeds, list)
@@ -185,6 +193,19 @@ class SaleOrder(models.Model):
                 mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
         return records
+
+    @api.multi
+    def shopee_fetch_order(self):
+        wiz_mp_order_obj = self.env['wiz.mp.order']
+
+        self.ensure_one()
+
+        wiz_mp_order = wiz_mp_order_obj.create({
+            'mp_account_id': self.mp_account_id.id,
+            'params': 'by_mp_invoice_number',
+            'mp_invoice_number': self.mp_invoice_number
+        })
+        return wiz_mp_order.get_order()
 
     @api.multi
     def shopee_generate_delivery_line(self):
@@ -242,19 +263,22 @@ class SaleOrder(models.Model):
     @api.multi
     def shopee_generate_global_discount_line(self):
         for order in self:
-            adjustment_line = order.order_line.filtered(lambda l: l.is_adjustment)
-            if not adjustment_line:
-                sp_order_raw = json.loads(order.raw, strict=False)
-                seller_discount = json_digger(sp_order_raw, 'order_income/seller_discount',
+            global_discount_line = order.order_line.filtered(lambda l: l.is_global_discount)
+            sp_order_raw = json.loads(order.raw, strict=False)
+            seller_discount = json_digger(sp_order_raw, 'order_income/seller_discount',
+                                          default=0)
+            shopee_discount = json_digger(sp_order_raw, 'order_income/shopee_discount',
+                                          default=0)
+            voucher_from_seller = json_digger(sp_order_raw, 'order_income/voucher_from_seller',
                                               default=0)
-                shopee_discount = json_digger(sp_order_raw, 'order_income/shopee_discount',
+            voucher_from_shopee = json_digger(sp_order_raw, 'order_income/voucher_from_shopee',
                                               default=0)
-                voucher_from_seller = json_digger(sp_order_raw, 'order_income/voucher_from_seller',
-                                                  default=0)
-                voucher_from_shopee = json_digger(sp_order_raw, 'order_income/voucher_from_shopee',
-                                                  default=0)
+            coins = json_digger(sp_order_raw, 'order_income/coins',
+                                default=0)
 
-                total_discount = seller_discount + shopee_discount + voucher_from_seller + voucher_from_shopee
+            total_discount = seller_discount + shopee_discount + voucher_from_seller + voucher_from_shopee + coins
+            if not global_discount_line:
+
                 if total_discount > 0:
                     discount_product = order.mp_account_id.global_discount_product_id
                     if not discount_product:
@@ -270,3 +294,59 @@ class SaleOrder(models.Model):
                             'is_global_discount': True
                         })]
                     })
+            else:
+                if total_discount > 0:
+                    global_discount_line.write({
+                        'price_unit': total_discount,
+                    })
+
+    @api.multi
+    @mp.shopee.capture_error
+    def shopee_get_awb(self):
+        sp_account = False
+        for order in self:
+            if order.mp_awb_url:
+                return {
+                    'name': 'Label',
+                    'res_model': 'ir.actions.act_url',
+                    'type': 'ir.actions.act_url',
+                    'target': 'new',
+                    'url': order.mp_awb_url,
+                }
+            elif order.mp_awb_number:
+                if order.mp_account_id.mp_token_id.state == 'valid':
+                    params = {'access_token': order.mp_account_id.mp_token_id.name}
+                    sp_account = order.mp_account_id.shopee_get_account(**params)
+                else:
+                    raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+
+                if sp_account:
+                    sp_order = ShopeeOrder(sp_account)
+
+    @api.multi
+    @mp.shopee.capture_error
+    def shopee_drop_off(self):
+        sale_order_obj = self.env['sale.order']
+        sp_account = False
+        for order in self:
+            if order.mp_account_id.mp_token_id.state == 'valid':
+                params = {'access_token': order.mp_account_id.mp_token_id.name}
+                sp_account = order.mp_account_id.shopee_get_account(**params)
+            else:
+                raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+
+            if sp_account:
+                sp_order_v2 = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
+                action_params = {
+                    'order_sn': order.mp_external_id,
+                    # 'package_number': order.sp_package_number,
+                    'dropoff': {
+                        "tracking_no": "",
+                        "branch_id": 0,
+                        "sender_real_name": ""
+                    }
+                }
+                action_status = sp_order_v2.action_ship_order(**action_params)
+                if action_status == "success":
+                    order.action_confirm()
+                    order.shopee_fetch_order()

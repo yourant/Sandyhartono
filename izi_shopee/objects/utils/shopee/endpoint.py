@@ -30,7 +30,8 @@ class ShopeeEndpoint(object):
             'order_list': ('GET', '/api/v2/order/get_order_list'),
             'order_detail': ('GET', '/api/v2/order/get_order_detail'),
             'shipping_doc_info': ('GET', '/api/v2/logistics/get_shipping_document_info'),
-            'shipping_parameter': ('GET', '/api/v2/logistics/get_shipping_parameter')
+            'shipping_parameter': ('GET', '/api/v2/logistics/get_shipping_parameter'),
+            'ship_order': ('POST', '/api/v2/logistics/ship_order')
         }
     }
 
