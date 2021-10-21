@@ -83,6 +83,7 @@ class SaleOrder(models.Model):
             'mp_payment_method_info': ('payment_method', None),
             'mp_delivery_carrier_name': ('shipping_carrier', None),
             'mp_order_notes': ('note', None),
+            'mp_order_notes': ('message_to_seller', None),
             'mp_cancel_reason': ('cancel_reason', None),
             'mp_recipient_address_city': ('recipient_address/city', None),
             'mp_recipient_address_name': ('recipient_address/name', None),
@@ -115,13 +116,27 @@ class SaleOrder(models.Model):
             else:
                 return None
 
+        def _set_mp_delivery_type(env, data):
+            if data:
+                mp_delivery_type = None
+                if 'pickup' in data and 'dropoff' in data:
+                    mp_delivery_type = 'both'
+                elif 'pickup' in data:
+                    mp_delivery_type = 'pickup'
+                elif 'dropoff' in data:
+                    mp_delivery_type = 'drop off'
+                return mp_delivery_type
+            else:
+                return None
+
         mp_field_mapping.update({
             'mp_payment_date': ('pay_time', _convert_timestamp_to_datetime),
             'mp_order_date': ('create_time', _convert_timestamp_to_datetime),
             'mp_order_last_update_date': ('update_time', _convert_timestamp_to_datetime),
             'mp_shipping_deadline': ('ship_by_date', _convert_timestamp_to_datetime),
             'sp_package_number': ('package_list', _get_package_number),
-            'mp_awb_number': ('shipping_document_info', _get_tracking_number)
+            'mp_awb_number': ('shipping_document_info', _get_tracking_number),
+            'mp_delivery_type': ('shipping_paramater/info_needed', _set_mp_delivery_type)
 
         })
 
