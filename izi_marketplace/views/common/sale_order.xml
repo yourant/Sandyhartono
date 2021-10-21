@@ -117,7 +117,7 @@
                 <field name="mp_delivery_carrier_type" readonly="1" string="Delivery Carrier Type"/>
                 <field name="mp_awb_number" readonly="1"/>
                 <field name="mp_awb_url" widget="url" readonly="1"/>
-                <field name="mp_delivery_type" readonly="1" string="Delivery Type"/>
+                <field name="mp_delivery_type" string="Delivery Type" readonly="1"/>
                 <field name="mp_accept_deadline" readonly="1"/>
                 <field name="mp_shipping_deadline" readonly="1"/>
               </group>
