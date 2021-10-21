@@ -7,16 +7,6 @@ from odoo import api, fields, models
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    sp_order_item_id = fields.Char(string="Shopee Order Item ID", required_if_marketplace="shopee")
-
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
-
-        mp_external_id_fields.append(('shopee', 'sp_order_item_id'))
-        super(SaleOrderLine, cls)._add_rec_mp_external_id(mp_external_id_fields)
-
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
         if not mp_field_mappings:
@@ -31,7 +21,6 @@ class SaleOrderLine(models.Model):
             'product_uom_qty': ('model_quantity_purchased', None),
             'sp_discounted_price': ('model_discounted_price', None),
             'sp_original_price': ('model_original_price', None),
-            'sp_order_item_id': ('order_item_id', lambda env, r: str(r))
         }
 
         def _handle_product_id(env, data):
