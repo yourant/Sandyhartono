@@ -39,7 +39,8 @@ class WizardMPOrder(models.TransientModel):
         self.to_date = fields.Datetime.to_string(now)
 
     def get_order(self):
-        kwargs = {'params': self.params}
+        kwargs = {'params': self.params,
+                  'force_update': self._context.get('force_update', False)}
         if self.params == 'by_date_range':
             from_date = fields.Datetime.from_string(self.from_date)
             to_date = fields.Datetime.from_string(self.to_date)
