@@ -67,6 +67,12 @@ class MarketplaceAccount(models.Model):
     adjustment_product_id = fields.Many2one(comodel_name="product.product",
                                             string="Default Adjustment Product",
                                             default=lambda self: self._get_default_adjustment_product_id())
+
+    get_unpaid_orders = fields.Boolean(string="Get Unpaid Order", default=False,
+                                       help="Get order with status UNPAID from Shopee")
+    get_cancelled_orders = fields.Boolean(string="Get Cancelled Order", default=False,
+                                          help="Get order CANCELLED from marketplace if the order is not exists before")
+
     debug_force_update = fields.Boolean(string="Force Update", default=False,
                                         help="Force update even there is no changes from marketplace")
     debug_force_update_raw = fields.Boolean(string="Force Update Raw Only", default=False,
