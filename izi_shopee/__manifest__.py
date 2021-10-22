@@ -37,6 +37,7 @@
 
         # data
         'data/mp_partner.xml',
+        'data/product.xml',
         # global action
         # 'views/action/action.xml',
 
