@@ -174,3 +174,16 @@ class TokopediaOrder(TokopediaAPI):
         prepared_request_obj.prepare_url(url, params)
         return prepared_request_obj.url
 
+    def action_get_booking_code(self, *args, **kwargs):
+        return getattr(self, '%s_action_get_booking_code' % self.api_version)(*args, **kwargs)
+
+    def v1_action_get_booking_code(self, order_id=None):
+        params = {}
+
+        if order_id:
+            params.update({'order_id': order_id})
+
+        prepared_request = self.build_request('fulfillment_order', params=params)
+        response = self.request(**prepared_request)
+        response_data = self.process_response('booking_code', response)
+        return response_data

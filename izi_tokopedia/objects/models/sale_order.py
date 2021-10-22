@@ -221,7 +221,8 @@ class SaleOrder(models.Model):
             return default_sanitizer(raw_data=decrypted_raw_datas)
 
         return {
-            'sanitize_decrypt': sanitize_decrypt
+            'sanitize_decrypt': sanitize_decrypt,
+            'booking_code': self.get_default_sanitizer(mp_field_mapping, root_path='data')
         }
 
     @api.model
@@ -432,3 +433,18 @@ class SaleOrder(models.Model):
                 'default_order_ids': [(6, 0, self.ids)],
             },
         }
+
+    @api.multi
+    def tokopedia_get_booking_code(self):
+        for order in self:
+            mp_account_ctx = order.mp_account_id.generate_context()
+            sanitizers = order.with_context(mp_account_ctx).tokopedia_get_sanitizers(
+                {'mp_awb_number': ('order_data/booking_data/booking_code', None)})
+            tp_account = order.mp_account_id.tokopedia_get_account()
+            tp_order = TokopediaOrder(tp_account, sanitizers=sanitizers)
+            tp_order_seller = TokopediaOrder(tp_account, api_version="url")
+            tp_order_seller.endpoints.host = 'seller'
+
+            booking_code = tp_order.action_get_booking_code(order.mp_external_id)[1]
+            label_url = tp_order_seller.action_print_shipping_label(order_ids=[order.mp_external_id], printed=0)
+            order.write(dict(booking_code[0], **{'mp_awb_url': label_url}))
