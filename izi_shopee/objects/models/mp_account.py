@@ -245,8 +245,8 @@ class MarketplaceAccount(models.Model):
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
 
-        skipped = 0
         force_update_ids = []
+        sp_order_list = []
 
         def get_order_income(sp_data_raws):
             sp_order_raws, sp_order_sanitizeds = [], []
@@ -302,9 +302,10 @@ class MarketplaceAccount(models.Model):
                 sp_order_raws, sp_order_sanitizeds = get_order_income(sp_data_raws)
 
         elif kwargs.get('params') == 'by_mp_invoice_number':
-            sp_order_list = 1
+            shopee_invoice_number = kwargs.get('mp_invoice_number')
+            sp_order_list.append(shopee_invoice_number)
             order_params.update({
-                'order_id': kwargs.get('mp_invoice_number')
+                'order_id': shopee_invoice_number
             })
             sp_data_raws = sp_order_v2.get_order_detail(**order_params)
             sp_order_raws, sp_order_sanitizeds = get_order_income(sp_data_raws)
