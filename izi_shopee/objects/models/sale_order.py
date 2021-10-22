@@ -276,8 +276,8 @@ class SaleOrder(models.Model):
                             'sequence': 999,
                             'name': 'Shopee Coins',
                             'product_id': shopee_coins_product.id,
-                            'product_uom_qty': -1,
-                            'price_unit': total_coins,
+                            'product_uom_qty': 1,
+                            'price_unit': -total_coins,
                             'is_shopee_coins': True
                         })]
                     })
@@ -309,8 +309,8 @@ class SaleOrder(models.Model):
                         'order_line': [(0, 0, {
                             'sequence': 999,
                             'product_id': discount_product.id,
-                            'product_uom_qty': -1,
-                            'price_unit': total_discount,
+                            'product_uom_qty': 1,
+                            'price_unit': -total_discount,
                             'is_global_discount': True
                         })]
                     })
