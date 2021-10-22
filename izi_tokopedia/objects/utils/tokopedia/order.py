@@ -154,7 +154,10 @@ class TokopediaOrder(TokopediaAPI):
         response_data = self.process_response('default', response, no_sanitize=True)
         return response_data
 
-    def url_action_get_shipping_label(self, order_ids, printed=0):
+    def action_print_shipping_label(self, *args, **kwargs):
+        return getattr(self, '%s_action_print_shipping_label' % self.api_version)(*args, **kwargs)
+
+    def url_action_print_shipping_label(self, order_ids, printed=0):
         if not isinstance(order_ids, list):
             raise TypeError("order_ids should be in list format!")
 
