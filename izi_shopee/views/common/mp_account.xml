@@ -16,6 +16,9 @@
             <field name="sp_partner_key" password="True" attrs="{'required': [('marketplace', '=', 'shopee')]}"/>
           </group>
         </xpath>
+        <xpath expr="//group[@name='product_configuration']" position="inside">
+            <field name="sp_coins_product_id" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+        </xpath>
       </field>
     </record>
   </data>

@@ -260,6 +260,28 @@ class SaleOrder(models.Model):
                         })]
                     })
 
+            shopee_coins_line = order.order_line.filtered(lambda l: l.is_shopee_coins)
+            if not shopee_coins_line:
+                sp_order_raw = json.loads(order.raw, strict=False)
+                total_coins = json_digger(sp_order_raw, 'order_income/coins',
+                                          default=0)
+                if total_coins > 0:
+                    shopee_coins_product = order.mp_account_id.sp_coins_product_id
+                    if not shopee_coins_product:
+                        raise ValidationError(
+                            'Please define global discount product on'
+                            ' this marketplace account: "%s"' % order.mp_account_id.name)
+                    order.write({
+                        'order_line': [(0, 0, {
+                            'sequence': 999,
+                            'name': 'Shopee Coins',
+                            'product_id': shopee_coins_product.id,
+                            'product_uom_qty': -1,
+                            'price_unit': total_coins,
+                            'is_shopee_coins': True
+                        })]
+                    })
+
     @api.multi
     def shopee_generate_global_discount_line(self):
         for order in self:
@@ -273,10 +295,8 @@ class SaleOrder(models.Model):
                                               default=0)
             voucher_from_shopee = json_digger(sp_order_raw, 'order_income/voucher_from_shopee',
                                               default=0)
-            coins = json_digger(sp_order_raw, 'order_income/coins',
-                                default=0)
 
-            total_discount = seller_discount + shopee_discount + voucher_from_seller + voucher_from_shopee + coins
+            total_discount = seller_discount + shopee_discount + voucher_from_seller + voucher_from_shopee
             if not global_discount_line:
 
                 if total_discount > 0:
@@ -321,7 +341,19 @@ class SaleOrder(models.Model):
                     raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
 
                 if sp_account:
-                    sp_order = ShopeeOrder(sp_account)
+                    sp_order_v1 = ShopeeOrder(sp_account, api_version="v1")
+                    awb_data = sp_order_v1.get_airways_bill(order_sn=order.mp_invoice_number)
+                    order.mp_awb_url = awb_data.get(order.mp_invoice_number, False)
+                    if order.mp_awb_url:
+                        return {
+                            'name': 'Label',
+                            'res_model': 'ir.actions.act_url',
+                            'type': 'ir.actions.act_url',
+                            'target': 'new',
+                            'url': order.mp_awb_url,
+                        }
+            else:
+                pass
 
     @api.multi
     @mp.shopee.capture_error
