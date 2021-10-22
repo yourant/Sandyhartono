@@ -109,7 +109,8 @@ class ShopeeOrder(ShopeeAPI):
 
         response_field = ['item_list', 'recipient_address', 'note,shipping_carrier', 'pay_time',
                           'buyer_user_id', 'buyer_username', 'payment_method', 'package_list', 'actual_shipping_fee',
-                          'estimated_shipping_fee', 'actual_shipping_fee_confirmed', 'total_amount']
+                          'estimated_shipping_fee', 'actual_shipping_fee_confirmed', 'total_amount', 
+                          'checkout_shipping_carrier']
         order_id_list = []
         raw_datas = {'order_list': []}
         per_page = 50

@@ -99,7 +99,8 @@ class SaleOrder(models.Model):
             'mp_recipient_address_full': ('recipient_address/full_address', None),
             'mp_amount_total': ('total_amount', None),
             'mp_awb_url': ('awb_url', None),
-            'mp_expected_income': ('order_income/escrow_amount', None)
+            'mp_expected_income': ('order_income/escrow_amount', None),
+            'mp_delivery_carrier_type': ('checkout_shipping_carrier', None)
         }
 
         def _convert_timestamp_to_datetime(env, data):
@@ -213,10 +214,10 @@ class SaleOrder(models.Model):
 
         for order in self:
             delivery_line = order.order_line.filtered(lambda l: l.is_delivery)
+            sp_order_raw = json.loads(order.raw, strict=False)
+            sp_order_shipping = json_digger(sp_order_raw, 'package_list')[0]
+            sp_logistic_name = str(sp_order_shipping.get('shipping_carrier'))
             if not delivery_line:
-                sp_order_raw = json.loads(order.raw, strict=False)
-                sp_order_shipping = json_digger(sp_order_raw, 'package_list')[0]
-                sp_logistic_name = str(sp_order_shipping.get('shipping_carrier'))
                 sp_logistic = sp_logistic_obj.search([('logistics_channel_name', '=', sp_logistic_name)])
                 delivery_product = sp_logistic.get_delivery_product()
                 if not delivery_product:
@@ -235,6 +236,11 @@ class SaleOrder(models.Model):
                         'is_delivery': True
                     })]
                 })
+            else:
+                if delivery_line.name != sp_logistic_name:
+                    delivery_line.update({
+                        'name': sp_logistic_name,
+                    })
 
     @api.multi
     def shopee_generate_adjusment_line(self):
