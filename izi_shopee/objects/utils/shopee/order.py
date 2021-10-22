@@ -91,33 +91,48 @@ class ShopeeOrder(ShopeeAPI):
         return raw_data
 
     def v2_get_order_detail(self, **kwargs):
+        def req_order_detail(order_ids):
+            params = {
+                'order_sn_list': ','.join(order_id_list),
+                'response_optional_fields': ','.join(response_field)
+            }
+            prepared_request = self.build_request('order_detail',
+                                                  self.sp_account.partner_id,
+                                                  self.sp_account.partner_key,
+                                                  self.sp_account.shop_id,
+                                                  self.sp_account.access_token,
+                                                  ** {
+                                                      'params': params
+                                                  })
+            raw_data = self.process_response('order_detail', self.request(**prepared_request))
+            return raw_data['order_list']
+
         response_field = ['item_list', 'recipient_address', 'note,shipping_carrier', 'pay_time',
                           'buyer_user_id', 'buyer_username', 'payment_method', 'package_list', 'actual_shipping_fee',
                           'estimated_shipping_fee', 'actual_shipping_fee_confirmed', 'total_amount']
         order_id_list = []
+        raw_datas = {'order_list': []}
+        per_page = 50
+        count_order = 0
         if kwargs.get('sp_data', False):
             sp_data = kwargs.get('sp_data')
-            for data in sp_data:
-                order_id_list.append(data['order_sn'])
+            order_list_split = [sp_data[x:x+per_page] for x in range(0, len(sp_data), per_page)]
+            for datas in order_list_split:
+                order_id_list = []
+                for order in datas:
+                    order_id_list.append(order['order_sn'])
+                count_order += len(order_id_list)
+                self._logger.info("Order: Get order detail %d of %d." % (count_order, len(sp_data)))
+                raw_data = req_order_detail(order_id_list)
+                raw_datas['order_list'].extend(raw_data)
+
         elif kwargs.get('order_id', False):
             order_id_list.append(kwargs.get('order_id'))
+            self._logger.info("Order: Get order detail %d of unlimited." % len(order_id_list))
+            raw_data = req_order_detail(order_id_list)
+            raw_datas['order_list'].append(raw_data)
 
-        params = {
-            'order_sn_list': ','.join(order_id_list),
-            'response_optional_fields': ','.join(response_field)
-        }
-
-        prepared_request = self.build_request('order_detail',
-                                              self.sp_account.partner_id,
-                                              self.sp_account.partner_key,
-                                              self.sp_account.shop_id,
-                                              self.sp_account.access_token,
-                                              ** {
-                                                  'params': params
-                                              })
-        raw_data = self.process_response('order_detail', self.request(**prepared_request))
-
-        temp_raw_data = raw_data['order_list']
+        temp_raw_data = raw_datas['order_list']
         for index, data in enumerate(temp_raw_data):
             shipping_parameter = False
             shipping_info = False
@@ -137,23 +152,24 @@ class ShopeeOrder(ShopeeAPI):
                                             })
                     shipping_info = shipping_info['shipping_document_info']
 
-            raw_data['order_list'][index].update({
+            raw_datas['order_list'][index].update({
                 'shipping_paramater': shipping_parameter,
                 'shipping_document_info': shipping_info
             })
 
-        return raw_data['order_list']
+        self._logger.info("Order: Finished Get order detail %d record(s) imported." % len(raw_datas['order_list']))
+        return raw_datas['order_list']
 
-    def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_range=None):
+    def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_range=None, **kwargs):
         date_ranges = self.pagination_date_range(from_date, to_date)
-
         for date_range in date_ranges:
             from_timestamp = self.to_api_timestamp(date_range[0])
             to_timestamp = self.to_api_timestamp(date_range[1])
             params = {
                 'time_range_field': time_range,
                 'time_from': from_timestamp,
-                'time_to': to_timestamp
+                'time_to': to_timestamp,
+                'response_optional_fields': 'order_status'
             }
             unlimited = not limit
             if unlimited:
@@ -173,14 +189,8 @@ class ShopeeOrder(ShopeeAPI):
                                                           })
                     response_data = self.process_response('order_list', self.request(**prepared_request))
                     if response_data['order_list']:
-                        params = {
-                            'sp_data': response_data['order_list']
-                        }
-                        raw_data = getattr(self, '%s_get_order_detail' %
-                                           self.api_version)(**params)
-                        # self.order_data.extend(sp_data)
-                        self.order_data_raw.extend(raw_data)
-                        self._logger.info("Order: Imported %d of unlimited." % len(self.order_data))
+                        self.order_data_raw.extend(response_data['order_list'])
+                        self._logger.info("Order: Get order list %d of unlimited." % len(response_data['order_list']))
                         if not response_data['next_cursor']:
                             unlimited = False
                         else:
@@ -188,7 +198,7 @@ class ShopeeOrder(ShopeeAPI):
                     else:
                         unlimited = False
 
-        self._logger.info("Order: Finished %d record(s) imported." % len(self.order_data))
+        self._logger.info("Order: Finished Get order List %d record(s) imported." % len(self.order_data_raw))
         # return self.order_data_raw, self.order_data
         return self.order_data_raw
 
