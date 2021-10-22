@@ -421,11 +421,11 @@ class SaleOrder(models.Model):
         }
 
     @api.multi
-    def tokopedia_get_label(self):
+    def tokopedia_print_label(self):
         return {
-            'name': 'Get Shipping Label(s)',
+            'name': 'Print Shipping Label(s)',
             'view_mode': 'form',
-            'res_model': 'wiz.tp_order_get_label',
+            'res_model': 'wiz.tp_order_print_label',
             'type': 'ir.actions.act_window',
             'target': 'new',
             'context': {

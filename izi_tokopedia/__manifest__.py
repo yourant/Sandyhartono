@@ -51,7 +51,7 @@
         # wizard
         'views/wizard/wiz_upload_public_key.xml',
         'views/wizard/wiz_tp_order_reject.xml',
-        'views/wizard/wiz_tp_order_get_label.xml',
+        'views/wizard/wiz_tp_order_print_label.xml',
 
         # report paperformat
         # 'data/report_paperformat.xml',
