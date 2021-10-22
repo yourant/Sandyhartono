@@ -128,9 +128,9 @@ class ShopeeOrder(ShopeeAPI):
 
         elif kwargs.get('order_id', False):
             order_id_list.append(kwargs.get('order_id'))
-            self._logger.info("Order: Get order detail %d of unlimited." % len(order_id_list))
+            self._logger.info("Order: Get order detail %d of %d." % (len(order_id_list), len(order_id_list)))
             raw_data = req_order_detail(order_id_list)
-            raw_datas['order_list'].append(raw_data)
+            raw_datas['order_list'].extend(raw_data)
 
         temp_raw_data = raw_datas['order_list']
         for index, data in enumerate(temp_raw_data):
