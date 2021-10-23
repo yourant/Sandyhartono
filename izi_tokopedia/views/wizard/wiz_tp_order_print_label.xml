@@ -11,7 +11,7 @@
               <field name="order_ids" widget="many2many_tags" readonly="1" force_save="1"/>
               <field name="mark_printed"/>
             </group>
-            <div class="alert alert-info o_form_header">
+            <div class="alert alert-info o_form_header" role="alert">
               <i class="fa fa-info-circle" style="margin-right: 10px;"/>
               <span>You'll be redirected to Tokopedia, please make sure you've already logged in. If you're not
                 redirected to shipping label page after login, please click again "Print Label" button below!</span>
