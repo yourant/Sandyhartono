@@ -103,6 +103,8 @@ class MarketplaceProduct(models.Model):
         # Get default values
         fields_with_default = []
         for fname, field in product_tmpl_obj._fields.items():
+            if field.type in ['one2many', 'many2many']:  # Exclude "x2many" field type
+                continue
             if field.default and field.store:
                 fields_with_default.append(fname)
         values.update(product_tmpl_obj.default_get(fields_with_default))
