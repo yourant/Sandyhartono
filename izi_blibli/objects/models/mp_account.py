@@ -136,9 +136,14 @@ class MarketplaceAccount(models.Model):
         bli_account = self.blibli_get_account()
         bli_product = BlibliProduct(bli_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
         bli_data_raw, bli_data_sanitized = bli_product.get_product_list()
-        check_existing_records = mp_product_obj.with_context(mp_account_ctx). \
-            check_existing_records('bli_product_id', bli_data_raw, bli_data_sanitized,
-                                   isinstance(bli_data_sanitized, list))
+        check_existing_records_params = {
+            'identifier_field': 'bli_product_id',
+            'raw_data': bli_data_raw,
+            'mp_data': bli_data_sanitized,
+            'multi': isinstance(bli_data_sanitized, list)
+        }
+        check_existing_records = mp_product_obj.with_context(
+            mp_account_ctx).check_existing_records(**check_existing_records_params)
         if check_existing_records['need_update_records']:
             mp_product_obj.with_context({'mp_account_id': self.id}).update_records(
                 check_existing_records['need_update_records'])
