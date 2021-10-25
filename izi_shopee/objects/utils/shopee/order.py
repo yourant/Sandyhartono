@@ -11,20 +11,8 @@ class ShopeeOrder(ShopeeAPI):
         self.order_data = []
         self.order_data_raw = []
 
-    def get_order_list(self, *args, **kwargs):
-        return getattr(self, '%s_get_order_list' % self.api_version)(*args, **kwargs)
-
-    def get_order_detail(self, *args, **kwargs):
-        return getattr(self, '%s_get_order_detail' % self.api_version)(*args, **kwargs)
-
-    def get_airways_bill(self, *args, **kwargs):
-        return getattr(self, '%s_get_awb' % self.api_version)(*args, **kwargs)
-
     def get_income(self, *args, **kwargs):
         return getattr(self, '%s_get_income' % self.api_version)(*args, **kwargs)
-
-    def action_ship_order(self, *args, **kwargs):
-        return getattr(self, '%s_ship_order' % self.api_version)(*args, **kwargs)
 
     def v1_get_income(self, **kwargs):
         body = {
@@ -39,6 +27,9 @@ class ShopeeOrder(ShopeeAPI):
                                               })
         response = self.process_response('get_my_income', self.request(**prepared_request), no_sanitize=True)
         return response.json()
+
+    def get_airways_bill(self, **kwargs):
+        return getattr(self, '%s_get_awb' % self.api_version)(**kwargs)
 
     def v1_get_awb(self, **kwargs):
         body = {
@@ -59,6 +50,12 @@ class ShopeeOrder(ShopeeAPI):
                 awb_dict[data['ordersn']] = data['airway_bill']
         return awb_dict
 
+    def get_shipping_parameter(self, **kwargs):
+        return getattr(self, '%s_get_shipping_parameter' %
+                       self.api_version)(**{
+                           'order_sn': kwargs.get('order_sn'),
+                       })
+
     def v2_get_shipping_parameter(self, **kwargs):
         params = {
             'order_sn': kwargs.get('order_sn'),
@@ -73,6 +70,13 @@ class ShopeeOrder(ShopeeAPI):
                                               })
         raw_data = self.process_response('shipping_parameter', self.request(**prepared_request))
         return raw_data
+
+    def get_shipping_doc_info(self, **kwargs):
+        return getattr(self, '%s_get_shipping_doc_info' %
+                       self.api_version)(**{
+                           'order_sn': kwargs.get('order_sn'),
+                           'package_number': kwargs.get('package_number')
+                       })
 
     def v2_get_shipping_doc_info(self, **kwargs):
         params = {
@@ -89,6 +93,9 @@ class ShopeeOrder(ShopeeAPI):
                                               })
         raw_data = self.process_response('shipping_doc_info', self.request(**prepared_request))
         return raw_data
+
+    def get_order_detail(self, **kwargs):
+        return getattr(self, '%s_get_order_detail' % self.api_version)(**kwargs)
 
     def v2_get_order_detail(self, **kwargs):
         def req_order_detail(order_ids):
@@ -109,7 +116,7 @@ class ShopeeOrder(ShopeeAPI):
 
         response_field = ['item_list', 'recipient_address', 'note,shipping_carrier', 'pay_time',
                           'buyer_user_id', 'buyer_username', 'payment_method', 'package_list', 'actual_shipping_fee',
-                          'estimated_shipping_fee', 'actual_shipping_fee_confirmed', 'total_amount', 
+                          'estimated_shipping_fee', 'actual_shipping_fee_confirmed', 'total_amount',
                           'checkout_shipping_carrier']
         order_id_list = []
         raw_datas = {'order_list': []}
@@ -139,18 +146,12 @@ class ShopeeOrder(ShopeeAPI):
             shipping_info = False
             # get shipping type
             if data['order_status'] in ['READY_TO_SHIP', 'PROCESSED']:
-                shipping_parameter = getattr(self, '%s_get_shipping_parameter' %
-                                             self.api_version)(**{
-                                                 'order_sn': data['order_sn'],
-                                             })
+                shipping_parameter = self.get_shipping_parameter(order_sn=data['order_sn'])
 
                 # get shipping document info
                 if data['order_status'] == 'PROCESSED':
-                    shipping_info = getattr(self, '%s_get_shipping_doc_info' %
-                                            self.api_version)(**{
-                                                'order_sn': data['order_sn'],
-                                                'package_number': data['package_list'][0]['package_number']
-                                            })
+                    shipping_info = self.get_shipping_doc_info(
+                        order_sn=data['order_sn'], package_number=data['package_list'][0]['package_number'])
                     shipping_info = shipping_info['shipping_document_info']
 
             raw_datas['order_list'][index].update({
@@ -160,6 +161,9 @@ class ShopeeOrder(ShopeeAPI):
 
         self._logger.info("Order: Finished Get order detail %d record(s) imported." % len(raw_datas['order_list']))
         return raw_datas['order_list']
+
+    def get_order_list(self, **kwargs):
+        return getattr(self, '%s_get_order_list' % self.api_version)(**kwargs)
 
     def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_range=None, **kwargs):
         date_ranges = self.pagination_date_range(from_date, to_date)
@@ -203,6 +207,9 @@ class ShopeeOrder(ShopeeAPI):
         # return self.order_data_raw, self.order_data
         return self.order_data_raw
 
+    def action_ship_order(self, **kwargs):
+        return getattr(self, '%s_ship_order' % self.api_version)(**kwargs)
+
     def v2_ship_order(self, **kwargs):
         payload = {
             'order_sn': kwargs.get('order_sn'),
@@ -224,3 +231,52 @@ class ShopeeOrder(ShopeeAPI):
             return 'failed'
         else:
             return 'success'
+
+    def action_reject_order(self, **kwargs):
+        return getattr(self, '%s_reject_order' % self.api_version)(**kwargs)
+
+    def v2_reject_order(self, **kwargs):
+        payload = {
+            'order_sn': kwargs.get('order_exid'),
+            'cancel_reason': kwargs.get('reason_code')
+        }
+        if kwargs.get('item_list', False):
+            payload.update({'item_list': kwargs.get('item_list')})
+
+        prepared_request = self.build_request('reject_order',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'json': payload
+                                              })
+        response = self.process_response('reject_order', self.request(**prepared_request), no_sanitize=True)
+        raw_data = response.json()
+        if raw_data['error']:
+            return 'failed'
+        else:
+            return 'success'
+
+    def action_handle_buyer_cancel(self, **kwargs):
+        return getattr(self, '%s_handle_buyer_cancel' % self.api_version)(**kwargs)
+
+    def v2_handle_buyer_cancel(self, **kwargs):
+        payload = {
+            'order_sn': kwargs.get('order_sn'),
+            'operation': kwargs.get('operation')
+        }
+
+        prepared_request = self.build_request('buyer_cancellation',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'json': payload
+                                              })
+        response = self.process_response('buyer_cancellation', self.request(**prepared_request))
+        if response.get('update_time', False):
+            return "success"
+        else:
+            return "fail"
