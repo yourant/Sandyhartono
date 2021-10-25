@@ -387,4 +387,54 @@ class SaleOrder(models.Model):
                 action_status = sp_order_v2.action_ship_order(**action_params)
                 if action_status == "success":
                     order.action_confirm()
+                    time.sleep(3)
                     order.shopee_fetch_order()
+
+    @api.multi
+    def shopee_reject_order(self):
+        return {
+            'name': 'Reject Order(s)',
+            'view_mode': 'form',
+            'res_model': 'wiz.sp_order_reject',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                'default_order_ids': [(6, 0, self.ids)],
+            },
+        }
+
+    @api.multi
+    def shopee_accept_cancellation_order(self):
+        for order in self:
+            if order.mp_account_id.mp_token_id.state == 'valid':
+                params = {'access_token': order.mp_account_id.mp_token_id.name}
+                sp_account = order.mp_account_id.shopee_get_account(**params)
+                sp_order_v2 = ShopeeOrder(sp_account)
+                action_params = {
+                    'order_sn': order.mp_external_id,
+                    'operation': 'ACCEPT',
+                }
+                action_status = sp_order_v2.action_handle_buyer_cancel(**action_params)
+                if action_status == "success":
+                    order.action_cancel()
+                    order.shopee_fetch_order()
+            else:
+                raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+
+    @api.multi
+    def shopee_reject_cancellation_order(self):
+        for order in self:
+            if order.mp_account_id.mp_token_id.state == 'valid':
+                params = {'access_token': order.mp_account_id.mp_token_id.name}
+                sp_account = order.mp_account_id.shopee_get_account(**params)
+                sp_order_v2 = ShopeeOrder(sp_account)
+                action_params = {
+                    'order_sn': order.mp_external_id,
+                    'operation': 'REJECT',
+                }
+                action_status = sp_order_v2.action_handle_buyer_cancel(**action_params)
+                if action_status == "success":
+                    order.action_confirm()
+                    order.shopee_fetch_order()
+            else:
+                raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')

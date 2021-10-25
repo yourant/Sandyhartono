@@ -30,9 +30,11 @@
             <field name="arch" type="xml">
                 <xpath expr="//div[@name='mp_actions']" position="inside">
                     <div style="margin: 10px" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
-                        <button name="shopee_drop_off" string="Drop Off" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ['drop off', 'both'])]}" style="margin-right: 5px;"/>
-                        <button name="shopee_pickup" string="Request Pickup" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ['pickup', 'both'])]}" style="margin-right: 5px;"/>
-                        <button name="shopee_reject_order" string="Reject Order" class="btn-danger" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'in_process')]}" style="margin-right: 5px;"/>
+                        <button name="shopee_drop_off" string="Drop Off" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ('drop off', 'both'))]}" style="margin-right: 5px;"/>
+                        <button name="shopee_pickup" string="Request Pickup" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ('pickup', 'both'))]}" style="margin-right: 5px;"/>
+                        <button name="shopee_reject_order" string="Reject Order" class="btn-danger" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', 'not in', ('in_process', 'to_ship'))]}" style="margin-right: 5px;"/>
+                        <button name="shopee_accept_cancellation_order" string="Accept Cancellation Order" class="btn-danger" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_cancel')]}" style="margin-right: 5px;" confirm="Are you sure to Accept request cancel these orders?"/>
+                        <button name="shopee_reject_cancellation_order" string="Reject Cancellation Order" class="btn-info" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_cancel')]}" style="margin-right: 5px;" confirm="Are you sure to Reject request cancel these orders?"/>
                         <button name="shopee_get_awb" string="Get Airways Bill" class="btn-info" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_ship')]}" style="margin-right: 5px;"/>
                         <button name="shopee_fetch_order" string="Re-Fetch MP Order Data" type="object" icon="fa-refresh" context="{'force_update': True}"/>
                     </div>

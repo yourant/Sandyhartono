@@ -50,7 +50,7 @@
         'views/common/sale_order.xml',
         'views/common/mp_map_product_line.xml',
         # wizard
-
+        'views/wizard/wiz_sp_order_reject.xml',
         # report paperformat
         # 'data/report_paperformat.xml',
 
