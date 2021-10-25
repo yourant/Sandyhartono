@@ -169,8 +169,14 @@ class MarketplaceAccount(models.Model):
         _notify('info', 'Importing product from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
         sp_data_raw, sp_data_sanitized = sp_product.get_product_list(limit=mp_account_ctx.get('product_limit'))
-        check_existing_records = mp_product_obj.with_context(mp_account_ctx).check_existing_records(
-            'sp_product_id', sp_data_raw, sp_data_sanitized, isinstance(sp_data_sanitized, list))
+        check_existing_records_params = {
+            'identifier_field': 'sp_product_id',
+            'raw_data': sp_data_raw,
+            'mp_data': sp_data_sanitized,
+            'multi': isinstance(sp_data_sanitized, list)
+        }
+        check_existing_records = mp_product_obj.with_context(
+            mp_account_ctx).check_existing_records(**check_existing_records_params)
         if check_existing_records['need_update_records']:
             mp_product_obj.with_context({'mp_account_id': self.id}).update_records(
                 check_existing_records['need_update_records'])
