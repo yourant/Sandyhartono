@@ -13,6 +13,9 @@ class SaleOrderLine(models.Model):
     is_insurance = fields.Boolean(string="Is a Insurance", default=False)
     is_global_discount = fields.Boolean(string="Is a Global Discount", default=False)
     is_adjustment = fields.Boolean(string="Is a Adjustment", default=False)
+    type = fields.Selection([
+        ('consu', 'Consumable'),
+        ('service', 'Service')], string='Product Type', related='product_id.type')
 
     @api.model
     def _finish_mapping_raw_data(self, sanitized_data, values):
