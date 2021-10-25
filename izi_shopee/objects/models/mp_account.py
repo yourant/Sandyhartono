@@ -285,6 +285,7 @@ class MarketplaceAccount(models.Model):
             })
             sp_order_list = sp_order_v2.get_order_list(**order_params)
             order_list = []
+            sp_data_raws = []
             for sp_data_order in sp_order_list:
                 sp_order_invoice = sp_data_order.get('order_sn')
                 if sp_order_invoice in sp_orders_by_mpexid:
