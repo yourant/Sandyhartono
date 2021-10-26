@@ -1529,11 +1529,20 @@ class WebhookServer(models.Model):
 
             # Add Order Component
             _logger.info('Add Order Component')
-            component_configs = self.env['order.component.config'].sudo().search([('active', '=', True),
-                '|', '|', '|', ('mp_tokopedia_ids', 'in', values.get('mp_tokopedia_id')),
-                ('mp_shopee_ids', 'in', values.get('mp_shopee_id')),
-                ('mp_lazada_ids', 'in', values.get('mp_lazada_id')),
-                ('mp_blibli_ids', 'in', values.get('mp_blibli_id'))])
+            component_configs = False
+            if mp_tokopedia_id:
+                component_configs = self.env['order.component.config'].sudo().search(
+                    [('active', '=', True), ('mp_tokopedia_ids', 'in', values.get('mp_tokopedia_id'))])
+            elif mp_shopee_id:
+                component_configs = self.env['order.component.config'].sudo().search(
+                    [('active', '=', True), ('mp_shopee_ids', 'in', values.get('mp_shopee_id'))])
+            elif mp_lazada_id:
+                component_configs = self.env['order.component.config'].sudo().search(
+                    [('active', '=', True), ('mp_lazada_ids', 'in', values.get('mp_lazada_id'))])
+            elif mp_blibli_id:
+                component_configs = self.env['order.component.config'].sudo().search(
+                    [('active', '=', True), ('mp_blibli_ids', 'in', values.get('mp_blibli_id'))])
+
             for component_config in component_configs:
                 if values.get('date_order', False):
                     if component_config.date_start and values['date_order'] < component_config.date_start.strftime('%Y-%m-%d %H:%M:%S'):
