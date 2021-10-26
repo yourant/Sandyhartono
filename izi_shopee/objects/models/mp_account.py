@@ -358,15 +358,16 @@ class MarketplaceAccount(models.Model):
         rec.ensure_one()
         # self.shopee_get_sale_order(time_range='create_time', **kwargs)
         time_range = kwargs.get('time_range', False)
-        if time_range and time_range == 'last_hour':
+        if time_range:
+            if time_range == 'last_hour':
+                from_time = datetime.now() - timedelta(hours=1)
+                to_time = datetime.now()
+            elif time_range == 'last_3_days':
+                from_time = datetime.now() - timedelta(days=3)
+                to_time = datetime.now()
             kwargs.update({
-                'from_date': datetime.now() - timedelta(hours=1),
-                'to_date': datetime.now()
-            })
-        if time_range and time_range == 'last_3_days':
-            kwargs.update({
-                'from_date': datetime.now() - timedelta(days=3),
-                'to_date': datetime.now()
+                'from_date': from_time,
+                'to_date': to_time
             })
         rec.shopee_get_sale_order(time_mode='update_time', **kwargs)
         return {

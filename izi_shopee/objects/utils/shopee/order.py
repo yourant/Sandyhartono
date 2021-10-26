@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+import tzlocal
 
 from .api import ShopeeAPI
 
@@ -100,7 +101,7 @@ class ShopeeOrder(ShopeeAPI):
     def v2_get_order_detail(self, **kwargs):
         def req_order_detail(order_ids):
             params = {
-                'order_sn_list': ','.join(order_id_list),
+                'order_sn_list': ','.join(order_ids),
                 'response_optional_fields': ','.join(response_field)
             }
             prepared_request = self.build_request('order_detail',
@@ -167,9 +168,10 @@ class ShopeeOrder(ShopeeAPI):
 
     def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_mode=None, **kwargs):
         date_ranges = self.pagination_date_range(from_date, to_date)
+        server_timezone = tzlocal.get_localzone().zone
         for date_range in date_ranges:
-            from_timestamp = self.to_api_timestamp(date_range[0])
-            to_timestamp = self.to_api_timestamp(date_range[1])
+            from_timestamp = self.to_api_timestamp(date_range[0], dt_tz=server_timezone)
+            to_timestamp = self.to_api_timestamp(date_range[1], dt_tz=server_timezone)
             params = {
                 'time_range_field': time_mode,
                 'time_from': from_timestamp,
