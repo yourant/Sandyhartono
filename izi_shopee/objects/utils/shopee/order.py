@@ -253,10 +253,7 @@ class ShopeeOrder(ShopeeAPI):
                                               })
         response = self.process_response('reject_order', self.request(**prepared_request), no_sanitize=True)
         raw_data = response.json()
-        if raw_data['error']:
-            return 'failed'
-        else:
-            return 'success'
+        return raw_data['message']
 
     def action_handle_buyer_cancel(self, **kwargs):
         return getattr(self, '%s_handle_buyer_cancel' % self.api_version)(**kwargs)
