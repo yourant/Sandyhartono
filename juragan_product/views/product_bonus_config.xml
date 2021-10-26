@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record model="ir.actions.act_window" id="action_window_juragan_product_bonus_product">
+            <field name="name">Product Bonus Config</field>
+            <field name="res_model">product.bonus.config</field>
+            <field name="binding_view_types">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_item_juragan_product_bonus_product" name="Product Bonus Config" parent="juragan_webhook.menu_webhook" action="action_window_juragan_product_bonus_product" sequence="52"/>
+
+        <!-- Tree view for the menuitem -->
+        <record id="product_bonus_config_tree" model="ir.ui.view">
+            <field name="name">product.bonus.config.tree</field>
+            <field name="model">product.bonus.config</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form view for the menuitem -->
+        <record id="product_bonus_config_form" model="ir.ui.view">
+            <field name="name">product.bonus.config.form</field>
+            <field name="model">product.bonus.config</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="active"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                        </group>
+                        <group string="Marketplace Accounts">
+                            <field name="mp_tokopedia_ids" widget="many2many_tags"/>
+                            <field name="mp_shopee_ids" widget="many2many_tags"/>
+                            <field name="mp_lazada_ids" widget="many2many_tags"/>
+                            <field name="mp_blibli_ids" widget="many2many_tags"/>
+                        </group>
+                        <group string="Reference">
+                            <field name="product_ref_id" string="Product SKU"/>
+                            <field name="min_qty"/>
+                        </group>
+                        <group string="Product Bonus">
+                            <field name="product_line_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="product_id" string="Product SKU"/>
+                                    <field name="quantity"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

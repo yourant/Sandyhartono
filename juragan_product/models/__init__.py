@@ -14,3 +14,4 @@ from . import order_component_config
 from . import campaign
 from . import product_discount
 from . import mp_blibli
+from . import product_bonus_config

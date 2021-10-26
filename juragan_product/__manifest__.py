@@ -42,6 +42,7 @@
         'views/stock_distribution_views.xml',
         'views/order_component_config.xml',
         'views/juragan_campaign.xml',
+        'views/product_bonus_config.xml',
 
         # wizard        
         'wizards/views/popup_view.xml',

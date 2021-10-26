@@ -81,3 +81,6 @@ access_juragan_campaign_job_r_global,Juragan Campaign Job Access for Global: R,j
 access_juragan_campaign_crud_campaign_manager,Juragan Campaign Access for Campaign Manager: CRUD,juragan_product.model_juragan_campaign,juragan_product.group_manage_campaign,1,1,1,1
 access_juragan_campaign_job_crud_campaign_manager,Juragan Campaign Job Access for Campaign Manager: CRUD,juragan_product.model_juragan_campaign_job,juragan_product.group_manage_campaign,1,1,1,1
 access_product_staging_price_crud_global,Product Staging Price Access for Global: CRUD,juragan_product.model_product_staging_price,,1,1,1,1
+
+access_product_bonus_config,access_product_bonus_config,model_product_bonus_config,,1,1,1,1
+access_product_bonus_line,access_product_bonus_line,model_product_bonus_line,,1,1,1,1

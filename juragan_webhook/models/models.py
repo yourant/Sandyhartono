@@ -1654,6 +1654,50 @@ class WebhookServer(models.Model):
             res['note'] = '- PAID VIA %s %s\n' % (marketplace, self.env['res.company'].sudo().search([('id', '=', values.get('company_id'))], limit=1).name)
             res['note'] += '- %s\n' % (res['mp_invoice_number'])
 
+            #CUSTOM FASTPRINT -> ADD BONUS PRODUCT
+            product_bonus_configs = self.env['product.bonus.config'].sudo().search([])
+            config_by_product_ref_id = {}
+            for config in product_bonus_configs:
+                config_by_product_ref_id[config.product_ref_id.id] = config
+
+            order_line = []
+            for line in res['order_line']:
+                order_line.append(line)
+                if line[2]['product_id'] in config_by_product_ref_id:
+                    bonus_config = config_by_product_ref_id[line[2]['product_id']]
+
+                    process_time = True
+                    if bonus_config.date_start:
+                        if datetime.now() < bonus_config.date_start:
+                            process_time = False
+                    if bonus_config.date_end:
+                        if datetime.now() > bonus_config.date_end:
+                            process_time = False
+
+                    process_account = False
+                    if mp_tokopedia_id:
+                        if mp_account in bonus_config.mp_tokopedia_ids:
+                            process_account = True
+                    elif mp_shopee_id:
+                        if mp_account in bonus_config.mp_shopee_ids:
+                            process_account = True
+                    elif mp_lazada_id:
+                        if mp_account in bonus_config.mp_lazada_ids:
+                            process_account = True
+                    elif mp_blibli_id:
+                        if mp_account in bonus_config.mp_blibli_ids:
+                            process_account = True
+                            
+                    if process_time and process_account:
+                        for bonus_line in bonus_config['product_line_ids']:
+                            order_line.append((0, 0, {
+                                'product_id': bonus_line.product_id.id,
+                                'product_uom_qty': bonus_line.quantity,
+                                'price_unit': 0,
+                                'price_subtotal': 0,
+                            }))
+            res['order_line'] = order_line
+
             _logger.info('Preparation Done')
         return res
 
