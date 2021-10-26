@@ -165,13 +165,13 @@ class ShopeeOrder(ShopeeAPI):
     def get_order_list(self, **kwargs):
         return getattr(self, '%s_get_order_list' % self.api_version)(**kwargs)
 
-    def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_range=None, **kwargs):
+    def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_mode=None, **kwargs):
         date_ranges = self.pagination_date_range(from_date, to_date)
         for date_range in date_ranges:
             from_timestamp = self.to_api_timestamp(date_range[0])
             to_timestamp = self.to_api_timestamp(date_range[1])
             params = {
-                'time_range_field': time_range,
+                'time_range_field': time_mode,
                 'time_from': from_timestamp,
                 'time_to': to_timestamp,
                 'response_optional_fields': 'order_status'

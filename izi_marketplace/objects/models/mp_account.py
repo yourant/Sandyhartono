@@ -83,6 +83,37 @@ class MarketplaceAccount(models.Model):
     debug_order_limit = fields.Integer(string="Order Import Limit", required=True, default=0,
                                        help="Maximum number to import order, set 0 for unlimited!")
 
+    cron_id = fields.Many2one(comodel_name='ir.cron', string='Order Scheduler')
+    cron_user_id = fields.Many2one('res.users', string='Scheduler User', related='cron_id.user_id')
+    cron_interval_number = fields.Integer(string="Sync Every", default=1,
+                                          help="Repeat every x.", related='cron_id.interval_number')
+    cron_nextcall = fields.Datetime(string='Next Execution Date', related='cron_id.nextcall')
+    cron_interval_type = fields.Selection([('minutes', 'Minutes'),
+                                           ('hours', 'Hours'),
+                                           ('days', 'Days'),
+                                           ('weeks', 'Weeks'),
+                                           ('months', 'Months')], string='Interval Unit',
+                                          default='minutes', related='cron_id.interval_type')
+    cron_active = fields.Boolean(string='Active Scheduler', related='cron_id.active')
+
+    @api.model
+    def create(self, vals):
+        res = super(MarketplaceAccount, self).create(vals)
+        if not res.cron_id:
+            new_cron = self.env['ir.cron'].sudo().create({
+                'name': '%s Scheduler %s' % (str(res.marketplace.capitalize()), str(res.id)),
+                'model_id': self.env.ref('%s.model_%s' % (self._module, '_'.join(self._name.split('.')))).id,
+                'state': 'code',
+                'code': "model.%s_get_orders(id=%d,time_range='last_hour',params='by_date_range');" %
+                ((res.marketplace), (res.id)),
+                'interval_number': 5,
+                'interval_type': 'minutes',
+                'numbercall': -1,
+                'active': False,
+            })
+            res.cron_id = new_cron.id
+        return res
+
     @api.onchange('marketplace')
     def onchange_marketplace(self):
         self.partner_id = getattr(
