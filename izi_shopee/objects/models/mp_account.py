@@ -282,8 +282,8 @@ class MarketplaceAccount(models.Model):
                 sp_orders_by_mpexid[sp_order.mp_external_id] = sp_order
 
             order_params.update({
-                'from_date':  kwargs.get('from_date'),
-                'to_date':  kwargs.get('to_date'),
+                'from_date': kwargs.get('from_date'),
+                'to_date': kwargs.get('to_date'),
                 'limit': mp_account_ctx.get('order_limit'),
                 'time_mode': time_mode,
             })
@@ -360,13 +360,13 @@ class MarketplaceAccount(models.Model):
         time_range = kwargs.get('time_range', False)
         if time_range and time_range == 'last_hour':
             kwargs.update({
-                'from_date': datetime.now() - timedelta(hours=1),
-                'to_date': datetime.now()
+                'from_date': datetime.utcnow() - timedelta(hours=1),
+                'to_date': datetime.utcnow()
             })
         if time_range and time_range == 'last_3_days':
             kwargs.update({
-                'from_date': datetime.now() - timedelta(days=3),
-                'to_date': datetime.now()
+                'from_date': datetime.utcnow() - timedelta(days=3),
+                'to_date': datetime.utcnow()
             })
         rec.shopee_get_sale_order(time_mode='update_time', **kwargs)
         return {
