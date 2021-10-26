@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+from datetime import datetime, timedelta
 import json
 
 from odoo import api, fields, models
@@ -234,7 +235,7 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     @mp.shopee.capture_error
-    def shopee_get_sale_order(self, time_range=False, **kwargs):
+    def shopee_get_sale_order(self, time_mode=False, **kwargs):
         mp_account_ctx = self.generate_context()
         if kwargs.get('force_update'):
             mp_account_ctx.update({'force_update': kwargs.get('force_update')})
@@ -251,8 +252,11 @@ class MarketplaceAccount(models.Model):
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=True)
 
+        skipped = 0
         force_update_ids = []
         sp_order_list = []
+        sp_order_raws = False
+        sp_order_sanitizeds = False
 
         def get_order_income(sp_data_raws):
             sp_order_raws, sp_order_sanitizeds = [], []
@@ -278,10 +282,10 @@ class MarketplaceAccount(models.Model):
                 sp_orders_by_mpexid[sp_order.mp_external_id] = sp_order
 
             order_params.update({
-                'from_date': kwargs.get('from_date'),
-                'to_date': kwargs.get('to_date'),
+                'from_date':  kwargs.get('from_date'),
+                'to_date':  kwargs.get('to_date'),
                 'limit': mp_account_ctx.get('order_limit'),
-                'time_range': time_range,
+                'time_mode': time_mode,
             })
             sp_order_list = sp_order_v2.get_order_list(**order_params)
             order_list = []
@@ -290,19 +294,25 @@ class MarketplaceAccount(models.Model):
                 sp_order_invoice = sp_data_order.get('order_sn')
                 if sp_order_invoice in sp_orders_by_mpexid:
                     existing_order = sp_orders_by_mpexid[sp_order_invoice]
+                    mp_status_changed = existing_order.sp_order_status != str(sp_data_order['order_status'])
                 else:
                     existing_order = False
+                    mp_status_changed = False
                 no_existing_order = not existing_order
-                if sp_data_order['order_status'] == 'CANCELLED' and no_existing_order:
-                    if not self.get_cancelled_orders:
-                        continue
-                if existing_order and mp_account_ctx.get('force_update'):
-                    force_update_ids.append(existing_order.id)
-                if not self.get_unpaid_orders:
-                    if sp_data_order['order_status'] != 'UNPAID':
+                if no_existing_order or mp_status_changed or mp_account_ctx.get('force_update'):
+                    if sp_data_order['order_status'] == 'CANCELLED' and no_existing_order:
+                        if not self.get_cancelled_orders:
+                            skipped += 1
+                            continue
+                    if existing_order and mp_account_ctx.get('force_update'):
+                        force_update_ids.append(existing_order.id)
+                    if not self.get_unpaid_orders:
+                        if sp_data_order['order_status'] != 'UNPAID':
+                            order_list.append({'order_sn': sp_order_invoice})
+                    else:
                         order_list.append({'order_sn': sp_order_invoice})
                 else:
-                    order_list.append({'order_sn': sp_order_invoice})
+                    skipped += 1
 
             if order_list:
                 sp_data_raws = sp_order_v2.get_order_detail(sp_data=order_list)
@@ -326,21 +336,39 @@ class MarketplaceAccount(models.Model):
                 'force_update_ids': force_update_ids
             }))
 
-        check_existing_records_params = {
-            'identifier_field': 'sp_order_id',
-            'raw_data': sp_order_raws,
-            'mp_data': sp_order_sanitizeds,
-            'multi': isinstance(sp_order_sanitizeds, list)
-        }
-        check_existing_records = order_obj.with_context(mp_account_ctx).check_existing_records(
-            **check_existing_records_params)
-        order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+        if sp_order_raws and sp_order_sanitizeds:
+            check_existing_records_params = {
+                'identifier_field': 'sp_order_id',
+                'raw_data': sp_order_raws,
+                'mp_data': sp_order_sanitizeds,
+                'multi': isinstance(sp_order_sanitizeds, list)
+            }
+            check_existing_records = order_obj.with_context(mp_account_ctx).check_existing_records(
+                **check_existing_records_params)
+            order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+        else:
+            _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
+                    notif_sticky=True)
 
-    @ api.multi
+    @api.multi
     def shopee_get_orders(self, **kwargs):
-        self.ensure_one()
+        rec = self
+        if kwargs.get('id', False):
+            rec = self.browse(kwargs.get('id'))
+        rec.ensure_one()
         # self.shopee_get_sale_order(time_range='create_time', **kwargs)
-        self.shopee_get_sale_order(time_range='update_time', **kwargs)
+        time_range = kwargs.get('time_range', False)
+        if time_range and time_range == 'last_hour':
+            kwargs.update({
+                'from_date': datetime.now() - timedelta(hours=1),
+                'to_date': datetime.now()
+            })
+        if time_range and time_range == 'last_3_days':
+            kwargs.update({
+                'from_date': datetime.now() - timedelta(days=3),
+                'to_date': datetime.now()
+            })
+        rec.shopee_get_sale_order(time_mode='update_time', **kwargs)
         return {
             'type': 'ir.actions.client',
             'tag': 'close_notifications'
