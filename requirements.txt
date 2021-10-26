@@ -1,2 +1,1 @@
-tzlocal==2.1
 pycryptodomex==3.10.4

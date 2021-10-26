@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
-import tzlocal
-
 from .api import ShopeeAPI
 
 
@@ -168,10 +166,9 @@ class ShopeeOrder(ShopeeAPI):
 
     def v2_get_order_list(self, from_date, to_date, limit=0, per_page=50, time_mode=None, **kwargs):
         date_ranges = self.pagination_date_range(from_date, to_date)
-        server_timezone = tzlocal.get_localzone().zone
         for date_range in date_ranges:
-            from_timestamp = self.to_api_timestamp(date_range[0], dt_tz=server_timezone)
-            to_timestamp = self.to_api_timestamp(date_range[1], dt_tz=server_timezone)
+            from_timestamp = self.to_api_timestamp(date_range[0])
+            to_timestamp = self.to_api_timestamp(date_range[1])
             params = {
                 'time_range_field': time_mode,
                 'time_from': from_timestamp,
