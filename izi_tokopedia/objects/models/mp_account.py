@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
@@ -369,5 +369,20 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     def tokopedia_get_orders(self, **kwargs):
-        self.ensure_one()
-        self.tokopedia_get_sale_order(**kwargs)
+        rec = self
+        if kwargs.get('id', False):
+            rec = self.browse(kwargs.get('id'))
+        rec.ensure_one()
+        time_range = kwargs.get('time_range', False)
+        if time_range:
+            if time_range == 'last_hour':
+                from_time = datetime.now() - timedelta(hours=1)
+                to_time = datetime.now()
+            elif time_range == 'last_3_days':
+                from_time = datetime.now() - timedelta(days=3)
+                to_time = datetime.now()
+            kwargs.update({
+                'from_date': from_time,
+                'to_date': to_time
+            })
+        rec.tokopedia_get_sale_order(**kwargs)
