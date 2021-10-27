@@ -12,7 +12,7 @@
               <field name="reason_code"/>
               <field name="item_ids" widget="many2many_tags" force_save="1"
                   attrs="{'invisible': [('reason_code', '!=', 'OUT_OF_STOCK')], 'required': [('reason_code', '=', 'OUT_OF_STOCK')]}" 
-                  domain="[('order_id', 'in', order_ids),('type','=','product')]"/>
+                  domain="[('order_id', 'in', order_ids),('product_type','=','product')]"/>
             </group>
             <footer>
               <button name="confirm" type="object" string="Confirm" class="btn-primary" confirm="Are you sure to reject these orders?"/>
