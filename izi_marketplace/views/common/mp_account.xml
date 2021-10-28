@@ -99,11 +99,15 @@
               <page name="mp_order" string="Order">
                 <group name="mp_order" string="Marketplace Order" attrs="{'invisible': [('marketplace', '=', False)]}">
                   <group name="product_configuration">
-                    <field name="partner_id"/>
-                    <field name="warehouse_id" domain="[('company_id', '=', company_id)]"/>
                     <field name="insurance_product_id"/>
                     <field name="global_discount_product_id"/>
                     <field name="adjustment_product_id"/>
+                  </group>
+                  <group name="sales_configuration">
+                    <field name="partner_id"/>
+                    <field name="warehouse_id" domain="[('company_id', '=', company_id)]"/>
+                    <field name="user_id" domain="[('company_id', '=', company_id)]"/>
+                    <field name="team_id"/>
                   </group>
                   <group name="order_state_config">
                     <field name="get_unpaid_orders" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>

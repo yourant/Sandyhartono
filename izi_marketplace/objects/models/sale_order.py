@@ -106,6 +106,14 @@ class SaleOrder(models.Model):
             values.update({
                 'warehouse_id': mp_account.warehouse_id.id,
             })
+        if mp_account.team_id:
+            values.update({
+                'team_id': mp_account.team_id.id,
+            })
+        if mp_account.user_id:
+            values.update({
+                'user_id': mp_account.user_id.id,
+            })
         return sanitized_data, values
 
     @api.model
