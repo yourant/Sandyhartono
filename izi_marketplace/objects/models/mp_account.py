@@ -61,6 +61,8 @@ class MarketplaceAccount(models.Model):
     warehouse_id = fields.Many2one('stock.warehouse', string='Default Warehouse Marketplace')
     insurance_product_id = fields.Many2one(comodel_name="product.product", string="Default Insurance Product",
                                            default=lambda self: self._get_default_insurance_product_id())
+    team_id = fields.Many2one(comodel_name='crm.team', string='Default Sales Channel')
+    user_id = fields.Many2one(comodel_name='res.users', string='Default Salesperson')
     global_discount_product_id = fields.Many2one(comodel_name="product.product",
                                                  string="Default Global Discount Product",
                                                  default=lambda self: self._get_default_global_discount_product_id())
