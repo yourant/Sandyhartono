@@ -24,8 +24,6 @@ class WizardTokopediaOrderReject(models.TransientModel):
     reason_code = fields.Selection(string="Reason", selection=REJECT_REASONS, required=True)
     item_ids = fields.Many2many(comodel_name="sale.order.line", relation="rel_order_reject_item",
                                 column1="order_reject_id", column2="product_id", string="Item(s)", required=False)
-    # shop_close_end_date = fields.Date(string="Shop Close End Date", required=False)
-    # shop_close_note = fields.Text(string="Shop Close Note", required=False)
 
     @ mp.shopee.capture_error
     def confirm(self):
@@ -46,11 +44,13 @@ class WizardTokopediaOrderReject(models.TransientModel):
                         product_dict = {}
                         product_id = item.product_id
                         for product in product_id.map_line_ids:
-                            if product.name == product_id.name:
+                            if product.product_id.id == product_id.id:
                                 if product.mp_product_id:
-                                    product_dict['item_id'] = product.mp_product_id.mp_external_id
+                                    product_dict['item_id'] = int(product.mp_product_id.mp_external_id)
                                 if product.mp_product_variant_id:
-                                    product_dict['model_id'] = product.mp_product_variant_id.mp_external_id
+                                    product_dict['item_id'] = int(
+                                        product.mp_product_variant_id.mp_product_id.mp_external_id)
+                                    product_dict['model_id'] = int(product.mp_product_variant_id.mp_external_id)
                                 break
                         item_list.append(product_dict)
 
