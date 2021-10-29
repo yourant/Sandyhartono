@@ -3,6 +3,7 @@
 
 from . import wizard
 from . import wiz_sp_order_reject
+from . import wiz_sp_order_pickup
 
 __all__ = [
     'wizard'

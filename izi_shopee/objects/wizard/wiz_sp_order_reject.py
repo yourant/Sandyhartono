@@ -8,7 +8,7 @@ from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_shopee.objects.utils.shopee.order import ShopeeOrder
 
 
-class WizardTokopediaOrderReject(models.TransientModel):
+class WizardShopeeOrderReject(models.TransientModel):
     _name = 'wiz.sp_order_reject'
     _description = 'Shopee Order Reject Wizard'
 

@@ -5,7 +5,7 @@
       <field name="name">Wizard Shopee Order Reject Form View</field>
       <field name="model">wiz.sp_order_reject</field>
       <field name="arch" type="xml">
-        <form string="Wizard Tp Order Reject">
+        <form string="Wizard SP Order Reject">
           <sheet>
             <group>
               <field name="order_ids" widget="many2many_tags" readonly="1" force_save="1"/>

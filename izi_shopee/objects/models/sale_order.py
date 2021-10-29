@@ -13,7 +13,6 @@ from odoo.exceptions import ValidationError, UserError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger
-from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.order import ShopeeOrder
 
 
@@ -35,6 +34,11 @@ class SaleOrder(models.Model):
     sp_order_status = fields.Selection(string="Shopee Order Status", selection=SP_ORDER_STATUSES, required=False)
     sp_order_id = fields.Char(string="Shopee Order ID", readonly=True)
     sp_package_number = fields.Char(string="Shopee Package Number", readonly=True)
+    sp_pickup_ids = fields.One2many(
+        comodel_name='mp.shopee.order.pickup.info',
+        inverse_name='order_id',
+        string='Pickup Information',
+    )
 
     @classmethod
     def _add_rec_mp_order_status(cls, mp_order_statuses=None, mp_order_status_notes=None):
@@ -438,3 +442,84 @@ class SaleOrder(models.Model):
                     order.shopee_fetch_order()
             else:
                 raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+
+    @api.multi
+    def shopee_pickup(self):
+        mp_shopee_shop_address_obj = self.env['mp.shopee.shop.address']
+        mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
+        for order in self:
+            mp_account_ctx = order.mp_account_id.generate_context()
+            sp_order_raw = json.loads(order.raw, strict=False)
+            sp_shop_address_raw = mp_shopee_shop_address_obj.generate_shop_address_data(
+                order.mp_account_id, sp_order_raw)
+            sp_data_raw, sp_data_sanitized = mp_shopee_shop_address_obj.with_context(
+                mp_account_ctx)._prepare_mapping_raw_data(raw_data=sp_shop_address_raw)
+
+            check_existing_records_params = {
+                'identifier_field': 'address_id',
+                'raw_data': sp_data_raw,
+                'mp_data': sp_data_sanitized,
+                'multi': isinstance(sp_data_sanitized, list)
+            }
+            check_existing_records = mp_shopee_shop_address_obj.with_context(mp_account_ctx).check_existing_records(
+                **check_existing_records_params)
+            mp_shopee_shop_address_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
+                check_existing_records)
+
+            if order.mp_account_id.mp_token_id.state == 'valid':
+                params = {'access_token': order.mp_account_id.mp_token_id.name}
+                sp_account = order.mp_account_id.shopee_get_account(**params)
+                sp_order_v2 = ShopeeOrder(sp_account)
+                action_params = {
+                    'order_sn': order.mp_external_id,
+                }
+                shipping_paramater = sp_order_v2.get_shipping_parameter(**action_params)
+                address_list = shipping_paramater['pickup']['address_list']
+                sp_order_pickup_raws, sp_order_pickup_sanitizeds = [], []
+                list_field = ['date_from_timestamp', 'time_text']
+                for addess in address_list:
+                    address_id = mp_shopee_shop_address_obj.search([('address_id', '=', addess['address_id'])])
+                    pickup_info = [
+                        dict(sp_order_detail_raw,
+                             **dict([('order_id', order.id)]),
+                             **dict([('address_id', address_id.id)]),
+                             **dict([('date_from_timestamp', sp_order_v2.from_api_timestamp(
+                                 api_ts=sp_order_detail_raw.get('date')).strftime(DEFAULT_SERVER_DATETIME_FORMAT))]))
+                        for sp_order_detail_raw in json_digger(addess, 'time_slot_list')
+                    ]
+                    for pick in pickup_info:
+                        pick['time_info'] = dict([(key, pick[key]) for key in list_field])
+
+                    sp_data_raw, sp_data_sanitized = mp_shopee_order_pickup_info_obj.with_context(
+                        mp_account_ctx)._prepare_mapping_raw_data(raw_data=pickup_info)
+                    sp_order_pickup_raws.extend(sp_data_raw)
+                    sp_order_pickup_sanitizeds.extend(sp_data_sanitized)
+
+                for pickup in order.sp_pickup_ids:
+                    pickup.sudo().unlink()
+
+                def identify_pickup_line(record_obj, values):
+                    return record_obj.search([('order_id', '=', values['order_id']),
+                                              ('pickup_time_id', '=', values['pickup_time_id'])], limit=1)
+
+                check_existing_records_params = {
+                    'identifier_method': identify_pickup_line,
+                    'raw_data': sp_order_pickup_raws,
+                    'mp_data': sp_order_pickup_sanitizeds,
+                    'multi': isinstance(sp_order_pickup_sanitizeds, list)
+                }
+                check_existing_records = mp_shopee_order_pickup_info_obj.with_context(
+                    mp_account_ctx).check_existing_records(**check_existing_records_params)
+                mp_shopee_order_pickup_info_obj.with_context(
+                    mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+
+            return {
+                'name': 'Request Pickup Order(s)',
+                'view_mode': 'form',
+                'res_model': 'wiz.sp_order_pickup',
+                'type': 'ir.actions.act_window',
+                'target': 'new',
+                'context': {
+                    'default_order_ids': [(6, 0, self.ids)],
+                },
+            }

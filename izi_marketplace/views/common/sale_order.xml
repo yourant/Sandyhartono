@@ -112,7 +112,7 @@
                 <field name="mp_recipient_address_state" readonly="1"/>
                 <field name="mp_recipient_address_full" readonly="1"/>
               </group>
-              <group string="Delivery Information">
+              <group name='delivery_info' string="Delivery Information">
                 <field name="mp_delivery_carrier_name" readonly="1"/>
                 <field name="mp_delivery_carrier_type" readonly="1" string="Delivery Carrier Type"/>
                 <field name="mp_awb_number" readonly="1"/>
@@ -121,7 +121,7 @@
                 <field name="mp_accept_deadline" readonly="1"/>
                 <field name="mp_shipping_deadline" readonly="1"/>
               </group>
-              <group string="Amounts Information">
+              <group string="Amounts Information" name="amounts_info">
                 <field name="mp_amount_total"/>
                 <field name="mp_expected_income"/>
               </group>

@@ -51,6 +51,7 @@
         'views/common/mp_map_product_line.xml',
         # wizard
         'views/wizard/wiz_sp_order_reject.xml',
+        'views/wizard/wiz_sp_order_pickup.xml',
         # report paperformat
         # 'data/report_paperformat.xml',
 

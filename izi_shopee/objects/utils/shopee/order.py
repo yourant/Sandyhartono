@@ -214,8 +214,10 @@ class ShopeeOrder(ShopeeAPI):
             'order_sn': kwargs.get('order_sn'),
             # 'package_number': kwargs.get('package_number'),
         }
-        if kwargs.get('dropoff'):
+        if kwargs.get('dropoff', False):
             payload.update({'dropoff': kwargs.get('dropoff')})
+        elif kwargs.get('pickup', False):
+            payload.update({'pickup': kwargs.get('pickup')})
         prepared_request = self.build_request('ship_order',
                                               self.sp_account.partner_id,
                                               self.sp_account.partner_key,
