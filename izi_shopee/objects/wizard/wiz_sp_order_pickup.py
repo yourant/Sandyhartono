@@ -36,7 +36,7 @@ class WizardShopeeOrderPickup(models.TransientModel):
                 }
                 mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
                 pickup_ids = mp_shopee_order_pickup_info_obj.search(
-                    [('order_id', '=', order.id), ('pickup_id', '!=', self.pickup_id.id)])
+                    [('order_id', '=', order.id), ('id', '!=', self.pickup_id.id)])
                 for pickup in pickup_ids:
                     pickup.active = False
                 action_status = sp_order.action_ship_order(**kwargs)
