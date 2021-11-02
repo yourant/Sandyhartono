@@ -76,7 +76,6 @@ class MarketplaceAccount(models.Model):
         mp_blibli_logistic_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
         # mp_blibli_logistic_obj.with_context({'mp_account_id': self.id}).create_records(
         #     bli_data_raw, bli_data_sanitized, isinstance(bli_data_sanitized, list))
-<<<<<<< HEAD
 
     @api.multi
     @mp.blibli.capture_error
@@ -110,8 +109,6 @@ class MarketplaceAccount(models.Model):
         mp_account_ctx = self.generate_context()
         self.ensure_one()
         self.bli_shop_id.with_context(mp_account_ctx).get_active_logistics()
-=======
->>>>>>> deecca6 ([ADD] view in manifest)
 
     @api.multi
     def blibli_get_dependencies(self):
