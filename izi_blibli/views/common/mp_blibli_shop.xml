@@ -8,7 +8,7 @@
         <form string="Marketplace Blibli Shop">
           <sheet>
             <div class="oe_button_box" name="button_box">
-              <img class="mp-account-img" src="/izi_blibli/static/src/img/bli.png"/>
+              <img class="mp-account-img" src="/izi_blibli/static/src/img/bli.png" alt=""/>
             </div>
             <!-- <field name="shop_logo" widget="image_url" class="oe_avatar" readonly="1"/> -->
             <div class="oe_title">

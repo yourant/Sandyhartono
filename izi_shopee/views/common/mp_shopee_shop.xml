@@ -8,7 +8,7 @@
         <form string="Marketplace Shopee Shop">
           <sheet>
             <div class="oe_button_box" name="button_box">
-              <img class="mp-account-img" src="/izi_shopee/static/src/img/sp.png"/>
+              <img class="mp-account-img" src="/izi_shopee/static/src/img/sp.png" alt=""/>
             </div>
             <field name="shop_logo" widget="image_url" class="oe_avatar" readonly="1"/>
             <div class="oe_title">
