@@ -4,12 +4,13 @@ odoo.define('izi_marketplace.framework', function (require) {
   let core = require('web.core');
   let framework = require('web.framework');
   let AbstractAction = require('web.AbstractAction');
+  let ControlPanelMixin = require('web.ControlPanelMixin');
   let originblockUI = framework.blockUI;
   let originUnblockUI = framework.unblockUI;
 
-  let CloseNotificationAction = AbstractAction.extend({
+  let CloseNotificationAction = AbstractAction.extend(ControlPanelMixin, {
     init: function (parent, action) {
-      this.parent = parent;
+      this.actionManager = parent;
       this.action = action;
       this.originalUrl = window.location.href;
       return this._super.apply(this, arguments);
@@ -17,12 +18,13 @@ odoo.define('izi_marketplace.framework', function (require) {
     start: function () {
       let self = this;
       return this._super.apply(this, arguments).then(function () {
-        let parent = self.parent;
+        let actionManager = self.actionManager;
         let action = self.action;
+        // let controller = parent.getCurrentController()
         let params = action.params || {};
         self.closeNotifications(params);
         if (action.context.close_notifications_and_wizard) {
-          parent.do_action({'type': 'ir.actions.act_window_close'});
+          actionManager.do_action({'type': 'ir.actions.act_window_close'});
         }
       });
     },
@@ -78,13 +80,5 @@ odoo.define('izi_marketplace.framework', function (require) {
     return originUnblockUI();
   }
 
-  function closeNotificationAction(parent, action) {
-    let params = action.params || {};
-    closeNotifications(params);
-    if (action.context.close_notifications_and_wizard) {
-      parent.do_action({'type': 'ir.actions.act_window_close'})
-    }
-  }
-
-  core.action_registry.add('close_notifications', closeNotificationAction);
+  core.action_registry.add('close_notifications', CloseNotificationAction);
 });
