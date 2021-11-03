@@ -6,7 +6,7 @@
     "name": """IZI Marketplace""",
     "summary": """Base Module for Marketplace Integration""",
     "category": "Sales",
-    "version": "rc-11.0.0.5.0",
+    "version": "11.0.0.5.0",
     "development_status": "Alpha",  # Options: Alpha|Beta|Production/Stable|Mature
     "auto_install": False,
     "installable": True,
