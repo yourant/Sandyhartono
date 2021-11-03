@@ -28,12 +28,24 @@ class MPShopeeOrderPickupInfo(models.Model):
             'Thursday': 'Kamis',
             'Friday': 'Jum\'at',
             'Saturday': 'Sabtu',
-            'Sunday': 'Minggu'
+            'Sunday': 'Minggu',
+            'Senin': 'Senin',
+            'Selasa': 'Selasa',
+            'Rabu': 'Rabu',
+            'Kamis': 'Kamis',
+            'Jumat': 'Jum\'at',
+            'Sabtu': 'Sabtu',
+            'Minggu': 'Minggu',
         }
         for rec in self:
-            day = date_dict[datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%A')]
-            time = datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M') + \
-                '-' + datetime.strptime(rec.end_datetime, '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
+            day = date_dict[rec.start_datetime.strftime('%A')]
+            start_datetime = rec.start_datetime.strftime('%d-%m-%y, %H:%M')
+            end_datetime = rec.end_datetime.strftime('%H:%M') if rec.end_datetime else False
+            if start_datetime and end_datetime:
+                time = start_datetime + '-' + end_datetime
+            elif start_datetime and not end_datetime:
+                time = start_datetime
+
             date_time = day+', '+time
 
             res.append((rec.id, date_time))
