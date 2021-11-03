@@ -86,17 +86,6 @@ class MarketplaceAccount(models.Model):
                                        help="Maximum number to import order, set 0 for unlimited!")
 
     cron_id = fields.Many2one(comodel_name='ir.cron', string='Order Scheduler')
-    cron_user_id = fields.Many2one('res.users', string='Scheduler User', related='cron_id.user_id')
-    cron_interval_number = fields.Integer(string="Sync Every", default=1,
-                                          help="Repeat every x.", related='cron_id.interval_number')
-    cron_nextcall = fields.Datetime(string='Next Execution Date', related='cron_id.nextcall')
-    cron_interval_type = fields.Selection([('minutes', 'Minutes'),
-                                           ('hours', 'Hours'),
-                                           ('days', 'Days'),
-                                           ('weeks', 'Weeks'),
-                                           ('months', 'Months')], string='Interval Unit',
-                                          default='minutes', related='cron_id.interval_type')
-    cron_active = fields.Boolean(string='Active Scheduler', related='cron_id.active')
 
     @api.model
     def create(self, vals):

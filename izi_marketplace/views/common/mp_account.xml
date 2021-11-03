@@ -75,14 +75,7 @@
                 <field name="marketplace"/>
               </group>
               <group>
-                <field name="cron_active" readonly="0"/>
                 <field name="cron_id"/>
-                <field name="cron_nextcall"/>
-                <label for="cron_interval_number"/>
-                <div>
-                  <field name="cron_interval_number" class="oe_inline" readonly="0"/>
-                  <field name="cron_interval_type" class="oe_inline" readonly="0"/>
-                </div>
               </group>
               <group>
                 <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
