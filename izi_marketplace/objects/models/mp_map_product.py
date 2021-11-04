@@ -56,7 +56,7 @@ class MarketplaceMapProduct(models.Model):
                 'product_field_id': self.env.ref('product.field_product_product__default_code').id,
                 'mp_product_field_id': self.env.ref('izi_marketplace.field_mp_product__default_code').id,
                 'mp_product_variant_field_id': self.env.ref(
-                    'izi_marketplace.field_mp_product_variant_default_code').id,
+                    'izi_marketplace.field_mp_product_variant__default_code').id,
             }),
             (0, 0, {
                 'sequence': 2,
