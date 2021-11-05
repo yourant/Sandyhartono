@@ -22,7 +22,9 @@ class TokopediaEndpoint(object):
             'order_accept': ('POST', '/v1/order/{order_id}/fs/{fs_id}/ack'),
             'order_reject': ('POST', '/v1/order/{order_id}/fs/{fs_id}/nack'),
             'order_shipping_label': ('GET', '/v1/order/{order_id}/fs/{fs_id}/shipping-label'),
-            'fulfillment_order': ('GET', '/v1/fs/{fs_id}/fulfillment_order')
+            'fulfillment_order': ('GET', '/v1/fs/{fs_id}/fulfillment_order'),
+            'confirm_shipping': ('POST ', '/v1/order/{order_id}/fs/{fs_id}/status'),
+            'request_pickup': ('POST ', '/inventory/v1/fs/{fs_id}/pick-up')
         },
         'v2': {
             'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info'),

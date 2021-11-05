@@ -448,3 +448,31 @@ class SaleOrder(models.Model):
             booking_code = tp_order.action_get_booking_code(order.mp_external_id)[1]
             label_url = tp_order_seller.action_print_shipping_label(order_ids=[order.mp_external_id], printed=0)
             order.write(dict(booking_code[0], **{'mp_awb_url': label_url}))
+
+    @api.multi
+    def tokopedia_confirm_shipping(self):
+        return {
+            'name': 'Confirm Shipping Order(s)',
+            'view_mode': 'form',
+            'res_model': 'wiz.tp_order_confirm_shipping',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'context': {
+                'default_order_ids': [(6, 0, self.ids)],
+                'default_awb_number': self.mp_awb_number,
+            },
+        }
+
+    @api.multi
+    @mp.tokopedia.capture_error
+    def tokopedia_request_pickup(self):
+        for order in self:
+            tp_account = order.mp_account_id.tokopedia_get_account()
+            tp_order = TokopediaOrder(tp_account)
+            action_params = {
+                'order_id': order.mp_external_id,
+                'shop_id': order.mp_account_id.tp_shop_id.shop_id
+            }
+            action_status = tp_order.action_request_pickup(**action_params)
+            if action_status.get('result') == 'Anda telah sukses melakukan request pickup.':
+                order.tokopedia_fetch_order()
