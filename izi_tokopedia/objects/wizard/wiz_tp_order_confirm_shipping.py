@@ -16,7 +16,7 @@ class WizardTokopediaOrderConfirmShipping(models.TransientModel):
                                  column1="order_confirm_shipping_id",
                                  column2="order_id",
                                  string="Order(s)", required=True)
-    awb_number = fields.Char(string='AWB Number')
+    awb_number = fields.Char(string='AWB Number', required=True)
 
     @mp.tokopedia.capture_error
     def confirm(self):
