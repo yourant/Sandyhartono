@@ -48,4 +48,4 @@ class TokopediaAPI(object):
     def to_api_timestamp(self, dt, dt_tz='UTC'):
         dt_tz = pytz.timezone(dt_tz)
         api_dt = dt_tz.localize(dt).astimezone(self.api_tz)
-        return int(api_dt.replace(tzinfo=None).timestamp())
+        return int(api_dt.replace(tzinfo=pytz.utc).timestamp())
