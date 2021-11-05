@@ -187,3 +187,32 @@ class TokopediaOrder(TokopediaAPI):
         response = self.request(**prepared_request)
         response_data = self.process_response('booking_code', response)
         return response_data
+
+    def action_confirm_shipping(self, *args, **kwargs):
+        return getattr(self, '%s_action_confirm_shipping' % self.api_version)(*args, **kwargs)
+
+    def v1_action_confirm_shipping(self, order_id, order_status, shipping_ref_num, **kwargs):
+        self.endpoints.tp_account.order_id = order_id
+
+        data = {
+            'order_status': order_status,
+            'shipping_ref_num': shipping_ref_num
+        }
+
+        prepared_request = self.build_request('confirm_shipping', json=data, params={}, force_params=True)
+        response = self.request(**prepared_request)
+        response_data = self.process_response('default', response)
+        return response_data
+
+    def action_request_pickup(self, *args, **kwargs):
+        return getattr(self, '%s_action_request_pickup' % self.api_version)(*args, **kwargs)
+
+    def v1_action_request_pickup(self, order_id, shop_id):
+        data = {
+            'order_id': int(order_id),
+            'shop_id': int(shop_id)
+        }
+        prepared_request = self.build_request('request_pickup', json=data, params={}, force_params=True)
+        response = self.request(**prepared_request)
+        response_data = self.process_response('default', response)
+        return response_data
