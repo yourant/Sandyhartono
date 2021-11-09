@@ -139,5 +139,62 @@
         </xpath>
       </field>
     </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_accept_order">
+      <field name="name">Accept Order</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="priority">5</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_process']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.accept_order()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_reject_order">
+      <field name="name">Reject Order</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="priority">6</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_process','in_process','to_ship']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.reject_order()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_print_label">
+      <field name="name">Get Label Order</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="priority">7</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_ship','in_shipping']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.get_label()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
   </data>
 </odoo>
