@@ -4,7 +4,8 @@
 from datetime import datetime, timezone
 import time
 import json
-
+import requests
+import base64
 
 from odoo import api, fields, models
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
@@ -332,17 +333,16 @@ class SaleOrder(models.Model):
 
     @api.multi
     @mp.shopee.capture_error
-    def shopee_get_awb(self):
+    def shopee_print_label(self):
         sp_account = False
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        order_list = []
         for order in self:
-            if order.mp_awb_url:
-                return {
-                    'name': 'Label',
-                    'res_model': 'ir.actions.act_url',
-                    'type': 'ir.actions.act_url',
-                    'target': 'new',
-                    'url': order.mp_awb_url,
-                }
+            if order.mp_awb_datas:
+                order_list.append(order.name)
+            elif order.mp_awb_url:
+                order.mp_awb_datas = base64.b64encode(requests.get(order.mp_awb_url).content)
+                order_list.append(order.name)
             elif order.mp_awb_number:
                 if order.mp_account_id.mp_token_id.state == 'valid':
                     params = {'access_token': order.mp_account_id.mp_token_id.name}
@@ -354,16 +354,18 @@ class SaleOrder(models.Model):
                     sp_order_v1 = ShopeeOrder(sp_account, api_version="v1")
                     awb_data = sp_order_v1.get_airways_bill(order_sn=order.mp_invoice_number)
                     order.mp_awb_url = awb_data.get(order.mp_invoice_number, False)
-                    if order.mp_awb_url:
-                        return {
-                            'name': 'Label',
-                            'res_model': 'ir.actions.act_url',
-                            'type': 'ir.actions.act_url',
-                            'target': 'new',
-                            'url': order.mp_awb_url,
-                        }
+                    order.mp_awb_datas = base64.b64encode(requests.get(order.mp_awb_url).content)
+                    order_list.append(order.name)
             else:
                 pass
+
+        return {
+            'name': 'Label',
+            'res_model': 'ir.actions.act_url',
+            'type': 'ir.actions.act_url',
+            'target': 'new',
+            'url': base_url+'/web/binary/download_pdf/%s' % ('&'.join(order_list)),
+        }
 
     @api.multi
     @mp.shopee.capture_error
@@ -523,3 +525,19 @@ class SaleOrder(models.Model):
                     'default_order_ids': [(6, 0, self.ids)],
                 },
             }
+
+    @api.multi
+    @mp.shopee.capture_error
+    def shopee_get_awb_num(self):
+        sp_account = False
+        for order in self:
+            if order.mp_account_id.mp_token_id.state == 'valid':
+                params = {'access_token': order.mp_account_id.mp_token_id.name}
+                sp_account = order.mp_account_id.shopee_get_account(**params)
+            else:
+                raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+
+            if sp_account:
+                sp_order = ShopeeOrder(sp_account)
+                awb_data = sp_order.get_awb_number(order_sn=order.mp_invoice_number)
+                order.mp_awb_number = awb_data.get('tracking_number', False)
