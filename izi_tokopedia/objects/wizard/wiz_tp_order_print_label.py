@@ -17,18 +17,16 @@ class WizardTokopediaOrderPrintLabel(models.TransientModel):
 
     @mp.tokopedia.capture_error
     def print_label(self):
-        context = self._context
         orders = self.order_ids
+        order_list_exid = []
+        for order in orders:
+            order_list_exid.append(order.mp_external_id)
 
-        if not context.get('multi'):
-            order = orders.ensure_one()
-
-            tp_account = order.mp_account_id.tokopedia_get_account()
-            tp_order = TokopediaOrder(tp_account, api_version="url")
-            tp_order.endpoints.host = 'seller'
-            label_url = tp_order.action_print_shipping_label(order_ids=[order.mp_external_id],
-                                                             printed=int(self.mark_printed))
-            return {
-                'type': 'ir.actions.act_url',
-                'url': label_url,
-            }
+        tp_account = orders[0].mp_account_id.tokopedia_get_account()
+        tp_order = TokopediaOrder(tp_account, api_version="url")
+        tp_order.endpoints.host = 'seller'
+        label_url = tp_order.action_print_shipping_label(order_ids=order_list_exid, printed=int(self.mark_printed))
+        return {
+            'type': 'ir.actions.act_url',
+            'url': label_url,
+        }
