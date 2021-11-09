@@ -1,10 +1,10 @@
 import base64
-import logging
-import werkzeug
-import PyPDF2
+
+from PyPDF2 import PdfFileReader, PdfFileWriter
+import io
+import os
 
 from odoo import http, _
-from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 
 
@@ -12,14 +12,25 @@ class ShopeeDownloadPDF(http.Controller):
 
     @http.route('/web/binary/download_pdf/<ids>', type='http', auth="public", website=True)
     def download_pdf(self, ids, **kw):
+        dir = 'izi_shopee/data/file/'
+        for f in os.listdir(dir):
+            os.remove(os.path.join(dir, f))
         pdf_list = []
+        output = PdfFileWriter()
+        output_filename = ids
         for so in ids.split('&'):
             so_awb_datas = request.env['sale.order'].sudo().search([('name', '=', so)]).mp_awb_datas
+            awb_file = PdfFileReader(io.BytesIO(base64.b64decode(so_awb_datas)))
+            for page in awb_file.pages:
+                output.addPage(page)
             pdf_list.append(so_awb_datas)
 
-        pdf_files = base64.b64decode(b''.join(pdf_list))
         headers = [
             ('Content-Type', 'application/pdf'),
-            ('Content-Length', len(pdf_files))
+            ('Content-Disposition', 'attachment; filename=' + '%s.pdf;' % output_filename)
         ]
-        return http.request.make_response(pdf_files, headers)
+        with open(os.path.join(dir, output_filename), 'wb') as f:
+            output.write(f)
+            f.close()
+        filename = open(os.path.join(dir, output_filename), 'rb')
+        return http.request.make_response(filename, headers)
