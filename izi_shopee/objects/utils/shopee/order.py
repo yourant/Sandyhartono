@@ -278,3 +278,24 @@ class ShopeeOrder(ShopeeAPI):
             return "success"
         else:
             return "fail"
+
+    def get_awb_number(self, **kwargs):
+        return getattr(self, '%s_get_awb_number' %
+                       self.api_version)(**{
+                           'order_sn': kwargs.get('order_sn'),
+                       })
+
+    def v2_get_awb_number(self, **kwargs):
+        params = {
+            'order_sn': kwargs.get('order_sn'),
+        }
+        prepared_request = self.build_request('get_awb_num',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'params': params
+                                              })
+        raw_data = self.process_response('get_awb_num', self.request(**prepared_request))
+        return raw_data
