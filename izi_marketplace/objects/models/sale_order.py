@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class SaleOrder(models.Model):
@@ -57,6 +58,7 @@ class SaleOrder(models.Model):
         string="Delivery Type", selection=MP_DELIVERY_TYPES, required=False, readonly=True)
     mp_shipping_deadline = fields.Datetime(string="Maximum Shpping Date", readonly=True)
     mp_delivery_weight = fields.Float(string="Weight (KG)", readonly=True)
+    mp_awb_datas = fields.Binary(string='AWB URL Datas', attachment=True)
 
     # MP Buyer Info
     mp_buyer_id = fields.Integer(string="Buyer ID", readonly=True)
@@ -242,3 +244,35 @@ class SaleOrder(models.Model):
         for order in self:
             if hasattr(order, '%s_generate_adjusment_line' % order.marketplace):
                 getattr(order, '%s_generate_adjusment_line' % order.marketplace)()
+
+    @api.multi
+    def accept_order(self):
+        for order in self:
+            if hasattr(order, '%s_accept_order' % order.marketplace):
+                getattr(order, '%s_accept_order' % order.marketplace)()
+
+    @api.multi
+    def reject_order(self):
+        marketplace = self.mapped('marketplace')
+        mp_account_ids = self.mapped('mp_account_id.id').id
+        if marketplace.count(marketplace[0]) == len(marketplace):
+            if mp_account_ids.count(mp_account_ids[0]) == len(mp_account_ids):
+                if hasattr(self, '%s_reject_order' % marketplace[0]):
+                    return getattr(self, '%s_reject_order' % marketplace[0])()
+            else:
+                raise ValidationError('Please select the same marketplace account.')
+        else:
+            raise ValidationError('Please select the same marketplace channel.')
+
+    @api.multi
+    def get_label(self):
+        marketplace = self.mapped('marketplace')
+        mp_account_ids = self.mapped('mp_account_id.id')
+        if marketplace.count(marketplace[0]) == len(marketplace):
+            if mp_account_ids.count(mp_account_ids[0]) == len(mp_account_ids):
+                if hasattr(self, '%s_print_label' % marketplace[0]):
+                    return getattr(self, '%s_print_label' % marketplace[0])()
+            else:
+                raise ValidationError('Please select the same marketplace account.')
+        else:
+            raise ValidationError('Please select the same marketplace channel.')
