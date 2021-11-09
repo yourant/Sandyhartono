@@ -410,6 +410,12 @@ class SaleOrder(models.Model):
 
     @api.multi
     def tokopedia_reject_order(self):
+        allowed_status = ['to_process']
+        order_statuses = self.mapped('mp_order_status')
+        if not all(order_status in allowed_status for order_status in order_statuses):
+            raise ValidationError(
+                "The status of your selected orders for tokopedia should be in {}".format(allowed_status))
+
         return {
             'name': 'Reject Order(s)',
             'view_mode': 'form',
