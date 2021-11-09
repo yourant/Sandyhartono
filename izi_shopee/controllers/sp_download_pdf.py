@@ -12,10 +12,11 @@ class ShopeeDownloadPDF(http.Controller):
 
     @http.route('/web/binary/download_pdf/<ids>', type='http', auth="public", website=True)
     def download_pdf(self, ids, **kw):
-        dir = 'izi_shopee/data/file/'
-        for f in os.listdir(dir):
-            os.remove(os.path.join(dir, f))
-        pdf_list = []
+        path = 'izi_shopee/data/file/'
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        for f in os.listdir(path):
+            os.remove(os.path.join(path, f))
         output = PdfFileWriter()
         output_filename = ids
         for so in ids.split('&'):
@@ -23,14 +24,13 @@ class ShopeeDownloadPDF(http.Controller):
             awb_file = PdfFileReader(io.BytesIO(base64.b64decode(so_awb_datas)))
             for page in awb_file.pages:
                 output.addPage(page)
-            pdf_list.append(so_awb_datas)
 
         headers = [
             ('Content-Type', 'application/pdf'),
             ('Content-Disposition', 'attachment; filename=' + '%s.pdf;' % output_filename)
         ]
-        with open(os.path.join(dir, output_filename), 'wb') as f:
+        with open(os.path.join(path, output_filename), 'wb') as f:
             output.write(f)
             f.close()
-        filename = open(os.path.join(dir, output_filename), 'rb')
+        filename = open(os.path.join(path, output_filename), 'rb')
         return http.request.make_response(filename, headers)
