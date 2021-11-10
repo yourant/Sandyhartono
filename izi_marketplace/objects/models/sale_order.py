@@ -254,7 +254,7 @@ class SaleOrder(models.Model):
     @api.multi
     def reject_order(self):
         marketplace = self.mapped('marketplace')
-        mp_account_ids = self.mapped('mp_account_id.id').id
+        mp_account_ids = self.mapped('mp_account_id.id')
         if marketplace.count(marketplace[0]) == len(marketplace):
             if mp_account_ids.count(mp_account_ids[0]) == len(mp_account_ids):
                 if hasattr(self, '%s_reject_order' % marketplace[0]):
