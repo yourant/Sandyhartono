@@ -63,10 +63,10 @@ class MarketplaceMapProduct(models.Model):
                 'product_model_id': self.env.ref('product.model_product_product').id,
                 'mp_product_model_id': self.env.ref('izi_marketplace.model_mp_product').id,
                 'mp_product_variant_model_id': self.env.ref('izi_marketplace.model_mp_product_variant').id,
-                'product_field_id': self.env.ref('product.field_product_product_name').id,
-                'mp_product_field_id': self.env.ref('izi_marketplace.field_mp_product_name').id,
+                'product_field_id': self.env.ref('product.field_product_product__name').id,
+                'mp_product_field_id': self.env.ref('izi_marketplace.field_mp_product__name').id,
                 'mp_product_variant_field_id': self.env.ref(
-                    'izi_marketplace.field_mp_product_variant_name').id,
+                    'izi_marketplace.field_mp_product_variant__name').id,
             })
         ]
         return field_mapping_data
