@@ -364,7 +364,7 @@ class SaleOrder(models.Model):
             'res_model': 'ir.actions.act_url',
             'type': 'ir.actions.act_url',
             'target': 'new',
-            'url': base_url+'/web/binary/download_pdf/%s' % ('&'.join(order_list)),
+            'url': base_url+'/web/binary/shopee/download_pdf/%s' % ('&'.join(order_list)),
         }
 
     @api.multi
