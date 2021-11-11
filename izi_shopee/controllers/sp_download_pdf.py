@@ -13,7 +13,7 @@ class ShopeeDownloadPDF(http.Controller):
 
     @http.route('/web/binary/download_pdf/<ids>', type='http', auth="public", website=True)
     def download_pdf(self, ids, **kw):
-        path = 'izi_shopee/data/file/'
+        path = '/izi_marketplace/izi_shopee/data/file/'
         base_path = os.path.abspath(os.getcwd())
         final_path = base_path + path
         _logger.info(final_path)
