@@ -8,7 +8,9 @@ out
 gen
 
 .vscode/*
-!.vscode/settings.json
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/extensions.json
 *.code-workspace
 
 # Local History for Visual Studio Code
@@ -107,7 +109,7 @@ coverage.xml
 
 # Translations
 *.mo
-#*.pot
+*.pot
 
 # Django stuff:
 *.log
