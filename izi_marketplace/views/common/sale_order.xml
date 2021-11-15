@@ -188,7 +188,7 @@ else:
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
-    allowed_statuses = ['to_ship','in_shipping']
+    allowed_statuses = ['to_ship','in_ship']
     if not all(order_status in allowed_statuses for order_status in order_statuses):
         raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
     action = records.get_label()
