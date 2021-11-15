@@ -26,7 +26,7 @@
                     icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_process')]}"
                     style="margin-right: 5px;"/>
             <button name="tokopedia_get_booking_code" string="Get Booking Code" type="object" icon="fa-barcode"
-                    attrs="{'invisible': ['|', ('mp_awb_number', 'not in', [False, '']), '|',
+                    attrs="{'invisible': ['|', ('mp_awb_number', 'not in', [False, '']),
                                           ('mp_order_status', 'not in', ['to_ship', 'in_ship', 'done'])]}"
                     style="margin-right: 5px;"/>
             <button name="tokopedia_request_pickup" string="Request Pickup" type="object" icon="fa-print"
