@@ -102,7 +102,8 @@ class SaleOrder(models.Model):
         values.update({
             'partner_id': customer.id,
             'partner_invoice_id': partner_shipping.id,
-            'partner_shipping_id': partner_shipping.id
+            'partner_shipping_id': partner_shipping.id,
+            'company_id': mp_account.company_id.id
         })
         if mp_account.warehouse_id:
             values.update({
