@@ -19,7 +19,6 @@
     # "images": [
     #     'images/main_screenshot.png'
     # ],
-
     # "price": 10.00,
     # "currency": "USD",
 
