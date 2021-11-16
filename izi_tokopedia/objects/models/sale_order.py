@@ -15,6 +15,8 @@ from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 
+from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict
+
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
