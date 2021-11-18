@@ -160,8 +160,6 @@ class SaleOrder(models.Model):
 
         order_line_obj = self.env['sale.order.line'].with_context(mp_account_ctx)
 
-        records = super(SaleOrder, self)._finish_create_records(records)
-
         sp_order_detail_raws, sp_order_detail_sanitizeds = [], []
 
         if mp_account.marketplace == 'shopee':
@@ -198,6 +196,7 @@ class SaleOrder(models.Model):
             order_line_obj.with_context(
                 mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
+        records = super(SaleOrder, self)._finish_create_records(records)
         return records
 
     @api.multi
