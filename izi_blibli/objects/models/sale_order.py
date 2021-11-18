@@ -187,8 +187,6 @@ class SaleOrder(models.Model):
 
         order_line_obj = self.env['sale.order.line'].with_context(mp_account_ctx)
 
-        records = super(SaleOrder, self)._finish_create_records(records)
-
         bli_order_detail_raws, bli_order_detail_sanitizeds = [], []
 
         if mp_account.marketplace == 'blibli':
@@ -220,7 +218,8 @@ class SaleOrder(models.Model):
                 mp_account_ctx).check_existing_records(**check_existing_records_params)
             order_line_obj.with_context(
                 mp_account_ctx).handle_result_check_existing_records(check_existing_records)
-
+        
+        records = super(SaleOrder, self)._finish_create_records(records)
         return records
 
     @api.multi
