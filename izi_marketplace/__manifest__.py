@@ -54,6 +54,7 @@
         'views/common/mp_map_product_line.xml',
         'views/common/product_template.xml',
         'views/common/sale_order.xml',
+        'views/common/order_component_config.xml',
 
         # wizard
         'views/wizard/wiz_mp_order.xml',
