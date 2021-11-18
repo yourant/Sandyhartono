@@ -176,8 +176,6 @@ class SaleOrder(models.Model):
 
         order_line_obj = self.env['sale.order.line'].with_context(mp_account_ctx)
 
-        records = super(SaleOrder, self)._finish_create_records(records)
-
         if mp_account.marketplace == 'tokopedia':
             tp_order_detail_raws, tp_order_detail_sanitizeds = [], []
             for record in records:
@@ -199,6 +197,8 @@ class SaleOrder(models.Model):
             }
             check_existing_records = order_line_obj.check_existing_records(**check_existing_records_params)
             order_line_obj.handle_result_check_existing_records(check_existing_records)
+
+        records = super(SaleOrder, self)._finish_create_records(records)
         return records
 
     @api.model
