@@ -289,6 +289,10 @@ class MarketplaceAccount(models.Model):
         params, tp_data_detail_orders = {}, []
         tp_data_raws, tp_data_sanitizeds = [], []
         if kwargs.get('params') == 'by_date_range':
+            tp_orders_by_mpexid = {}
+            tp_orders = order_obj.search([('mp_account_id', '=', self.id)])
+            for rec_tp_order in tp_orders:
+                tp_orders_by_mpexid[rec_tp_order.mp_external_id] = rec_tp_order
             params.update({
                 'from_date': kwargs.get('from_date'),
                 'to_date': kwargs.get('to_date'),
@@ -299,12 +303,20 @@ class MarketplaceAccount(models.Model):
             for index, tp_data_order in enumerate(tp_data_orders):
                 tp_invoice_number = tp_data_order.get('invoice_ref_num')
                 tp_order_id = tp_data_order.get('order_id')
-                existing_order = order_obj.search_mp_records('tokopedia', str(tp_order_id)).exists()
-
+                if tp_order_id in tp_orders_by_mpexid:
+                    existing_order = tp_orders_by_mpexid[tp_order_id]
+                    mp_status_changed = existing_order.tp_order_status != str(tp_data_order['order_status'])
+                else:
+                    existing_order = False
+                    mp_status_changed = False
                 # If no existing order OR mp status changed on existing order, then fetch new detail order
                 no_existing_order = not existing_order
-                mp_status_changed = existing_order.tp_order_status != str(tp_data_order['order_status'])
                 if no_existing_order or mp_status_changed or mp_account_ctx.get('force_update'):
+                    tp_status_cancel = ['0', '2', '3', '4', '5', '10', '15', '690', '691', '695', '698', '699']
+                    if str(tp_data_order['order_status']) in tp_status_cancel and no_existing_order:
+                        if not self.get_cancelled_orders:
+                            skipped += 1
+                            continue
                     if existing_order:
                         force_update_ids.append(existing_order.id)
                     notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
