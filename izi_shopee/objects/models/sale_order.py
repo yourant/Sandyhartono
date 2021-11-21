@@ -371,16 +371,23 @@ class SaleOrder(models.Model):
     @mp.shopee.capture_error
     def shopee_drop_off(self):
         sale_order_obj = self.env['sale.order']
-        sp_account = False
-        for order in self:
-            if order.mp_account_id.mp_token_id.state == 'valid':
-                params = {'access_token': order.mp_account_id.mp_token_id.name}
-                sp_account = order.mp_account_id.shopee_get_account(**params)
-            else:
-                raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+        allowed_status = ['in_process']
+        order_statuses = self.mapped('mp_order_status')
+        sp_order_v2 = False
+        if not all(order_status in allowed_status for order_status in order_statuses):
+            raise ValidationError(
+                "The status of your selected orders for shopee should be in {}".format(allowed_status))
 
-            if sp_account:
-                sp_order_v2 = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
+        if self[0].mp_account_id.mp_token_id.state == 'valid':
+            params = {'access_token': self[0].mp_account_id.mp_token_id.name}
+            sp_account = self[0].mp_account_id.shopee_get_account(**params)
+            sp_order_v2 = ShopeeOrder(
+                sp_account, sanitizers=sale_order_obj.get_sanitizers(self[0].mp_account_id.marketplace))
+        else:
+            raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+
+        if sp_order_v2:
+            for order in self:
                 action_params = {
                     'order_sn': order.mp_external_id,
                     # 'package_number': order.sp_package_number,
@@ -393,7 +400,7 @@ class SaleOrder(models.Model):
                 action_status = sp_order_v2.action_ship_order(**action_params)
                 if action_status == "success":
                     order.action_confirm()
-                    time.sleep(3)
+                    time.sleep(1)
                     order.shopee_fetch_order()
 
     @api.multi
@@ -449,6 +456,11 @@ class SaleOrder(models.Model):
     def shopee_request_pickup(self):
         mp_shopee_shop_address_obj = self.env['mp.shopee.shop.address']
         mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
+        allowed_status = ['in_process']
+        order_statuses = self.mapped('mp_order_status')
+        if not all(order_status in allowed_status for order_status in order_statuses):
+            raise ValidationError(
+                "The status of your selected orders for shopee should be in {}".format(allowed_status))
         for order in self:
             mp_account_ctx = order.mp_account_id.generate_context()
             sp_order_raw = json.loads(order.raw, strict=False)
