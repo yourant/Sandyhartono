@@ -366,3 +366,16 @@ class SaleOrder(models.Model):
                 raise ValidationError('Please select the same marketplace account.')
         else:
             raise ValidationError('Please select the same marketplace channel.')
+
+    @api.multi
+    def request_pickup(self):
+        marketplace = self.mapped('marketplace')
+        mp_account_ids = self.mapped('mp_account_id.id')
+        if marketplace.count(marketplace[0]) == len(marketplace):
+            if mp_account_ids.count(mp_account_ids[0]) == len(mp_account_ids):
+                if hasattr(self, '%s_request_pickup' % marketplace[0]):
+                    return getattr(self, '%s_request_pickup' % marketplace[0])()
+            else:
+                raise ValidationError('Please select the same marketplace account.')
+        else:
+            raise ValidationError('Please select the same marketplace channel.')

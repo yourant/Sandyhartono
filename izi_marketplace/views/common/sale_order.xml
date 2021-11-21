@@ -215,5 +215,24 @@ else:
     raise Warning("Please select sale order first!")
       </field>
     </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_request_pickup">
+      <field name="name">Request Pickup</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="priority">9</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_ship','in_process']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.request_pickup()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
   </data>
 </odoo>
