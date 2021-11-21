@@ -14,6 +14,7 @@
           <group attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
             <field name="sp_partner_id" attrs="{'required': [('marketplace', '=', 'shopee')]}"/>
             <field name="sp_partner_key" password="True" attrs="{'required': [('marketplace', '=', 'shopee')]}"/>
+            <field name="sp_shop_id" attrs="{'invisible': [('sp_shop_id', '=', False)]}"/>
           </group>
         </xpath>
         <xpath expr="//group[@name='product_configuration']" position="inside">
