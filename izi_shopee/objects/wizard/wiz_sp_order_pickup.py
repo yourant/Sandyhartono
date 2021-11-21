@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import time
+from datetime import datetime
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
@@ -20,6 +21,15 @@ class WizardShopeeOrderPickup(models.TransientModel):
 
     @ mp.shopee.capture_error
     def confirm(self):
+        date_dict = {
+            'Monday': 'Senin',
+            'Tuesday': 'Selasa',
+            'Wednesday': 'Rabu',
+            'Thursday': 'Kamis',
+            'Friday': 'Jum\'at',
+            'Saturday': 'Sabtu',
+            'Sunday': 'Minggu'
+        }
         for order in self.order_ids:
             if order.mp_account_id.mp_token_id.state == 'valid':
                 params = {'access_token': order.mp_account_id.mp_token_id.name}
@@ -41,6 +51,12 @@ class WizardShopeeOrderPickup(models.TransientModel):
                     pickup.active = False
                 action_status = sp_order.action_ship_order(**kwargs)
                 if action_status == "success":
+                    day = date_dict[datetime.strptime(self.pickup_id.start_datetime,
+                                                      '%Y-%m-%d %H:%M:%S').strftime('%A')]
+                    str_time = datetime.strptime(self.pickup_id.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M') + \
+                        '-' + datetime.strptime(self.pickup_id.end_datetime, '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
+                    date_time = day+', ' + str_time
+                    order.sp_pickup_date = date_time
                     order.action_confirm()
-                    time.sleep(3)
+                    time.sleep(1)
                     order.shopee_fetch_order()

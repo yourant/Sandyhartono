@@ -9,15 +9,8 @@
                 <xpath expr="//group[@name='order_status']" position="inside">
                     <field name="sp_order_status" readonly="1" attrs="{'invisible':[('marketplace', '!=', 'shopee')]}"/>
                 </xpath>
-                <xpath expr="//group[@name='marketplace_info']" position="after">
-                    <group string="Pickup Information" attrs="{'invisible':[('marketplace', '!=', 'shopee')]}">
-                        <field name="sp_pickup_ids" readonly="1">
-                            <tree>
-                                <field name="start_datetime"/>
-                                <field name="end_datetime"/>
-                            </tree>
-                        </field>
-                    </group>
+                <xpath expr="//group[@name='delivery_info']" position="inside">
+                    <field name="sp_pickup_date" readonly="1" attrs="{'invisible':['|',('marketplace', '!=', 'shopee'), ('mp_order_status', '!=', 'to_ship')]}"/>
                 </xpath>
             </field>
         </record>

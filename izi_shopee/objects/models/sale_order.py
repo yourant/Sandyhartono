@@ -35,6 +35,7 @@ class SaleOrder(models.Model):
     sp_order_status = fields.Selection(string="Shopee Order Status", selection=SP_ORDER_STATUSES, required=False)
     sp_order_id = fields.Char(string="Shopee Order ID", readonly=True)
     sp_package_number = fields.Char(string="Shopee Package Number", readonly=True)
+    sp_pickup_date = fields.Char(string='Shopee Pickup Date', readonly=True)
     sp_pickup_ids = fields.One2many(
         comodel_name='mp.shopee.order.pickup.info',
         inverse_name='order_id',
@@ -445,7 +446,7 @@ class SaleOrder(models.Model):
                 raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
 
     @api.multi
-    def shopee_pickup(self):
+    def shopee_request_pickup(self):
         mp_shopee_shop_address_obj = self.env['mp.shopee.shop.address']
         mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
         for order in self:
