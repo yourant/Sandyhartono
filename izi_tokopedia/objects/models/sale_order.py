@@ -182,7 +182,9 @@ class SaleOrder(models.Model):
                 tp_order_raw = json.loads(record.raw, strict=False)
                 tp_order_details = [
                     # Insert order_id into tp_order_detail_raw
-                    dict(tp_order_detail_raw, **dict([('order_id', record.id)]))
+                    dict(tp_order_detail_raw,
+                         **dict([('order_id', record.id)]),
+                         **dict([('mp_order_exid', record.mp_invoice_number)]))
                     for tp_order_detail_raw in json_digger(tp_order_raw, 'order_info/order_detail')
                 ]
                 tp_data_raw, tp_data_sanitized = order_line_obj._prepare_mapping_raw_data(raw_data=tp_order_details)
