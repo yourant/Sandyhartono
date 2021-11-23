@@ -372,13 +372,19 @@ class SaleOrder(models.Model):
     @api.multi
     @mp.shopee.capture_error
     def shopee_drop_off(self):
+        sp_order_v2 = False
         sale_order_obj = self.env['sale.order']
         allowed_status = ['in_process']
         order_statuses = self.mapped('mp_order_status')
-        sp_order_v2 = False
         if not all(order_status in allowed_status for order_status in order_statuses):
             raise ValidationError(
                 "The status of your selected orders for shopee should be in {}".format(allowed_status))
+
+        allowed_delivery_type = ['drop off', 'both']
+        order_mp_delivery_type = self.mapped('mp_delivery_type')
+        if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
+            raise ValidationError(
+                "The status of your selected orders for shopee should be in {}".format(allowed_delivery_type))
 
         if self[0].mp_account_id.mp_token_id.state == 'valid':
             params = {'access_token': self[0].mp_account_id.mp_token_id.name}
@@ -458,11 +464,19 @@ class SaleOrder(models.Model):
     def shopee_request_pickup(self):
         mp_shopee_shop_address_obj = self.env['mp.shopee.shop.address']
         mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
+
         allowed_status = ['in_process']
         order_statuses = self.mapped('mp_order_status')
         if not all(order_status in allowed_status for order_status in order_statuses):
             raise ValidationError(
                 "The status of your selected orders for shopee should be in {}".format(allowed_status))
+
+        allowed_delivery_type = ['pickup', 'both']
+        order_mp_delivery_type = self.mapped('mp_delivery_type')
+        if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
+            raise ValidationError(
+                "The status of your selected orders for shopee should be in {}".format(allowed_delivery_type))
+
         for order in self:
             mp_account_ctx = order.mp_account_id.generate_context()
             sp_order_raw = json.loads(order.raw, strict=False)
