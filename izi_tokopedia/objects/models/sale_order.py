@@ -459,11 +459,6 @@ class SaleOrder(models.Model):
 
     @api.multi
     def tokopedia_confirm_shipping(self):
-        allowed_delivery_type = ['drop off']
-        order_mp_delivery_type = self.mapped('mp_delivery_type')
-        if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
-            raise ValidationError(
-                "The status of your selected orders for tokopedia should be in {}".format(allowed_delivery_type))
         return {
             'name': 'Confirm Shipping Order(s)',
             'view_mode': 'form',
@@ -479,11 +474,6 @@ class SaleOrder(models.Model):
     @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_request_pickup(self):
-        allowed_delivery_type = ['pickup']
-        order_mp_delivery_type = self.mapped('mp_delivery_type')
-        if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
-            raise ValidationError(
-                "The status of your selected orders for tokopedia should be in {}".format(allowed_delivery_type))
         for order in self:
             tp_account = order.mp_account_id.tokopedia_get_account()
             tp_order = TokopediaOrder(tp_account)
