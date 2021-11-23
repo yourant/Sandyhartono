@@ -230,7 +230,7 @@ if records:
     if not all(order_status in allowed_statuses for order_status in order_statuses):
         raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
     allowed_delivery_type = ['pickup', 'both']
-    order_mp_delivery_type = self.mapped('mp_delivery_type')
+    order_mp_delivery_type = records.mapped('mp_delivery_type')
     if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
         raise ValidationError(
             "The status of your selected orders should be in {}".format(allowed_delivery_type))
@@ -254,7 +254,7 @@ if records:
     if not all(order_status in allowed_statuses for order_status in order_statuses):
         raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
     allowed_delivery_type = ['drop off', 'both']
-    order_mp_delivery_type = self.mapped('mp_delivery_type')
+    order_mp_delivery_type = records.mapped('mp_delivery_type')
     if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
         raise ValidationError(
             "The status of your selected orders should be in {}".format(allowed_delivery_type))
