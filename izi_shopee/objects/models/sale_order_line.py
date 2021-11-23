@@ -17,6 +17,7 @@ class SaleOrderLine(models.Model):
         marketplace = 'shopee'
         mp_field_mapping = {
             'order_id': ('order_id', None),
+            'mp_exid': ('mp_order_exid', None),
             'name': ('item_name', None),
             'price_unit': ('model_original_price', None),
             'sp_weight': ('weight', None),

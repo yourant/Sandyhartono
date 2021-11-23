@@ -174,7 +174,9 @@ class SaleOrder(models.Model):
 
                 sp_order_details = [
                     # Insert order_id into tp_order_detail_raw
-                    dict(sp_order_detail_raw, **dict([('order_id', record.id)]))
+                    dict(sp_order_detail_raw,
+                         **dict([('order_id', record.id)]),
+                         **dict([('mp_order_exid', record.mp_invoice_number)]))
                     for sp_order_detail_raw in json_digger(sp_order_raw, 'item_list')
                 ]
                 sp_data_raw, sp_data_sanitized = order_line_obj.with_context(
