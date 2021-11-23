@@ -229,6 +229,11 @@ if records:
     allowed_statuses = ['to_ship','in_process']
     if not all(order_status in allowed_statuses for order_status in order_statuses):
         raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    allowed_delivery_type = ['pickup', 'both']
+    order_mp_delivery_type = self.mapped('mp_delivery_type')
+    if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
+        raise ValidationError(
+            "The status of your selected orders should be in {}".format(allowed_delivery_type))
     action = records.request_pickup()
 else:
     raise Warning("Please select sale order first!")
@@ -248,6 +253,11 @@ if records:
     allowed_statuses = ['to_ship','in_process']
     if not all(order_status in allowed_statuses for order_status in order_statuses):
         raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    allowed_delivery_type = ['drop off', 'both']
+    order_mp_delivery_type = self.mapped('mp_delivery_type')
+    if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
+        raise ValidationError(
+            "The status of your selected orders should be in {}".format(allowed_delivery_type))
     action = records.drop_off()
 else:
     raise Warning("Please select sale order first!")
