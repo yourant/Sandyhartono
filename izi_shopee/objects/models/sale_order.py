@@ -380,12 +380,6 @@ class SaleOrder(models.Model):
             raise ValidationError(
                 "The status of your selected orders for shopee should be in {}".format(allowed_status))
 
-        allowed_delivery_type = ['drop off', 'both']
-        order_mp_delivery_type = self.mapped('mp_delivery_type')
-        if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
-            raise ValidationError(
-                "The status of your selected orders for shopee should be in {}".format(allowed_delivery_type))
-
         if self[0].mp_account_id.mp_token_id.state == 'valid':
             params = {'access_token': self[0].mp_account_id.mp_token_id.name}
             sp_account = self[0].mp_account_id.shopee_get_account(**params)
@@ -470,12 +464,6 @@ class SaleOrder(models.Model):
         if not all(order_status in allowed_status for order_status in order_statuses):
             raise ValidationError(
                 "The status of your selected orders for shopee should be in {}".format(allowed_status))
-
-        allowed_delivery_type = ['pickup', 'both']
-        order_mp_delivery_type = self.mapped('mp_delivery_type')
-        if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
-            raise ValidationError(
-                "The status of your selected orders for shopee should be in {}".format(allowed_delivery_type))
 
         for order in self:
             mp_account_ctx = order.mp_account_id.generate_context()
