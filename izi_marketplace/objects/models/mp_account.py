@@ -85,6 +85,8 @@ class MarketplaceAccount(models.Model):
                                          help="Maximum number to import product, set 0 for unlimited!")
     debug_order_limit = fields.Integer(string="Order Import Limit", required=True, default=0,
                                        help="Maximum number to import order, set 0 for unlimited!")
+    debug_skip_error = fields.Boolean(string="Skip Error", default=False,
+                                      help="Skip error when processing records from marketplace")
 
     cron_id = fields.Many2one(comodel_name='ir.cron', string='Order Scheduler')
     cron_user_id = fields.Many2one('res.users', string='Scheduler User', related='cron_id.user_id')
@@ -98,6 +100,8 @@ class MarketplaceAccount(models.Model):
                                            ('months', 'Months')], string='Interval Unit',
                                           default='minutes', related='cron_id.interval_type')
     cron_active = fields.Boolean(string='Active Scheduler', related='cron_id.active')
+    mp_log_error_ids = fields.One2many(comodel_name='mp.log.error',
+                                       inverse_name='mp_account_id', string='Marketplace Log Error')
 
     @api.model
     def create(self, vals):
@@ -167,6 +171,7 @@ class MarketplaceAccount(models.Model):
             'store_product_img': self.debug_store_product_img,
             'product_limit': self.debug_product_limit,
             'order_limit': self.debug_order_limit,
+            'skip_error': self.debug_skip_error,
         })
         return context
 

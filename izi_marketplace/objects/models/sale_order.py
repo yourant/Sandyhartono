@@ -123,6 +123,13 @@ class SaleOrder(models.Model):
     def _finish_create_records(self, records):
         records = super(SaleOrder, self)._finish_create_records(records)
         records = self.process_order_component_config(records)
+        if self._context.get('skip_error'):
+            for record in records:
+                record_line = record.mapped('order_line.product_type')
+                if not record_line:
+                    record.unlink()
+                elif 'product' not in record_line:
+                    record.unlink()
         return records
 
     @api.model

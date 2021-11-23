@@ -19,7 +19,7 @@ class SaleOrderLine(models.Model):
     def _finish_mapping_raw_data(self, sanitized_data, values):
         sanitized_data, values = super(SaleOrderLine, self)._finish_mapping_raw_data(sanitized_data, values)
 
-        if not values.get('product_id'):
+        if not values.get('product_id') and self._context.get('final', False):
             err_msg = 'Could not find matched record for MP Product "%s", please make sure this MP Product is mapped!'
             raise ValidationError(err_msg % values['name'])
 

@@ -115,11 +115,25 @@
                   </group>
                 </group>
               </page>
+              <page name="mp_log_error" string="Marketplace Log Error" attrs="{'invisible': [('marketplace', '!=', False), ('debug_skip_error', '=', False)]}">
+                <field name="mp_log_error_ids">
+                  <tree options="{'no_create': True}">
+                    <button type="object" name="retry_get_record" icon="fa-refresh" />
+                    <field name="last_retry_time" readonly="1"/>
+                    <field name="model_name" readonly="1"/>
+                    <field name="mp_external_id" readonly="1"/>
+                    <field name="name" readonly="1"/>
+                    <field name="mp_log_status" readonly="1"/>
+                    <field name="notes" readonly="1"/>
+                  </tree>
+                </field>
+              </page>
               <page string="Debug" groups="base.group_no_one">
                 <group>
                   <field name="debug_force_update" widget="boolean_toggle"/>
                   <field name="debug_force_update_raw" widget="boolean_toggle"/>
                   <field name="debug_store_product_img" widget="boolean_toggle"/>
+                  <field name="debug_skip_error" widget="boolean_toggle"/>
                   <field name="debug_product_limit"/>
                   <field name="debug_order_limit"/>
                 </group>

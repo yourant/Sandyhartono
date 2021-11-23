@@ -13,3 +13,4 @@ from . import product_product
 from . import sale_order
 from . import sale_order_line
 from . import order_component_config
+from . import mp_log_error
