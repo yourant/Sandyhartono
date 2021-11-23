@@ -6,7 +6,7 @@
     "name": """IZI Marketplace: Blibli""",
     "summary": """Integrating Odoo with Marketplace: Blibli""",
     "category": "Sales",
-    "version": "11.0.0.3.1",
+    "version": "11.0.0.3.2",
     "development_status": "Alpha",  # Options: Alpha|Beta|Production/Stable|Mature
     "auto_install": False,
     "installable": True,

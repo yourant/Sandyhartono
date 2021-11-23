@@ -6,7 +6,7 @@
     "name": """IZI Marketplace: Shopee""",
     "summary": """Integrating Odoo with Marketplace: Shopee""",
     "category": "Sales",
-    "version": "11.0.0.5.1",
+    "version": "11.0.0.6.0",
     "development_status": "Alpha",  # Options: Alpha|Beta|Production/Stable|Mature
     "auto_install": False,
     "installable": True,
