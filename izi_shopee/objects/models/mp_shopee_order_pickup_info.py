@@ -14,8 +14,8 @@ class MPShopeeOrderPickupInfo(models.Model):
     pickup_time_id = fields.Char(string='Pickup Time ID')
     start_datetime = fields.Datetime(string='Start Datetime')
     end_datetime = fields.Datetime(string='End Datetime')
-    order_id = fields.Many2one(comodel='sale.order', string='Shopee Order')
-    address_id = fields.Many2one(comodel='mp.shopee.shop.address', string='Shop Address')
+    order_id = fields.Many2one(comodel_name='sale.order', string='Shopee Order')
+    address_id = fields.Many2one(comodel_name='mp.shopee.shop.address', string='Shop Address')
     active = fields.Boolean(string='Active', default=True)
 
     @api.multi
