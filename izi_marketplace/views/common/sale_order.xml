@@ -146,7 +146,6 @@
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">5</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -165,7 +164,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">6</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -184,7 +182,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">7</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -203,7 +200,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">8</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -222,7 +218,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">9</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -245,7 +240,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">10</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
