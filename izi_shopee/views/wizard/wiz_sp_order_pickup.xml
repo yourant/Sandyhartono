@@ -10,7 +10,7 @@
                         <group>
                             <field name="order_ids" widget="many2many_tags" readonly="1" force_save="1"/>
                             <field name="address_id"/>
-                            <field name="pickup_id" domain="[('order_id', 'in', order_ids)]" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="pickup_id" domain="[('order_id', 'in', order_ids), ('address_id', '=', address_id)]" options="{'no_open': True, 'no_create': True}"/>
                         </group>
                         <footer>
                             <button name="confirm" type="object" string="Confirm" class="btn-primary" confirm="Are you sure to pickup these orders?"/>
