@@ -166,7 +166,8 @@ class SaleOrder(models.Model):
         if mp_account.marketplace == 'shopee':
             for record in records:
                 sp_order_raw = json.loads(record.raw, strict=False)
-                list_item_field = ['item_id', 'item_name', 'item_sku', 'model_id', 'model_name', 'model_sku']
+                list_item_field = ['item_id', 'item_name', 'item_sku', 'model_id',
+                                   'model_name', 'model_sku', 'model_original_price', 'model_discounted_price']
 
                 item_list = sp_order_raw['item_list']
                 for item in item_list:
