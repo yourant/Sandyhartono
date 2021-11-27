@@ -199,6 +199,17 @@ class SaleOrder(models.Model):
             }
             check_existing_records = order_line_obj.check_existing_records(**check_existing_records_params)
             order_line_obj.handle_result_check_existing_records(check_existing_records)
+            if self._context.get('skip_error'):
+                for record in records:
+                    tp_order_raw = json.loads(record.raw, strict=False)
+                    item_list = tp_order_raw.get('order_info').get('order_detail', [])
+                    record_line = record.mapped('order_line.product_type')
+                    if not record_line:
+                        record.unlink()
+                    elif 'product' not in record_line:
+                        record.unlink()
+                    elif len(item_list) != record_line.count('product'):
+                        record.unlink()
 
         records = super(SaleOrder, self)._finish_create_records(records)
         return records
