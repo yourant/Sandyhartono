@@ -80,8 +80,10 @@ class MarketplaceAccount(models.Model):
         if shop_id:
             raw_token['shop_id'] = shop_id
         mp_token_obj.create_token(self, raw_token)
+        time_now = str((datetime.now() + timedelta(hours=7)) .strftime("%Y-%m-%d %H:%M:%S"))
+        auth_message = 'Congratulations, you have been successfully authenticated! from: %s' % (time_now)
         self.write({'state': 'authenticated',
-                    'auth_message': 'Congratulations, you have been successfully authenticated!'})
+                    'auth_message': auth_message})
 
     @api.multi
     @mp.shopee.capture_error
