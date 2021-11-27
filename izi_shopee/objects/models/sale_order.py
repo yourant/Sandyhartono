@@ -342,10 +342,10 @@ class SaleOrder(models.Model):
         order_list = []
         for order in self:
             if order.mp_awb_datas:
-                order_list.append(order.name)
+                order_list.append(str(order.id))
             elif order.mp_awb_url:
                 order.mp_awb_datas = base64.b64encode(requests.get(order.mp_awb_url).content)
-                order_list.append(order.name)
+                order_list.append(str(order.id))
             elif order.mp_awb_number:
                 if order.mp_account_id.mp_token_id.state == 'valid':
                     params = {'access_token': order.mp_account_id.mp_token_id.name}
@@ -358,7 +358,7 @@ class SaleOrder(models.Model):
                     awb_data = sp_order_v1.get_airways_bill(order_sn=order.mp_invoice_number)
                     order.mp_awb_url = awb_data.get(order.mp_invoice_number, False)
                     order.mp_awb_datas = base64.b64encode(requests.get(order.mp_awb_url).content)
-                    order_list.append(order.name)
+                    order_list.append(str(order.id))
             else:
                 pass
 
