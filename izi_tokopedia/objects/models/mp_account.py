@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import json
 from datetime import datetime, timedelta
+import time
 
 from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
@@ -323,6 +324,7 @@ class MarketplaceAccount(models.Model):
                         str(index + 1), len(tp_data_orders), tp_invoice_number
                     )
                     _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+                    time.sleep(0.02)
                     tp_data_detail_order = tp_order.get_order_detail(order_id=tp_order_id)
                     tp_data_detail_order.update({'order_summary': tp_data_order})
                     tp_data_detail_orders.append(tp_data_detail_order)
