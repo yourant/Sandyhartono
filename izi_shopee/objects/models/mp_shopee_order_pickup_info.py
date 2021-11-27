@@ -32,8 +32,11 @@ class MPShopeeOrderPickupInfo(models.Model):
         }
         for rec in self:
             day = date_dict[datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%A')]
-            time = datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M') + \
-                '-' + datetime.strptime(rec.end_datetime, '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
+            if rec.end_datetime:
+                time = datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M') + \
+                    '-' + datetime.strptime(rec.end_datetime, '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
+            else:
+                time = datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M')
             date_time = day+', '+time
 
             res.append((rec.id, date_time))
@@ -80,22 +83,23 @@ class MPShopeeOrderPickupInfo(models.Model):
             time_text = data['time_text']
             date = datetime.strptime(data['date_from_timestamp'], DEFAULT_SERVER_DATETIME_FORMAT)
             end_datetime = None
-            end_time = time_text.split('-')[1]
-            if 'am' in end_time or 'pm' in end_time:
-                if 'am' in end_time:
-                    end_time = end_time.replace('am', ' AM')
-                elif 'pm' in end_time:
-                    end_time = end_time.replace('pm', ' PM')
-                end_time_obj = datetime.strptime(end_time, '%I:%M %p')
-                end_hour = end_time_obj.hour
-                end_minute = end_time_obj.minute
-                end_second = end_time_obj.second
-            else:
-                end_hour = int(end_time.split(':')[0])
-                end_minute = int(end_time.split(':')[1])
-                end_second = int(end_time.split(':')[2]) if len(end_time.split(':')) > 2 else 0
+            if time_text != 'Now':
+                end_time = time_text.split('-')[1]
+                if 'am' in end_time or 'pm' in end_time:
+                    if 'am' in end_time:
+                        end_time = end_time.replace('am', ' AM')
+                    elif 'pm' in end_time:
+                        end_time = end_time.replace('pm', ' PM')
+                    end_time_obj = datetime.strptime(end_time, '%I:%M %p')
+                    end_hour = end_time_obj.hour
+                    end_minute = end_time_obj.minute
+                    end_second = end_time_obj.second
+                else:
+                    end_hour = int(end_time.split(':')[0])
+                    end_minute = int(end_time.split(':')[1])
+                    end_second = int(end_time.split(':')[2]) if len(end_time.split(':')) > 2 else 0
 
-            end_datetime = date.replace(hour=end_hour, minute=end_minute, second=end_second)
+                end_datetime = date.replace(hour=end_hour, minute=end_minute, second=end_second)
 
             return end_datetime
 
