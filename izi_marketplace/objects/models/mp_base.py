@@ -459,7 +459,7 @@ class MarketplaceBase(models.AbstractModel):
 
             # Prepare Server Log
             mp_logs = mp_log_error_obj.search([('model_name', '=', self._name),
-                                               ('mp_log_status', '=', 'failed'), 
+                                               ('mp_log_status', '=', 'failed'),
                                                ('mp_account_id', '=', mp_account.id)])
             mp_logs_by_exid = {}
             for mp_log in mp_logs:
@@ -485,7 +485,7 @@ class MarketplaceBase(models.AbstractModel):
                         'name': message_error,
                         'model_name': self._name,
                         'mp_log_status': 'failed',
-                        'notes': False,
+                        'notes': mp_data.get('name'),
                         'mp_external_id': mp_exid,
                         'mp_account_id': mp_account.id,
                         'last_retry_time': fields.Datetime.now(),
@@ -496,10 +496,11 @@ class MarketplaceBase(models.AbstractModel):
                         mp_log_error_obj.create(log_values)
                 else:
                     if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
-                        mp_logs_by_exid[mp_exid].write({
-                            'mp_log_status': 'success',
-                            'last_retry_time': fields.Datetime.now(),
-                        })
+                        if mp_logs_by_exid[mp_exid].notes == mp_data.get('name'):
+                            mp_logs_by_exid[mp_exid].write({
+                                'mp_log_status': 'success',
+                                'last_retry_time': fields.Datetime.now(),
+                            })
 
             return self.with_context(context)._finish_create_records(records)
 
