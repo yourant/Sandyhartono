@@ -33,6 +33,11 @@ class MarketplaceAccount(models.Model):
         ('authenticated', 'Authenticated'),
     ]
 
+    MP_WEBHOOK_STATES = [
+        ('registered', 'Registered'),
+        ('no_register', 'No Register')
+    ]
+
     READONLY_STATES = {
         'authenticated': [('readonly', True)],
         'authenticating': [('readonly', True)],
@@ -102,6 +107,8 @@ class MarketplaceAccount(models.Model):
     cron_active = fields.Boolean(string='Active Scheduler', related='cron_id.active')
     mp_log_error_ids = fields.One2many(comodel_name='mp.log.error',
                                        inverse_name='mp_account_id', string='Marketplace Log Error')
+    mp_webhook_state = fields.Selection(string="Webhook Status", selection=MP_WEBHOOK_STATES,
+                                        default="no_register", readonly=True)
 
     @api.model
     def create(self, vals):
@@ -197,6 +204,12 @@ class MarketplaceAccount(models.Model):
         self.ensure_one()
         if hasattr(self, '%s_get_products' % self.marketplace):
             return getattr(self, '%s_get_products' % self.marketplace)()
+
+    @api.multi
+    def register_webhooks(self):
+        self.ensure_one()
+        if hasattr(self, '%s_register_webhooks' % self.marketplace):
+            return getattr(self, '%s_register_webhooks' % self.marketplace)()
 
     @api.multi
     def action_map_product(self):

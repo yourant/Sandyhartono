@@ -116,7 +116,12 @@
                 </group>
               </page>
               <page name="mp_webhook" string="Webhook">
-                <group name="mp_webhook" string="Marketplace Webhook" attrs="{'invisible': [('marketplace', '=', False)]}"></group>
+                <group name="mp_webhook" string="Marketplace Webhook" attrs="{'invisible': [('marketplace', '=', False)]}">
+                  <group>
+                    <field name="mp_webhook_state"/>
+                  </group>
+                </group>
+                <button name="register_webhooks" string="Register Webhooks" icon="fa-upload" type="object" style="margin: 10px;"/>
               </page>
               <page name="mp_log_error" string="Marketplace Log Error" attrs="{'invisible': [('marketplace', '!=', False), ('debug_skip_error', '=', False)]}">
                 <field name="mp_log_error_ids">
