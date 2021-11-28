@@ -155,7 +155,7 @@ class MarketplaceAccount(models.Model):
         if self.fields_get().get('tp_is_webhook_order', False):
             if self.tp_is_webhook_order:
                 webhook_args.update({
-                    # 'order_notification_url': base_url+'/api/izi/webhook/tp/order/status',
+                    'order_notification_url': base_url+'/api/izi/webhook/tp/order/notification',
                     'order_request_cancellation_url': base_url+'/api/izi/webhook/tp/order/request/cancel',
                     'order_status_url': base_url+'/api/izi/webhook/tp/order/status'
                 })
@@ -434,6 +434,8 @@ class MarketplaceAccount(models.Model):
                 'multi': isinstance(tp_data_sanitizeds, list)
             }
             check_existing_records = order_obj.check_existing_records(**check_existing_records_params)
+            if kwargs.get('skip_create', False):
+                check_existing_records.pop('need_create_records')
             order_obj.handle_result_check_existing_records(check_existing_records)
         else:
             _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
