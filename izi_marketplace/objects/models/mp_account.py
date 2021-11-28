@@ -212,6 +212,12 @@ class MarketplaceAccount(models.Model):
             return getattr(self, '%s_register_webhooks' % self.marketplace)()
 
     @api.multi
+    def unregister_webhooks(self):
+        self.ensure_one()
+        if hasattr(self, '%s_unregister_webhooks' % self.marketplace):
+            return getattr(self, '%s_unregister_webhooks' % self.marketplace)()
+
+    @api.multi
     def action_map_product(self):
         product_map_obj = self.env['mp.map.product']
 
