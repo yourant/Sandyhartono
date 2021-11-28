@@ -177,6 +177,15 @@ class MarketplaceAccount(models.Model):
         else:
             raise UserError('Select at least 1 feature for register webhook')
 
+    @mp.tokopedia.capture_error
+    def tokopedia_unregister_webhooks(self):
+        _logger = self.env['mp.base']._logger
+        notif_msg = "Unregister webhook is Success.."
+        self.write({
+            'mp_webhook_state': 'no_register'
+        })
+        _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+
     @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_shop(self):
