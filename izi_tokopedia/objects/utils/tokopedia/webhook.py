@@ -14,7 +14,7 @@ class TokopediaWebhook(TokopediaAPI):
         }
         if kwargs.get('order_notification_url', False):
             webhook_payload.update({
-                'order_notification_url': kwargs.get('order_notification_url'),
+                # 'order_notification_url': kwargs.get('order_notification_url'),
                 'order_request_cancellation_url': kwargs.get('order_request_cancellation_url'),
                 'order_status_url': kwargs.get('order_status_url'),
             })
