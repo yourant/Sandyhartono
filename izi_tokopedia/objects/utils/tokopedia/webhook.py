@@ -12,7 +12,7 @@ class TokopediaWebhook(TokopediaAPI):
             'fs_id': self.tp_account.fs_id,
             'webhook_secret': kwargs.get('webhook_secret'),
         }
-        if kwargs.get('order_notification_url', False):
+        if kwargs.get('order_status_url', False):
             webhook_payload.update({
                 # 'order_notification_url': kwargs.get('order_notification_url'),
                 'order_request_cancellation_url': kwargs.get('order_request_cancellation_url'),
