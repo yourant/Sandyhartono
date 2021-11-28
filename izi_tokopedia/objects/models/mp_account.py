@@ -140,10 +140,9 @@ class MarketplaceAccount(models.Model):
 
     @api.multi
     @mp.tokopedia.capture_error
-    def tokopedia_register_webhook(self):
+    def tokopedia_register_webhooks(self):
         _logger = self.env['mp.base']._logger
-        # base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        base_url = 'https://aded-103-10-66-64.ngrok.io'
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         self.ensure_one()
 
         if not self.tp_webhook_secret:
@@ -156,8 +155,8 @@ class MarketplaceAccount(models.Model):
         if self.fields_get().get('tp_is_webhook_order', False):
             if self.tp_is_webhook_order:
                 webhook_args.update({
-                    'order_notification_url': base_url+'/api/izi/webhook/tp/order/notification',
-                    'order_cancellation_url': base_url+'/api/izi/webhook/tp/order/cancel',
+                    'order_notification_url': base_url+'/api/izi/webhook/tp/order/status',
+                    'order_request_cancellation_url': base_url+'/api/izi/webhook/tp/order/request/cancel',
                     'order_status_url': base_url+'/api/izi/webhook/tp/order/status'
                 })
         if len(webhook_args) > 1:
@@ -166,8 +165,14 @@ class MarketplaceAccount(models.Model):
             response = tp_webhook.register_webhook(**webhook_args)
             if response.status_code == 200:
                 notif_msg = "Register webhook is successfully.."
+                self.write({
+                    'mp_webhook_state': 'registered'
+                })
             else:
                 notif_msg = "Register webhook is failure.."
+                self.write({
+                    'mp_webhook_state': 'no_register'
+                })
             _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
         else:
             raise UserError('Select at least 1 feature for register webhook')

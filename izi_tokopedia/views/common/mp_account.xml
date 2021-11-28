@@ -24,7 +24,6 @@
             <field name="tp_webhook_secret" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
             <field name="tp_is_webhook_order"/>
           </group>
-          <button name="tokopedia_register_webhook" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}" string="Register Webhook to Tokopedia" icon="fa-upload" type="object" style="margin: 10px;"/>
         </xpath>
         <xpath expr="//page[@name='mp_credential']" position="after">
           <page string="Encryption" name="tp_encryption" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
