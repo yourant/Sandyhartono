@@ -7,6 +7,7 @@ import time
 from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import mp, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.account import TokopediaAccount
@@ -15,6 +16,7 @@ from odoo.addons.izi_tokopedia.objects.utils.tokopedia.logistic import Tokopedia
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.product import TokopediaProduct
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.shop import TokopediaShop
+from odoo.addons.izi_tokopedia.objects.utils.tokopedia.webhook import TokopediaWebhook
 
 
 class MarketplaceAccount(models.Model):
@@ -40,6 +42,9 @@ class MarketplaceAccount(models.Model):
     tp_public_key_file = fields.Binary(string="Public Key File")
     tp_public_key_file_name = fields.Char(string="Public Key File Name")
     tp_public_key = fields.Char(string="Public Key", compute="_compute_tp_public_key")
+
+    tp_webhook_secret = fields.Char(string='Tokopedia Webhook Secret')
+    tp_is_webhook_order = fields.Boolean(string='Tokopedia Order Webhook', default=True)
 
     @api.onchange('marketplace')
     def onchange_marketplace_tokopedia(self):
@@ -132,6 +137,40 @@ class MarketplaceAccount(models.Model):
         response = tp_encryption.register_public_key(public_key)
         if response.status_code == 200:
             _notify('info', 'Public key registered successfully!')
+
+    @api.multi
+    @mp.tokopedia.capture_error
+    def tokopedia_register_webhook(self):
+        _logger = self.env['mp.base']._logger
+        # base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        base_url = 'https://aded-103-10-66-64.ngrok.io'
+        self.ensure_one()
+
+        if not self.tp_webhook_secret:
+            raise UserError('Webhook secret must be filled')
+
+        webhook_args = {
+            'webhook_secret': self.tp_webhook_secret
+        }
+
+        if self.fields_get().get('tp_is_webhook_order', False):
+            if self.tp_is_webhook_order:
+                webhook_args.update({
+                    'order_notification_url': base_url+'/api/izi/webhook/tp/order/notification',
+                    'order_cancellation_url': base_url+'/api/izi/webhook/tp/order/cancel',
+                    'order_status_url': base_url+'/api/izi/webhook/tp/order/status'
+                })
+        if len(webhook_args) > 1:
+            tp_account = self.tokopedia_get_account()
+            tp_webhook = TokopediaWebhook(tp_account)
+            response = tp_webhook.register_webhook(**webhook_args)
+            if response.status_code == 200:
+                notif_msg = "Register webhook is successfully.."
+            else:
+                notif_msg = "Register webhook is failure.."
+            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+        else:
+            raise UserError('Select at least 1 feature for register webhook')
 
     @api.multi
     @mp.tokopedia.capture_error
@@ -339,8 +378,9 @@ class MarketplaceAccount(models.Model):
                 len(tp_data_detail_orders), len(tp_data_orders)
             ), notify=True, notif_sticky=True)
         elif kwargs.get('params') == 'by_mp_invoice_number':
-            mp_invoice_number = kwargs.get('mp_invoice_number')
-            params.update({'invoice_num': mp_invoice_number})
+            mp_invoice_number = kwargs.get('mp_invoice_number', False)
+            mp_order_id = kwargs.get('mp_order_id', False)
+            params.update({'invoice_num': mp_invoice_number, 'order_id': mp_order_id})
             tp_data_detail_order = tp_order.get_order_detail(**params)
 
             # Get order summary
@@ -353,7 +393,10 @@ class MarketplaceAccount(models.Model):
                 'limit': mp_account_ctx.get('order_limit'),
             }
             tp_data_orders = tp_order.get_order_list(**order_summary_params)
-            tp_data_order = list(filter(lambda o: o['invoice_ref_num'] == mp_invoice_number, tp_data_orders))[0]
+            if mp_invoice_number:
+                tp_data_order = list(filter(lambda o: o['invoice_ref_num'] == mp_invoice_number, tp_data_orders))[0]
+            elif mp_order_id:
+                tp_data_order = list(filter(lambda o: o['order_id'] == mp_order_id, tp_data_orders))[0]
             tp_data_detail_order.update({'order_summary': tp_data_order})
 
             tp_data_raw, tp_data_sanitized = order_obj._prepare_mapping_raw_data(
@@ -361,7 +404,8 @@ class MarketplaceAccount(models.Model):
             tp_data_raws.extend(tp_data_raw)
             tp_data_sanitizeds.extend(tp_data_sanitized)
 
-            _logger(self.marketplace, 'Processed order %s!' % mp_invoice_number, notify=True, notif_sticky=True)
+            _logger(self.marketplace, 'Processed order %s!' %
+                    tp_data_order.get('invoice_ref_num'), notify=True, notif_sticky=True)
 
         if force_update_ids:
             order_obj = order_obj.with_context(dict(order_obj._context.copy(), **{
