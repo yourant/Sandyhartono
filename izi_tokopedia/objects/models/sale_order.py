@@ -464,7 +464,7 @@ class SaleOrder(models.Model):
             tp_account = order.mp_account_id.tokopedia_get_account()
             tp_order = TokopediaOrder(tp_account)
 
-            time.sleep(0.02)
+            time.sleep(0.5)
             action_status = tp_order.action_accept_order(order.mp_external_id)
             if action_status == "success":
                 order.action_confirm()
@@ -513,7 +513,7 @@ class SaleOrder(models.Model):
             tp_order = TokopediaOrder(tp_account, sanitizers=sanitizers)
             tp_order_seller = TokopediaOrder(tp_account, api_version="url")
             tp_order_seller.endpoints.host = 'seller'
-            time.sleep(0.02)
+            time.sleep(0.5)
             booking_code = tp_order.action_get_booking_code(order.mp_external_id)[1]
             label_url = tp_order_seller.action_print_shipping_label(order_ids=[order.mp_external_id], printed=0)
             order.write(dict(booking_code[0], **{'mp_awb_url': label_url}))
@@ -542,7 +542,7 @@ class SaleOrder(models.Model):
                 'order_id': order.mp_external_id,
                 'shop_id': order.mp_account_id.tp_shop_id.shop_id
             }
-            time.sleep(0.02)
+            time.sleep(0.5)
             action_status = tp_order.action_request_pickup(**action_params)
             if action_status.get('result') == 'Anda telah sukses melakukan request pickup.':
                 if order.mp_account_id.mp_webhook_state == 'no_register':
