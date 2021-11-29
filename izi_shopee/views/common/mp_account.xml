@@ -7,8 +7,8 @@
       <field name="inherit_id" ref="izi_marketplace.form_mp_account"/>
       <field name="arch" type="xml">
         <xpath expr="//div[@name='button_box']" position="inside">
-          <img class="mp-account-img" src="/izi_shopee/static/src/img/sp.png"
-               attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+          <img class="mp-account-img" src="/izi_shopee/static/src/img/sp.png" 
+              attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
         </xpath>
         <xpath expr="//group[@name='mp_credential']" position="inside">
           <group attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
@@ -18,7 +18,19 @@
           </group>
         </xpath>
         <xpath expr="//group[@name='product_configuration']" position="inside">
-            <field name="sp_coins_product_id" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+          <field name="sp_coins_product_id" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+        </xpath>
+        <xpath expr="//page[@name='debug']" position="inside">
+          <group attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+            <field name="sp_log_token_ids">
+              <tree options="{'no_create': True}">
+                <field name="log_create_datetime" readonly="1"/>
+                <field name="json_request" readonly="1"/>
+                <field name="log_text" readonly="1"/>
+                <field name="status" readonly="1"/>
+              </tree>
+            </field>
+          </group>
         </xpath>
       </field>
     </record>

@@ -28,6 +28,8 @@ class MarketplaceAccount(models.Model):
     sp_coins_product_id = fields.Many2one(comodel_name="product.product",
                                           string="Default Shopee Coins Product",
                                           default=lambda self: self._get_default_sp_coins_product_id())
+    sp_log_token_ids = fields.One2many(comodel_name='mp.shopee.log.token',
+                                       inverse_name='mp_account_id', string='Shopee Log Token')
 
     @api.model
     def _get_default_sp_coins_product_id(self):
@@ -63,23 +65,34 @@ class MarketplaceAccount(models.Model):
 
     def shopee_renew_token(self):
         self.ensure_one()
+        mp_shopee_log_token = self.env['mp.shopee.log.token']
         current_token = False
         if self.mp_token_ids:
             current_token = self.mp_token_ids.sorted('expired_date', reverse=True)[0]
         if current_token:
             if current_token.refresh_token:
-                self.shopee_get_token(**{'refresh_token': current_token.refresh_token,
-                                         'shop_id': current_token.sp_shop_id})
+                request_params = {
+                    'refresh_token': current_token.refresh_token,
+                    'shop_id': current_token.sp_shop_id
+                }
+                try:
+                    self.shopee_get_token(**request_params)
+                except Exception as e:
+                    request_params.update({'partner_id': self.sp_partner_id})
+                    mp_shopee_log_token.create_log_token(self, e.args[0], request_params, status='fail')
 
     @api.multi
     def shopee_get_token(self, **kwargs):
         mp_token_obj = self.env['mp.token']
+        mp_shopee_log_token = self.env['mp.shopee.log.token']
+
         sp_account = self.shopee_get_account(**kwargs)
         shop_id = kwargs.get('shop_id', None)
-        raw_token = sp_account.get_token()
+        raw_token, request_json = sp_account.get_token()
         if shop_id:
             raw_token['shop_id'] = shop_id
-        mp_token_obj.create_token(self, raw_token)
+        mp_token = mp_token_obj.create_token(self, raw_token)
+        mp_shopee_log_token.create_log_token(self, raw_token, request_json, status='success', mp_token=mp_token)
         time_now = str((datetime.now() + timedelta(hours=7)) .strftime("%Y-%m-%d %H:%M:%S"))
         auth_message = 'Congratulations, you have been successfully authenticated! from: %s' % (time_now)
         self.write({'state': 'authenticated',

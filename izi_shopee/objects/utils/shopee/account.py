@@ -66,4 +66,4 @@ class ShopeeAccount(object):
                                                                })
             response = validate_response(requests.request(**prepared_request))
             _logger.info('\n%s' % (json.dumps(response.json(), indent=2)))
-            return response.json()
+            return response.json(), prepared_request.get('json')
