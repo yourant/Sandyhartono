@@ -24,7 +24,7 @@ class WizardTokopediaOrderReject(models.TransientModel):
 
     order_ids = fields.Many2many(comodel_name="sale.order", relation="rel_order_reject_sale_order",
                                  column1="order_reject_id", column2="order_id", string="Order(s)", required=True)
-    reason_code = fields.Selection(string="Reason", selection=REJECT_REASONS, required=True)
+    reason_code = fields.Selection(string="Reason Code", selection=REJECT_REASONS, required=True)
     reason = fields.Text(string="Reason", required=True)
     shop_close_end_date = fields.Date(string="Shop Close End Date", required=False)
     shop_close_note = fields.Text(string="Shop Close Note", required=False)
