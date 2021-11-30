@@ -31,7 +31,7 @@ class MarketplaceToken(models.Model):
         self.ensure_one()
         x_minutes = 180
         now_utc = datetime.utcnow()
-        time_diff = now_utc.replace(tzinfo=None) - datetime.strptime(self.create_date, "%Y-%m-%d %H:%M:%S")
+        time_diff = now_utc.replace(tzinfo=None) - self.create_date
         if (time_diff.days > 0 or time_diff.seconds > (x_minutes * 60)) and self.refresh_token and self.sp_shop_id:
             try:
                 self.mp_account_id.shopee_renew_token()
