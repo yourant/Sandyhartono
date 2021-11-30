@@ -95,12 +95,20 @@ class TestResUsers(common.TransactionCase):
     def test_notify_many(self):
         # check that the notification of a list of users is done with
         # a single call to the bus
+<<<<<<< HEAD
         with mock.patch(
             "odoo.addons.bus.models.bus.ImBus.sendmany"
         ) as mockedSendMany:
             users = self.env.user.search([(1, "=", 1)])
             self.assertTrue(len(users) > 1)
             users.notify_warning(message="message")
+=======
+        with mock.patch('odoo.addons.bus.models.bus.ImBus.sendmany'
+                        ) as mockedSendMany:
+            users = self.env.user.search([(1, "=", 1)])
+            self.assertTrue(len(users) > 1)
+            users.notify_warning('message')
+>>>>>>> 6ad3aa2b3c989e26f34100be8af1a16924765802
 
             self.assertEqual(1, mockedSendMany.call_count)
 
@@ -115,6 +123,7 @@ class TestResUsers(common.TransactionCase):
             self.assertEqual(len(users), len(first_pos_call_args))
 
     def test_notify_other_user(self):
+<<<<<<< HEAD
         other_user = self.env.ref("base.user_demo")
         other_user_model = self.env["res.users"].sudo(other_user)
         with self.assertRaises(exceptions.UserError):
@@ -123,3 +132,13 @@ class TestResUsers(common.TransactionCase):
     def test_notify_admin_allowed_other_user(self):
         other_user = self.env.ref("base.user_demo")
         other_user.notify_info(message="hello")
+=======
+        other_user = self.env.ref('base.user_demo')
+        other_user_model = self.env['res.users'].sudo(other_user)
+        with self.assertRaises(exceptions.UserError):
+            other_user_model.browse(self.env.uid).notify_info('hello')
+
+    def test_notify_admin_allowed_other_user(self):
+        other_user = self.env.ref('base.user_demo')
+        other_user.notify_info('hello')
+>>>>>>> 6ad3aa2b3c989e26f34100be8af1a16924765802

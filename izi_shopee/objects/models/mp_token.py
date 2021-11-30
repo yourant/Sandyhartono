@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
@@ -29,13 +29,15 @@ class MarketplaceToken(models.Model):
     @api.multi
     def shopee_validate_current_token(self):
         self.ensure_one()
-        x_minutes = 230
+        x_minutes = 180
         now_utc = datetime.utcnow()
-        time_diff = now_utc.replace(tzinfo=None) - self.create_date
+        time_diff = now_utc.replace(tzinfo=None) - datetime.strptime(self.create_date, "%Y-%m-%d %H:%M:%S")
         if (time_diff.days > 0 or time_diff.seconds > (x_minutes * 60)) and self.refresh_token and self.sp_shop_id:
             try:
                 self.mp_account_id.shopee_renew_token()
             except Exception as e:
-                self.mp_account_id.write({'state': 'authenticating', 'auth_message': str(e.args[0])})
+                time_now = str((datetime.now() + timedelta(hours=7)).strftime("%Y-%m-%d %H:%M:%S"))
+                auth_message = "%s from: %s" % (str(e.args[0]), time_now)
+                self.mp_account_id.write({'state': 'authenticating', 'auth_message': auth_message})
                 return self.mp_account_id.mp_token_ids.sorted('expired_date', reverse=True)[0]
         return self

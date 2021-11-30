@@ -25,6 +25,7 @@ class SaleOrderLine(models.Model):
         marketplace = 'tokopedia'
         mp_field_mapping = {
             'order_id': ('order_id', None),
+            'mp_exid': ('mp_order_exid', None),
             'tp_order_detail_id': ('order_detail_id', lambda env, r: str(r)),
             'name': ('product_name', None),
             'price_unit': ('product_price', None),

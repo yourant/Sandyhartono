@@ -56,4 +56,5 @@ class WizardTokopediaOrderReject(models.TransientModel):
             action_status = tp_order.action_reject_order(**kwargs)
             if action_status == "success":
                 order.action_cancel()
-                order.tokopedia_fetch_order()
+                if order.mp_account_id.mp_webhook_state == 'no_register':
+                    order.tokopedia_fetch_order()

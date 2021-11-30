@@ -221,6 +221,7 @@ class SaleOrder(models.Model):
             order_line_obj.with_context(
                 mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
+        records = super(SaleOrder, self)._finish_create_records(records)
         return records
 
     @api.multi

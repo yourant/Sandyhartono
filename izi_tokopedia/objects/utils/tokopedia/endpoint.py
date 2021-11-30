@@ -24,7 +24,8 @@ class TokopediaEndpoint(object):
             'order_shipping_label': ('GET', '/v1/order/{order_id}/fs/{fs_id}/shipping-label'),
             'fulfillment_order': ('GET', '/v1/fs/{fs_id}/fulfillment_order'),
             'confirm_shipping': ('POST ', '/v1/order/{order_id}/fs/{fs_id}/status'),
-            'request_pickup': ('POST ', '/inventory/v1/fs/{fs_id}/pick-up')
+            'request_pickup': ('POST ', '/inventory/v1/fs/{fs_id}/pick-up'),
+            'register_webhook': ('POST', '/v1/fs/{fs_id}/register')
         },
         'v2': {
             'logistic_info': ('GET', '/v2/logistic/fs/{fs_id}/info'),

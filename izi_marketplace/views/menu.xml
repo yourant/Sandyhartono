@@ -46,5 +46,11 @@
     <menuitem id="izi_marketplace.menu_item_mp_token" name="Access Token"
               parent="izi_marketplace.menu_separator_mp_account_config"
               action="izi_marketplace.action_window_mp_token" sequence="10"/>
+    
+    <!-- Marketplace / Configuration / Access Token -->
+    <menuitem id="izi_marketplace.order_component_config" name="Order Component" 
+              parent="izi_marketplace.menu_separator_mp_account_config" 
+              action="izi_marketplace.action_window_order_component_config" sequence="10"/>
+
   </data>
 </odoo>
