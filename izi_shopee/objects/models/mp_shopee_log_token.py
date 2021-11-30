@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+from datetime import datetime
 from odoo import api, fields, models
 
 
@@ -17,7 +18,7 @@ class MpShopeeLogToken(models.Model):
     json_request = fields.Text(string='JSON Request')
     json_response = fields.Text(string='JSON Response')
     log_text = fields.Text(string='Log')
-    log_create_datetime = fields.Datetime(string='Log Datetime', default=fields.Datetime.now())
+    log_create_datetime = fields.Datetime(string='Log Datetime')
     mp_account_id = fields.Many2one(comodel_name='mp.account', string='Marketplace Account')
     mp_token_id = fields.Many2one(comodel_name='mp.token', string='Marketplace Token')
 
@@ -31,6 +32,7 @@ class MpShopeeLogToken(models.Model):
             'mp_account_id': mp_account.id,
             'json_response': self.format_raw_data(raw_token),
             'status': status,
+            'log_create_datetime': datetime.now()
         }
         if mp_token:
             values.update({
