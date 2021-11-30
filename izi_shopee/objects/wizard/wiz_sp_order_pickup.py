@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
@@ -58,6 +58,7 @@ class WizardShopeeOrderPickup(models.TransientModel):
                     if start_datetime and end_datetime:
                         str_time = start_datetime + '-' + end_datetime
                     elif start_datetime and not end_datetime:
+                        start_datetime = self.pickup_id.start_datetime + timedelta(hours=7).strftime('%d-%m-%y, %H:%M')
                         str_time = start_datetime
 
                     date_time = day+', ' + str_time
