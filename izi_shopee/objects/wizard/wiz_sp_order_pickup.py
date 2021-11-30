@@ -53,9 +53,18 @@ class WizardShopeeOrderPickup(models.TransientModel):
                 if action_status == "success":
                     day = date_dict[datetime.strptime(self.pickup_id.start_datetime,
                                                       '%Y-%m-%d %H:%M:%S').strftime('%A')]
-                    str_time = datetime.strptime(self.pickup_id.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M') + \
-                        '-' + datetime.strptime(self.pickup_id.end_datetime, '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
-                    date_time = day+', ' + str_time
+                    if self.pickup_id.end_datetime:
+                        start_time = datetime.strptime(self.pickup_id.start_datetime,
+                                                       '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M')
+                        end_time = datetime.strptime(self.pickup_id.end_datetime,
+                                                     '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
+                        time = start_time + '-' + end_time
+                    else:
+                        start_time = datetime.strptime(self.pickup_id.start_datetime,
+                                                       '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M')
+                        time = start_time
+
+                    date_time = day+', '+time
                     order.sp_pickup_date = date_time
                     order.action_confirm()
                     time.sleep(1)

@@ -39,4 +39,5 @@ class MarketplaceToken(models.Model):
                 time_now = str((datetime.now() + timedelta(hours=7)) .strftime("%Y-%m-%d %H:%M:%S"))
                 auth_message = "%s from: %s" % (str(e.args[0]), time_now)
                 self.mp_account_id.write({'state': 'authenticating', 'auth_message': auth_message})
+                return self.mp_account_id.mp_token_ids.sorted('expired_date', reverse=True)[0]
         return self
