@@ -58,13 +58,13 @@ class WizardShopeeOrderPickup(models.TransientModel):
                                                        '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M')
                         end_time = datetime.strptime(self.pickup_id.end_datetime,
                                                      '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
-                        time = start_time + '-' + end_time
+                        time_str = start_time + '-' + end_time
                     else:
                         start_time_obj = datetime.strptime(
                             self.pickup_id.start_datetime, '%Y-%m-%d %H:%M:%S') + timedelta(hours=7)
-                        time = start_time_obj.strftime('%d-%m-%y, %H:%M')
+                        time_str = start_time_obj.strftime('%d-%m-%y, %H:%M')
 
-                    date_time = day+', '+time
+                    date_time = day + ', ' + time_str
                     order.sp_pickup_date = date_time
                     order.action_confirm()
                     time.sleep(1)
