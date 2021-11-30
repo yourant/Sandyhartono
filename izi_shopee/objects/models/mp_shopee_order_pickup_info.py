@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
-from datetime import datetime
+from datetime import datetime, timedelta
 from odoo import api, fields, models
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
 
@@ -36,7 +36,8 @@ class MPShopeeOrderPickupInfo(models.Model):
                 time = datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M') + \
                     '-' + datetime.strptime(rec.end_datetime, '%Y-%m-%d %H:%M:%S').strftime('%H:%M')
             else:
-                time = datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y, %H:%M')
+                start_time_obj = datetime.strptime(rec.start_datetime, '%Y-%m-%d %H:%M:%S') + timedelta(hours=7)
+                time = start_time_obj.strftime('%d-%m-%y, %H:%M')
             date_time = day+', '+time
 
             res.append((rec.id, date_time))
