@@ -7,7 +7,7 @@ from odoo import api, fields, models
 class MPProductImage(models.Model):
     _inherit = 'mp.product.image'
 
-    bli_image_id = fields.Char(string='Product Image External ID')
+    bli_image_id = fields.Char(string='Blibli Product Image External ID')
 
     @classmethod
     def _build_model_attributes(cls, pool):

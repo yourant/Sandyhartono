@@ -15,8 +15,8 @@ class MPBlibliShop(models.Model):
     _rec_name = 'shop_name'
     _rec_mp_external_id = 'shop_id'
 
-    shop_id = fields.Char(string="Shop ID", readonly=True)
-    shop_name = fields.Char(string="Shop Name", readonly=True)
+    shop_id = fields.Char(string="Blibli Shop ID", readonly=True)
+    shop_name = fields.Char(string="Blibli Shop Name", readonly=True)
     shop_logistic_ids = fields.One2many(comodel_name="mp.blibli.shop.logistic", inverse_name="shop_id",
                                         string="Active Logistics", required=False)
 
