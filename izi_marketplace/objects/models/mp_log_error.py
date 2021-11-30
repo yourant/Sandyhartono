@@ -7,6 +7,7 @@ from odoo.exceptions import ValidationError
 
 class MPLogError(models.Model):
     _name = 'mp.log.error'
+    _description = 'Marketplace Log Information'
     _order = 'id desc'
 
     name = fields.Char(string='Marketplace Error Message')

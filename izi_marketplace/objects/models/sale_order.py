@@ -41,13 +41,13 @@ class SaleOrder(models.Model):
 
     # MP Order Transaction & Payment
     mp_invoice_number = fields.Char(string="MP Invoice Number", required=False)
-    mp_payment_method_info = fields.Char(string="Payment Method", required=False, readonly=True)
-    mp_payment_date = fields.Datetime(string="Order Payment Date", readonly=True)
-    mp_order_date = fields.Datetime(string="Order Date", readonly=True)
-    mp_order_last_update_date = fields.Datetime(string="Order Last Update Date", readonly=True)
+    mp_payment_method_info = fields.Char(string="MP Payment Method", required=False, readonly=True)
+    mp_payment_date = fields.Datetime(string="MP Order Payment Date", readonly=True)
+    mp_order_date = fields.Datetime(string="MP Order Date", readonly=True)
+    mp_order_last_update_date = fields.Datetime(string="MP Order Last Update Date", readonly=True)
     mp_accept_deadline = fields.Datetime(string="Maximum Confirmation Date", readonly=True)
-    mp_cancel_reason = fields.Char(string='Order Cancel Reason', readonly=True)
-    mp_order_notes = fields.Text(string='Order Notes', readonly=True)
+    mp_cancel_reason = fields.Char(string='MP Order Cancel Reason', readonly=True)
+    mp_order_notes = fields.Text(string='MP Order Notes', readonly=True)
 
     # MP Order Shipment
     mp_awb_number = fields.Char(string="AWB Number", required=False)

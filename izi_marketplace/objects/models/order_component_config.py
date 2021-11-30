@@ -7,6 +7,7 @@ from odoo.exceptions import UserError, ValidationError
 
 class OrderComponentConfig(models.Model):
     _name = 'order.component.config'
+    _description = 'Marketplace Order Component Config'
 
     name = fields.Char('Name')
     mp_account_ids = fields.Many2many('mp.account', string='Marketplace Accounts')
@@ -16,6 +17,7 @@ class OrderComponentConfig(models.Model):
 
 class OrderComponentConfigLine(models.Model):
     _name = 'order.component.config.line'
+    _description = 'Marketplace Order Component Config Line'
 
     name = fields.Char('Name')
     config_id = fields.Many2one('order.component.config')
