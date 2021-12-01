@@ -13,9 +13,6 @@ from odoo.tools import config
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger, StringIteratorIO, clean_csv_value
 
 
-_local_base_url = "http://localhost:%s" % config.get('http_port')
-
-
 class MarketplaceBase(models.AbstractModel):
     _name = 'mp.base'
     _description = 'Marketplace Base Model'
@@ -86,7 +83,8 @@ class MarketplaceBase(models.AbstractModel):
         # getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
         # notif_env.cr.commit()
         # notif_env.cr.close()
-        requests.post('%s/log/notify' % (_local_base_url), data={
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        requests.post('%s/log/notify' % (base_url), data={
             'user_id': self.env.user.id,
             'notif_type': notif_type,
             'message': message,
