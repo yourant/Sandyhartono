@@ -18,7 +18,7 @@ class SaleOrderLine(models.Model):
         mp_field_mapping = {
             'order_id': ('order_id', None),
             'mp_exid': ('mp_order_exid', None),
-            'name': ('item_name', None),
+            'mp_product_name': ('item_name', None),
             'sp_weight': ('weight', None),
             'product_uom_qty': ('model_quantity_purchased', None),
             'sp_discounted_price': ('model_discounted_price', None),
