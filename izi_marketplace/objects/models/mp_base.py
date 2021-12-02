@@ -491,26 +491,31 @@ class MarketplaceBase(models.AbstractModel):
 
                 # create log message to mp.log.error
                 if message_error:
+                    msg_split = message_error.split('"')[1::2]
+                    notes = msg_split[0] if msg_split else False
                     log_values = {
                         'name': message_error,
                         'model_name': self._name,
                         'mp_log_status': 'failed',
-                        'notes': mp_data.get('name'),
+                        'notes': notes,
                         'mp_external_id': mp_exid,
                         'mp_account_id': mp_account.id,
                         'last_retry_time': fields.Datetime.now(),
                     }
                     if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
-                        mp_logs_by_exid[mp_exid].write(log_values)
+                        if isinstance(notes, str):
+                            if mp_logs_by_exid[mp_exid].notes == notes:
+                                mp_logs_by_exid[mp_exid].write(log_values)
                     else:
                         mp_log_error_obj.create(log_values)
                 else:
                     if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
-                        if mp_logs_by_exid[mp_exid].notes == mp_data.get('name'):
-                            mp_logs_by_exid[mp_exid].write({
-                                'mp_log_status': 'success',
-                                'last_retry_time': fields.Datetime.now(),
-                            })
+                        if isinstance(notes, str):
+                            if mp_logs_by_exid[mp_exid].notes == notes:
+                                mp_logs_by_exid[mp_exid].write({
+                                    'mp_log_status': 'success',
+                                    'last_retry_time': fields.Datetime.now(),
+                                })
 
             return self.with_context(context)._finish_create_records(records)
 
