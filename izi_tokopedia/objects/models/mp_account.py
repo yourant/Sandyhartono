@@ -398,7 +398,7 @@ class MarketplaceAccount(models.Model):
             tp_data_detail_order = tp_order.get_order_detail(**params)
 
             # Get order summary
-            tp_order_create_time = datetime.fromisoformat(tp_data_detail_order['create_time'][:-1].split('.')[0])
+            tp_order_create_time = datetime.fromisoformat(tp_data_detail_order['payment_date'][:-1].split('.')[0])
             tp_order_create_time_utc = datetime_convert_tz(tp_order_create_time, 'Asia/Jakarta', 'UTC')
             order_summary_params = {
                 'from_date': tp_order_create_time_utc.replace(tzinfo=None) - relativedelta(minutes=1),
