@@ -20,6 +20,11 @@
         <xpath expr="//group[@name='product_configuration']" position="inside">
           <field name="sp_coins_product_id" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
         </xpath>
+        <xpath expr="//group[@name='mp_webhook']" position="inside">
+          <group name='sp_webhook' attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+            <field name="sp_is_webhook_order"/>
+          </group>
+        </xpath>
         <xpath expr="//page[@name='debug']" position="inside">
           <group attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
             <field name="sp_log_token_ids">
