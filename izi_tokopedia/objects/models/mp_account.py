@@ -346,7 +346,7 @@ class MarketplaceAccount(models.Model):
             tp_orders_by_mpexid = {}
             tp_orders = order_obj.search([('mp_account_id', '=', self.id)])
             for rec_tp_order in tp_orders:
-                tp_orders_by_mpexid[rec_tp_order.mp_external_id] = rec_tp_order
+                tp_orders_by_mpexid[rec_tp_order.tp_order_id] = rec_tp_order
             params.update({
                 'from_date': kwargs.get('from_date'),
                 'to_date': kwargs.get('to_date'),
