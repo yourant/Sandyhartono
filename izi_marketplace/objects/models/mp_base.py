@@ -70,27 +70,27 @@ class MarketplaceBase(models.AbstractModel):
         """You can add validation for _rec_mp_field_mapping here!"""
         pass
 
-    # @api.model
-    # def _create_new_env(self):
-    #     new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
-    #     uid, context = self.env.uid, self.env.context
-    #     new_env = api.Environment(new_cr, uid, context)
-    #     return new_env
+    @api.model
+    def _create_new_env(self):
+        new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
+        uid, context = self.env.uid, self.env.context
+        new_env = api.Environment(new_cr, uid, context)
+        return new_env
 
     @api.model
     def _notify(self, notif_type, message, title=None, notif_sticky=False):
-        # notif_env = self._create_new_env()
-        # getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
-        # notif_env.cr.commit()
-        # notif_env.cr.close()
-        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        requests.post('%s/log/notify' % (base_url), data={
-            'user_id': self.env.user.id,
-            'notif_type': notif_type,
-            'message': message,
-            'title': title,
-            'sticky': notif_sticky,
-        })
+        notif_env = self._create_new_env()
+        getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
+        notif_env.cr.commit()
+        notif_env.cr.close()
+        # base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        # requests.post('%s/log/notify' % (base_url), data={
+        #     'user_id': self.env.user.id,
+        #     'notif_type': notif_type,
+        #     'message': message,
+        #     'title': title,
+        #     'sticky': notif_sticky,
+        # })
 
     @api.model
     def _logger(self, marketplace, message, level="info", notify=False, notif_type="info", notif_sticky=False):
