@@ -107,7 +107,6 @@ class MarketplaceAccount(models.Model):
     def shopee_register_webhooks(self):
         _logger = self.env['mp.base']._logger
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        # base_url = 'https://81f5-180-252-80-154.ngrok.io'
         self.ensure_one()
         params = {}
         if self.mp_token_id.state == 'valid':
@@ -151,8 +150,7 @@ class MarketplaceAccount(models.Model):
     @mp.shopee.capture_error
     def shopee_unregister_webhooks(self):
         _logger = self.env['mp.base']._logger
-        # base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-        base_url = 'https://81f5-180-252-80-154.ngrok.io'
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         self.ensure_one()
         params = {}
         if self.mp_token_id.state == 'valid':
