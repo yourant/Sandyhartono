@@ -490,9 +490,9 @@ class MarketplaceBase(models.AbstractModel):
                         message_error = str(e.name)
 
                 # create log message to mp.log.error
+                notes = mp_data.get('mp_product_name', False)
+                notes = mp_data.get('name', False) if not notes else notes
                 if message_error:
-                    msg_split = message_error.split('"')[1::2]
-                    notes = msg_split[0] if msg_split else False
                     log_values = {
                         'name': message_error,
                         'model_name': self._name,
