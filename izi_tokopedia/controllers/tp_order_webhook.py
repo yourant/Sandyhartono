@@ -23,18 +23,19 @@ class IZITokopedia(http.Controller):
                 mp_account = request.env['mp.account'].sudo().search([('tp_fs_id', '=', fs_id)])
                 if mp_account.mp_webhook_state == 'registered':
                     marketplace = mp_account.marketplace
+                    order_status = str(json_body.get('order_status'))
                     mp_webhook_order_obj = request.env['mp.webhook.order'].sudo()
                     mp_webhook_order_obj.create({
                         'mp_invoice_number': json_body.get('invoice_num,', ''),
-                        'tp_order_id': json_body.get('order_id,', False),
+                        'tp_order_id': str(json_body.get('order_id,', False)),
                         'mp_account_id': mp_account.id,
                         'order_update_time': datetime.fromtimestamp(
                             time.mktime(time.gmtime(json_body.get('create_time'))))
                         .strftime(DEFAULT_SERVER_DATETIME_FORMAT),
-                        'tp_order_status': json_body.get('order_status')
+                        'tp_order_status': order_status
                     })
                     _logger.info('Success Create Tokopedia Order: %s with status %s' %
-                                 (json_body.get('invoice_num'), json_body.get('order_status')))
+                                 (json_body.get('invoice_num'), order_status))
                     kwargs = {'params': 'by_mp_invoice_number',
                               'mp_order_id': json_body.get('order_id'),
                               'force_update': mp_account._context.get('force_update', False)}
