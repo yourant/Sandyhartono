@@ -6,6 +6,7 @@ from odoo.http import *
 import base64
 import requests
 import logging
+from datetime import datetime
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
 
 _logger = logging.getLogger(__name__)
