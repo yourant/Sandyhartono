@@ -446,7 +446,7 @@ class MarketplaceAccount(models.Model):
                 else:
                     skipped += 1
 
-                if order_params:
+                if len(order_params) != 0:
                     sp_data_raws = sp_order_v2.get_order_detail(**order_params)
                     sp_order_raws, sp_order_sanitizeds = get_order_income(sp_data_raws)
             else:
