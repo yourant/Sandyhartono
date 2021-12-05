@@ -162,7 +162,7 @@ class SaleOrder(models.Model):
             # MP Order Transaction & Payment
             'mp_payment_date': ('payment_info/payment_date', _handle_isoformat_to_dt_str),
             'mp_order_date': ('create_time', _handle_isoformat_to_dt_str),
-            'date_order': ('create_time', _handle_isoformat_to_dt_str),
+            'date_order': ('payment_date', _handle_isoformat_to_dt_str),
             'mp_order_last_update_date': ('update_time', _handle_isoformat_to_dt_str),
             'mp_accept_deadline': ('shipment_fulfillment/accept_deadline', _handle_isoformat_to_dt_str),
             'mp_order_notes': ('order_summary/products', _handle_order_notes),
