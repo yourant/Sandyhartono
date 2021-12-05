@@ -460,3 +460,7 @@ class MarketplaceAccount(models.Model):
                 'to_date': to_time
             })
         rec.tokopedia_get_sale_order(**kwargs)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications'
+        }
