@@ -52,7 +52,8 @@ class IZIShopeeWebhook(http.Controller):
                             marketplace = mp_account.marketplace
                             kwargs = {'params': 'by_mp_invoice_number',
                                       'mp_invoice_number': json_body.get('data').get('ordersn'),
-                                      'force_update': mp_account._context.get('force_update', False)}
+                                      'force_update': mp_account._context.get('force_update', False),
+                                      'order_status': json_body.get('data').get('status')}
                             if hasattr(mp_account, '%s_get_orders' % marketplace):
                                 getattr(mp_account, '%s_get_orders' % marketplace)(**kwargs)
 
