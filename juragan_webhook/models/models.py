@@ -1107,7 +1107,7 @@ class WebhookServer(models.Model):
     #
     def get_records(self, model_name, force_update=False, offset=0, limit=100, order_field='id', sort='asc',
                     retry_login=True, retry_login_count=3, domain_code=False, domain_url=False, loop_commit=True,
-                    commit_every=False, commit_on_finish=True):
+                    commit_every=False, commit_on_finish=True, end_offset=0):
         """
         Get any records from IZI to store in Odoo.
         :param model_name: model name or code/alias
@@ -1153,6 +1153,11 @@ class WebhookServer(models.Model):
                     break
                 else:
                     offset += limit
+
+                if end_offset > 0:
+                    if end_offset <= get_number:
+                        break
+
                 # Prepare Server Log
                 ServerLog = self.env['webhook.server.log'].sudo()
                 server_logs = ServerLog.search([('model_name', '=', model_name), ('status', '=', 'failed')])

@@ -133,11 +133,13 @@
 						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_templates" string="5. Get Product Templates" />
 						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_stagings" string="6. Get Product Stagings" />
 						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_products" string="7. Get Product Products" />
-						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_staging_variants" string="8. Get Product Staging Variants" />
-						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_marketplace_attributes" string="9. Get Product MP Attributes" />
+						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_discounts" string="8. Get Product Discount" />
+						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="after_get_products" string="9. Proccess After Get Product" />
+						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_staging_variants" string="10. Get Product Staging Variants" />
+						<button confirm="Make sure the product mapping is correct. Click OK to continue!" groups="base.group_no_one" type="object" name="get_product_marketplace_attributes" string="11. Get Product MP Attributes" />
 
-						<button confirm="Are you sure to import ALL ORDERS from marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="get_orders" string="10. Get All Orders" />
-						<button confirm="Are you sure to import ALL STOCK DATA from marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="import_stock" string="11. Import Stock" />
+						<button confirm="Are you sure to import ALL ORDERS from marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="get_orders" string="12. Get All Orders" />
+						<button confirm="Are you sure to import ALL STOCK DATA from marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="import_stock" string="13. Import Stock" />
 						<button confirm="Are you sure to export ALL STOCK DATA to marketplace? This action can not be undone!" class="btn-izi-danger" groups="base.group_no_one" type="object" name="export_stock" string="Export Stock" />
 					</header>
 					<sheet>
