@@ -1918,7 +1918,7 @@ class WebhookServer(models.Model):
         try:
             self = self.with_context(get_products=True)
             self.with_context(create_product_product=False).get_records('product.template', domain_code='all_active', force_update=True, limit=500, commit_every=100)
-            self.get_records('product.image', force_update=True, limit=500, commit_every=100)
+            # self.get_records('product.image', force_update=True, limit=500, commit_every=100)
             self.get_records('product.template.wholesale', force_update=True, limit=500, commit_every=100)
         except Exception as e:
             raise UserError(e)
@@ -1927,7 +1927,7 @@ class WebhookServer(models.Model):
         try:
             self = self.with_context(get_products=True)
             self.get_records('product.staging', force_update=True, domain_code='all_active', limit=500, commit_every=100)
-            self.get_records('product.image.staging', force_update=True, limit=500, commit_every=100)
+            # self.get_records('product.image.staging', force_update=True, limit=500, commit_every=100)
             self.get_records('product.staging.wholesale', force_update=True, limit=500, commit_every=100)
         except Exception as e:
             raise UserError(e)
