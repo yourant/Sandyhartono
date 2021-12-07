@@ -1224,7 +1224,7 @@ class WebhookServer(models.Model):
                         if commit_every:
                             if isinstance(commit_every, int):
                                 if commit_every == commit_counter:
-                                    # self.env.cr.commit()
+                                    self.env.cr.commit()
                                     commit_counter = 0
                         elif loop_commit:
                             # self.env.cr.commit()
@@ -1270,8 +1270,7 @@ class WebhookServer(models.Model):
             else:
                 break
         if commit_on_finish:
-            #### self.env.cr.commit()
-            pass  ####
+            self.env.cr.commit()
     
     def set_default_context(self, model_name):
         if model_name == 'sale.order':
