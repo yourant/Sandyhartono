@@ -4,3 +4,4 @@ from . import qty_available
 from . import confirm_shipping
 from . import popup
 from . import mapping_master
+from . import get_records

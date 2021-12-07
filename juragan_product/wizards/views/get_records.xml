@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="juragan_product.form_wiz_get_records" model="ir.ui.view">
+      <field name="name">Wizard Get Records</field>
+      <field name="model">wiz.get_records</field>
+      <field name="arch" type="xml">
+        <form string="Wizard Get Records">
+          <sheet>
+            <group>
+              <field name="start_offset" force_save="1"/>
+              <field name="end_offset"/>
+              <field name="limit"/>
+            </group>
+            <footer>
+              <button name="get_record" type="object" string="Confirm" class="btn-primary"/>
+              <button string="Cancel" class="btn-secondary" special="cancel"/>
+            </footer>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

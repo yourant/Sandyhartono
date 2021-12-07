@@ -1933,14 +1933,17 @@ class WebhookServer(models.Model):
             raise UserError(e)
     
     def get_product_products(self):
+        return {
+                'name': 'Request Pickup Order(s)',
+                'view_mode': 'form',
+                'res_model': 'wiz.get_records',
+                'type': 'ir.actions.act_window',
+                'target': 'new',
+            }
+    
+    def get_product_discounts(self):
         try:
-            self.get_records('product.product', force_update=True, domain_code='all_active', limit=500, commit_every=100)
-             # get product discount
-            try:
-                self.get_product_discounts()
-            except Exception as e:
-                _logger.error(str(e))
-            self.after_get_products()
+            self.get_product_discounts()
         except Exception as e:
             raise UserError(e)
     

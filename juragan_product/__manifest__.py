@@ -52,6 +52,7 @@
         'wizards/views/sale_cancel.xml',
         'wizards/views/warehouse_config_wizard.xml',
         'wizards/views/mapping_master.xml',
+        'wizards/views/get_records.xml',
 
         # report paperformat
 
