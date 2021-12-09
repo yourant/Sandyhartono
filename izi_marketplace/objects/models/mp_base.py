@@ -3,10 +3,12 @@
 import hashlib
 import json
 import logging
+import requests
 
 import pytz
 from odoo import api, fields, models, sql_db
 from odoo.exceptions import ValidationError
+from odoo.tools import config
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger, StringIteratorIO, clean_csv_value
 
@@ -81,6 +83,14 @@ class MarketplaceBase(models.AbstractModel):
         getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
         notif_env.cr.commit()
         notif_env.cr.close()
+        # base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        # requests.post('%s/log/notify' % (base_url), data={
+        #     'user_id': self.env.user.id,
+        #     'notif_type': notif_type,
+        #     'message': message,
+        #     'title': title,
+        #     'sticky': notif_sticky,
+        # })
 
     @api.model
     def _logger(self, marketplace, message, level="info", notify=False, notif_type="info", notif_sticky=False):
@@ -542,27 +552,32 @@ class MarketplaceBase(models.AbstractModel):
                         message_error = str(e.name)
 
                 # create log message to mp.log.error
+                notes = mp_data.get('mp_product_name', False)
+                notes = mp_data.get('name', False) if not notes else notes
                 if message_error:
                     log_values = {
                         'name': message_error,
                         'model_name': self._name,
                         'mp_log_status': 'failed',
-                        'notes': mp_data.get('name'),
+                        'notes': notes,
                         'mp_external_id': mp_exid,
                         'mp_account_id': mp_account.id,
                         'last_retry_time': fields.Datetime.now(),
                     }
                     if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
-                        mp_logs_by_exid[mp_exid].write(log_values)
+                        if isinstance(notes, str):
+                            if mp_logs_by_exid[mp_exid].notes == notes:
+                                mp_logs_by_exid[mp_exid].write(log_values)
                     else:
                         mp_log_error_obj.create(log_values)
                 else:
                     if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
-                        if mp_logs_by_exid[mp_exid].notes == mp_data.get('name'):
-                            mp_logs_by_exid[mp_exid].write({
-                                'mp_log_status': 'success',
-                                'last_retry_time': fields.Datetime.now(),
-                            })
+                        if isinstance(notes, str):
+                            if mp_logs_by_exid[mp_exid].notes == notes:
+                                mp_logs_by_exid[mp_exid].write({
+                                    'mp_log_status': 'success',
+                                    'last_retry_time': fields.Datetime.now(),
+                                })
 
             return self.with_context(context)._finish_create_records(records)
 

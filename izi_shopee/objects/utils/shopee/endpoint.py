@@ -35,7 +35,8 @@ class ShopeeEndpoint(object):
             'batch_ship_order': ('POST', '/api/v2/logistics/batch_ship_order'),
             'reject_order': ('POST', '/api/v2/order/cancel_order'),
             'buyer_cancellation': ('POST', '/api/v2/order/handle_buyer_cancellation'),
-            'get_awb_num': ('GET', '/api/v2/logistics/get_tracking_number')
+            'get_awb_num': ('GET', '/api/v2/logistics/get_tracking_number'),
+            'set_push_webhook': ('POST', '/api/v2/push/set_push_config')
         }
     }
 

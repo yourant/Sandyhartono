@@ -10,3 +10,4 @@ from . import mp_product_image
 from . import mp_product_variant
 from . import sale_order
 from . import sale_order_line
+from . import mp_webhook_order

@@ -5,12 +5,15 @@ import json
 
 from odoo import api, fields, models
 
+from odoo.exceptions import UserError
+
 from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_shopee.objects.utils.shopee.account import ShopeeAccount
 from odoo.addons.izi_shopee.objects.utils.shopee.logistic import ShopeeLogistic
 from odoo.addons.izi_shopee.objects.utils.shopee.shop import ShopeeShop
 from odoo.addons.izi_shopee.objects.utils.shopee.product import ShopeeProduct
 from odoo.addons.izi_shopee.objects.utils.shopee.order import ShopeeOrder
+from odoo.addons.izi_shopee.objects.utils.shopee.webhook import ShopeeWebhook
 
 
 class MarketplaceAccount(models.Model):
@@ -30,6 +33,7 @@ class MarketplaceAccount(models.Model):
                                           default=lambda self: self._get_default_sp_coins_product_id())
     sp_log_token_ids = fields.One2many(comodel_name='mp.shopee.log.token',
                                        inverse_name='mp_account_id', string='Shopee Log Token')
+    sp_is_webhook_order = fields.Boolean(string='Shopee Order Webhook', default=False)
 
     @api.model
     def _get_default_sp_coins_product_id(self):
@@ -97,6 +101,84 @@ class MarketplaceAccount(models.Model):
         auth_message = 'Congratulations, you have been successfully authenticated! from: %s' % (time_now)
         self.write({'state': 'authenticated',
                     'auth_message': auth_message})
+
+    @api.multi
+    @mp.shopee.capture_error
+    def shopee_register_webhooks(self):
+        _logger = self.env['mp.base']._logger
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        self.ensure_one()
+        params = {}
+        if self.mp_token_id.state == 'valid':
+            params = {'access_token': self.mp_token_id.name}
+
+        webhook_args = {
+            'callback_url': base_url+'/api/izi/webhook/sp/order',
+            'push_config': {}
+        }
+
+        if self.sp_is_webhook_order:
+            webhook_args['push_config'].update({
+                'order_status': 1,
+                'order_tracking_no': 1
+            })
+        if len(webhook_args.get('push_config')) > 1:
+            sp_account = self.shopee_get_account(**params)
+            sp_webhook = ShopeeWebhook(sp_account)
+            response = sp_webhook.register_webhook(**webhook_args)
+            if response.status_code == 200:
+                if response.json().get('status') == 'success':
+                    notif_msg = "Register webhook is successfully.."
+                    self.write({
+                        'mp_webhook_state': 'registered'
+                    })
+                else:
+                    notif_msg = "Register webhook is failure.."
+                    self.write({
+                        'mp_webhook_state': 'no_register'
+                    })
+            else:
+                notif_msg = "Register webhook is failure.."
+                self.write({
+                    'mp_webhook_state': 'no_register'
+                })
+            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+        else:
+            raise UserError('Select at least 1 feature for register webhook')
+
+    @api.multi
+    @mp.shopee.capture_error
+    def shopee_unregister_webhooks(self):
+        _logger = self.env['mp.base']._logger
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        self.ensure_one()
+        params = {}
+        if self.mp_token_id.state == 'valid':
+            params = {'access_token': self.mp_token_id.name}
+
+        webhook_args = {
+            'callback_url': base_url+'/api/izi/webhook/sp/order',
+            'push_config': {}
+        }
+
+        if not self.sp_is_webhook_order:
+            webhook_args['push_config'].update({
+                'order_status': 0,
+                'order_tracking_no': 0
+            })
+        if len(webhook_args.get('push_config')) > 1:
+            sp_account = self.shopee_get_account(**params)
+            sp_webhook = ShopeeWebhook(sp_account)
+            response = sp_webhook.register_webhook(**webhook_args)
+            if response.status_code == 200:
+                if response.json().get('status') == 'success':
+                    notif_msg = "Unregister webhook is successfully.."
+                    self.write({
+                        'mp_webhook_state': 'no_register'
+                    })
+            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+        else:
+            raise UserError('Select at least 1 feature for register webhook')
 
     @api.multi
     @mp.shopee.capture_error
@@ -272,6 +354,10 @@ class MarketplaceAccount(models.Model):
         sp_order_list = []
         sp_order_raws = False
         sp_order_sanitizeds = False
+        sp_orders_by_mpexid = {}
+        sp_orders = order_obj.search([('mp_account_id', '=', self.id)])
+        for sp_order in sp_orders:
+            sp_orders_by_mpexid[sp_order.mp_invoice_number] = sp_order
 
         def get_order_income(sp_data_raws):
             sp_order_raws, sp_order_sanitizeds = [], []
@@ -291,10 +377,6 @@ class MarketplaceAccount(models.Model):
             return sp_order_raws, sp_order_sanitizeds
 
         if kwargs.get('params') == 'by_date_range':
-            sp_orders_by_mpexid = {}
-            sp_orders = order_obj.search([('mp_account_id', '=', self.id)])
-            for sp_order in sp_orders:
-                sp_orders_by_mpexid[sp_order.mp_external_id] = sp_order
 
             order_params.update({
                 'from_date': kwargs.get('from_date'),
@@ -335,12 +417,44 @@ class MarketplaceAccount(models.Model):
 
         elif kwargs.get('params') == 'by_mp_invoice_number':
             shopee_invoice_number = kwargs.get('mp_invoice_number')
+            shopee_order_status = kwargs.get('order_status', False)
             sp_order_list.append(shopee_invoice_number)
-            order_params.update({
-                'order_id': shopee_invoice_number
-            })
-            sp_data_raws = sp_order_v2.get_order_detail(**order_params)
-            sp_order_raws, sp_order_sanitizeds = get_order_income(sp_data_raws)
+            if shopee_order_status:
+                if shopee_invoice_number in sp_orders_by_mpexid:
+                    existing_order = sp_orders_by_mpexid[shopee_invoice_number]
+                    mp_status_changed = existing_order.sp_order_status != shopee_order_status
+                else:
+                    existing_order = False
+                    mp_status_changed = False
+                no_existing_order = not existing_order
+                if no_existing_order or mp_status_changed or mp_account_ctx.get('force_update'):
+                    if shopee_order_status == 'CANCELLED' and no_existing_order:
+                        if not self.get_cancelled_orders:
+                            skipped += 1
+                    elif shopee_order_status == 'UNPAID' and no_existing_order:
+                        if not self.get_unpaid_orders:
+                            skipped += 1
+                    else:
+                        order_params.update({
+                            'order_id': shopee_invoice_number
+                        })
+
+                    if existing_order and mp_account_ctx.get('force_update'):
+                        force_update_ids.append(existing_order.id)
+                else:
+                    skipped += 1
+
+                if len(order_params) != 0:
+                    sp_data_raws = sp_order_v2.get_order_detail(**order_params)
+                    sp_order_raws, sp_order_sanitizeds = get_order_income(sp_data_raws)
+                else:
+                    sp_data_raws = {}
+            else:
+                order_params.update({
+                    'order_id': shopee_invoice_number
+                })
+                sp_data_raws = sp_order_v2.get_order_detail(**order_params)
+                sp_order_raws, sp_order_sanitizeds = get_order_income(sp_data_raws)
 
         _logger(self.marketplace, 'Processed %s order(s) from %s of total orders imported!' % (
                 len(sp_data_raws), len(sp_order_list)

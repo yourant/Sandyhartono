@@ -346,7 +346,7 @@ class MarketplaceAccount(models.Model):
             tp_orders_by_mpexid = {}
             tp_orders = order_obj.search([('mp_account_id', '=', self.id)])
             for rec_tp_order in tp_orders:
-                tp_orders_by_mpexid[rec_tp_order.mp_external_id] = rec_tp_order
+                tp_orders_by_mpexid[rec_tp_order.tp_order_id] = rec_tp_order
             params.update({
                 'from_date': kwargs.get('from_date'),
                 'to_date': kwargs.get('to_date'),
@@ -398,7 +398,7 @@ class MarketplaceAccount(models.Model):
             tp_data_detail_order = tp_order.get_order_detail(**params)
 
             # Get order summary
-            tp_order_create_time = datetime.fromisoformat(tp_data_detail_order['create_time'][:-1].split('.')[0])
+            tp_order_create_time = datetime.fromisoformat(tp_data_detail_order['payment_date'][:-1].split('.')[0])
             tp_order_create_time_utc = datetime_convert_tz(tp_order_create_time, 'Asia/Jakarta', 'UTC')
             order_summary_params = {
                 'from_date': tp_order_create_time_utc.replace(tzinfo=None) - relativedelta(minutes=1),
@@ -460,3 +460,7 @@ class MarketplaceAccount(models.Model):
                 'to_date': to_time
             })
         rec.tokopedia_get_sale_order(**kwargs)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'close_notifications'
+        }
