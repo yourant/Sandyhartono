@@ -12,7 +12,7 @@ class MPShopeeShopAddress(models.Model):
     _rec_mp_external_id = 'address_id'
     _rec_name = 'address'
 
-    shop_id = fields.Many2one(comodel='mp.shopee.shop', string="Shop ID")
+    shop_id = fields.Many2one(comodel_name='mp.shopee.shop', string="Shop ID")
     address_id = fields.Char(string="Address_id", readonly=True)
     region = fields.Char(string="Shop Region", readonly=True)
     state = fields.Char(string="Shop State", readonly=True)
