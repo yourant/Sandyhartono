@@ -14,3 +14,5 @@
 "izi_marketplace.access_mp_product_image_crud_mp_manager","MP Product Image Access for MP Manager: CRUD","izi_marketplace.model_mp_product_image","izi_marketplace.group_mp_manager",1,1,1,1
 
 "base.access_ir_cron","Cron for MP Manager: CRUD","base.model_ir_cron","izi_marketplace.group_mp_manager",1,1,1,1
+
+"izi_marketplace.access_wiz_mp_order","access_wiz_mp_order","model_wiz_mp_order",,1,1,1,1 
