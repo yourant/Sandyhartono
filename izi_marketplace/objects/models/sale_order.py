@@ -37,13 +37,14 @@ class SaleOrder(models.Model):
     # MP Order Status
     mp_order_status = fields.Selection(string="MP Order Status", selection=MP_ORDER_STATUSES, required=False,
                                        store=True, compute="_compute_mp_order_status")
-    mp_order_status_notes = fields.Char(string="MP Order Status Notes", compute="_compute_mp_order_status")
+    mp_order_status_notes = fields.Char(string="MP Order Status Notes",
+                                        compute="_compute_mp_order_status", compute_sudo=True)
 
     # MP Order Transaction & Payment
     mp_invoice_number = fields.Char(string="MP Invoice Number", required=False)
     mp_payment_method_info = fields.Char(string="Payment Method", required=False, readonly=True)
     mp_payment_date = fields.Datetime(string="Order Payment Date", readonly=True)
-    mp_order_date = fields.Datetime(string="Order Date", readonly=True)
+    mp_order_date = fields.Datetime(string="Marketplace Order Date", readonly=True)
     mp_order_last_update_date = fields.Datetime(string="Order Last Update Date", readonly=True)
     mp_accept_deadline = fields.Datetime(string="Maximum Confirmation Date", readonly=True)
     mp_cancel_reason = fields.Char(string='Order Cancel Reason', readonly=True)
