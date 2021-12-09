@@ -7,6 +7,7 @@ from odoo import api, fields, models
 
 class WizUploadPublicKey(models.TransientModel):
     _name = 'wiz.upload_public_key'
+    _description = 'Tokopedia Upload Public Key'
 
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     tp_private_key_file = fields.Binary(string="Secret Key File", required=True)

@@ -24,7 +24,7 @@ class MarketplaceAccount(models.Model):
     # marketplace = fields.Selection(selection_add=[('shopee', 'Shopee')], ondelete={'shopee': 'cascade'})
     sp_partner_id = fields.Char(string="Partner ID", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_partner_key = fields.Char(string="Partner Key", required_if_marketplace="shopee", states=READONLY_STATES)
-    sp_shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Current Shop")
+    sp_shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Shopee Current Shop")
     sp_coins_product_id = fields.Many2one(comodel_name="product.product",
                                           string="Default Shopee Coins Product",
                                           default=lambda self: self._get_default_sp_coins_product_id())

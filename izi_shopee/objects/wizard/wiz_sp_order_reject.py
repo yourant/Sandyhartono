@@ -21,7 +21,7 @@ class WizardShopeeOrderReject(models.TransientModel):
 
     order_ids = fields.Many2many(comodel_name="sale.order", relation="rel_sp_order_reject_sale_order",
                                  column1="order_reject_id", column2="order_id", string="Order(s)", required=True)
-    reason_code = fields.Selection(string="Reason", selection=REJECT_REASONS, required=True)
+    reason_code = fields.Selection(string="Shopee Reason Code", selection=REJECT_REASONS, required=True)
     item_ids = fields.Many2many(comodel_name="sale.order.line", relation="rel_order_reject_item",
                                 column1="order_reject_id", column2="product_id", string="Item(s)", required=False)
 

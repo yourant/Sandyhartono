@@ -31,11 +31,11 @@ class MarketplaceAccount(models.Model):
     }
 
     # marketplace = fields.Selection(selection_add=[('tokopedia', 'Tokopedia')], ondelete={'tokopedia': 'cascade'})
-    tp_client_id = fields.Char(string="Client ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
-    tp_client_secret = fields.Char(string="Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
+    tp_client_id = fields.Char(string="Tokopedia Client ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
+    tp_client_secret = fields.Char(string="Tokopedia Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_url = fields.Char(string="Shop URL", required_if_marketplace="tokopedia", states=READONLY_STATES)
-    tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop",
+    tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Tokopedia Current Shop",
                                  readonly=True, ondelete='set null')
     tp_private_key_file = fields.Text(string="Secret Key File")
     # tp_private_key_file_name = fields.Char(string="Secret Key File Name")

@@ -25,10 +25,10 @@ class MarketplaceAccount(models.Model):
     bli_shop_name = fields.Char(string='Shop Name', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_shop_code = fields.Char(string='Shop Code', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_seller_key = fields.Char(string='Seller Key', required_if_marketplace="blibli", states=READONLY_STATES)
-    bli_client_id = fields.Char('Client ID', required_if_marketplace="blibli", states=READONLY_STATES)
-    bli_client_secret = fields.Char('Client Secret', required_if_marketplace="blibli", states=READONLY_STATES)
+    bli_client_id = fields.Char('Blibli Client ID', required_if_marketplace="blibli", states=READONLY_STATES)
+    bli_client_secret = fields.Char('Blibli Client Secret', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_store_id = fields.Integer('Store ID', states=READONLY_STATES)
-    bli_shop_id = fields.Many2one(comodel_name="mp.blibli.shop", string="Current Shop")
+    bli_shop_id = fields.Many2one(comodel_name="mp.blibli.shop", string="Blibli Current Shop")
 
     @api.model
     def blibli_get_account(self, **kwargs):
