@@ -47,19 +47,19 @@ class MarketplaceAccount(models.Model):
         if self.marketplace == 'tokopedia':
             self.partner_id = self.env.ref('izi_tokopedia.res_partner_tokopedia', raise_if_not_found=False).id
 
-    @api.multi
+    # @api.multi
     def _compute_tp_private_key(self):
         self.ensure_one()
         if self.tp_private_key_file:
             self.tp_private_key = self.with_context({'bin_size': False}).tp_private_key_file
 
-    @api.multi
+    # @api.multi
     def _compute_tp_public_key(self):
         self.ensure_one()
         if self.tp_public_key_file:
             self.tp_public_key = self.with_context({'bin_size': False}).tp_public_key_file
 
-    @api.multi
+    # @api.multi
     def generate_rsa_key(self):
         _notify = self.env['mp.base']._notify
 
@@ -91,7 +91,7 @@ class MarketplaceAccount(models.Model):
         tp_account = TokopediaAccount(**credentials)
         return tp_account
 
-    @api.multi
+    # @api.multi
     def tokopedia_authenticate(self):
         mp_token_obj = self.env['mp.token']
 
@@ -104,7 +104,7 @@ class MarketplaceAccount(models.Model):
             'auth_message': 'Congratulations, you have been successfully authenticated!'
         })
 
-    @api.multi
+    # @api.multi
     def tokopedia_upload_public_key(self):
         return {
             'name': 'Upload Key Pair',
@@ -117,7 +117,7 @@ class MarketplaceAccount(models.Model):
             },
         }
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_register_public_key(self):
         _notify = self.env['mp.base']._notify
@@ -134,7 +134,7 @@ class MarketplaceAccount(models.Model):
         if response.status_code == 200:
             _notify('info', 'Public key registered successfully!')
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_shop(self):
         mp_account_ctx = self.generate_context()
@@ -157,7 +157,7 @@ class MarketplaceAccount(models.Model):
         check_existing_records = mp_tokopedia_shop_obj.check_existing_records(**check_existing_records_params)
         mp_tokopedia_shop_obj.handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_logistics(self):
         mp_account_ctx = self.generate_context()
@@ -181,14 +181,14 @@ class MarketplaceAccount(models.Model):
         check_existing_records = mp_tokopedia_logistic_obj.check_existing_records(**check_existing_records_params)
         mp_tokopedia_logistic_obj.handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_active_logistics(self):
         mp_account_ctx = self.generate_context()
         self.ensure_one()
         self.tp_shop_id.with_context(mp_account_ctx).get_active_logistics()
 
-    @api.multi
+    # @api.multi
     def tokopedia_get_dependencies(self):
         self.ensure_one()
         self.tokopedia_get_shop()
@@ -202,7 +202,7 @@ class MarketplaceAccount(models.Model):
             }
         }
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_mp_product(self):
         _notify = self.env['mp.base']._notify
@@ -228,7 +228,7 @@ class MarketplaceAccount(models.Model):
             **check_existing_records_params)
         mp_product_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_mp_product_variant(self):
         mp_product_obj = self.env['mp.product']
@@ -258,7 +258,7 @@ class MarketplaceAccount(models.Model):
         mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
             check_existing_records)
 
-    @api.multi
+    # @api.multi
     def tokopedia_get_products(self):
         self.ensure_one()
         self.tokopedia_get_mp_product()
@@ -268,7 +268,7 @@ class MarketplaceAccount(models.Model):
             'tag': 'close_notifications'
         }
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_sale_order(self, **kwargs):
         mp_account_ctx = self.generate_context()
@@ -369,7 +369,7 @@ class MarketplaceAccount(models.Model):
             _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
                     notif_sticky=True)
 
-    @api.multi
+    # @api.multi
     def tokopedia_get_orders(self, **kwargs):
         rec = self
         if kwargs.get('id', False):

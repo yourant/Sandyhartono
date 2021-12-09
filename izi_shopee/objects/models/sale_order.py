@@ -64,7 +64,7 @@ class SaleOrder(models.Model):
         mp_order_status_notes.append((marketplace, dict(cls.SP_ORDER_STATUSES)))
         super(SaleOrder, cls)._add_rec_mp_order_status(mp_order_statuses, mp_order_status_notes)
 
-    @api.multi
+    # @api.multi
     @api.depends('sp_order_status')
     def _compute_mp_order_status(self):
         super(SaleOrder, self)._compute_mp_order_status()
@@ -200,7 +200,7 @@ class SaleOrder(models.Model):
 
         return records
 
-    @api.multi
+    # @api.multi
     def shopee_fetch_order(self):
         wiz_mp_order_obj = self.env['wiz.mp.order']
 
@@ -213,7 +213,7 @@ class SaleOrder(models.Model):
         })
         return wiz_mp_order.get_order()
 
-    @api.multi
+    # @api.multi
     def shopee_generate_delivery_line(self):
         sp_logistic_obj = self.env['mp.shopee.logistic']
 
@@ -247,7 +247,7 @@ class SaleOrder(models.Model):
                         'name': sp_logistic_name,
                     })
 
-    @api.multi
+    # @api.multi
     def shopee_generate_adjusment_line(self):
         for order in self:
             adjustment_line = order.order_line.filtered(lambda l: l.is_adjustment)
@@ -293,7 +293,7 @@ class SaleOrder(models.Model):
                         })]
                     })
 
-    @api.multi
+    # @api.multi
     def shopee_generate_global_discount_line(self):
         for order in self:
             global_discount_line = order.order_line.filtered(lambda l: l.is_global_discount)
@@ -331,7 +331,7 @@ class SaleOrder(models.Model):
                         'price_unit': total_discount,
                     })
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_print_label(self):
         sp_account = False
@@ -367,7 +367,7 @@ class SaleOrder(models.Model):
             'url': base_url+'/web/binary/shopee/download_pdf/%s' % ('&'.join(order_list)),
         }
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_drop_off(self):
         sale_order_obj = self.env['sale.order']
@@ -396,7 +396,7 @@ class SaleOrder(models.Model):
                     time.sleep(3)
                     order.shopee_fetch_order()
 
-    @api.multi
+    # @api.multi
     def shopee_reject_order(self):
         return {
             'name': 'Reject Order(s)',
@@ -409,7 +409,7 @@ class SaleOrder(models.Model):
             },
         }
 
-    @api.multi
+    # @api.multi
     def shopee_accept_cancellation_order(self):
         for order in self:
             if order.mp_account_id.mp_token_id.state == 'valid':
@@ -427,7 +427,7 @@ class SaleOrder(models.Model):
             else:
                 raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
 
-    @api.multi
+    # @api.multi
     def shopee_reject_cancellation_order(self):
         for order in self:
             if order.mp_account_id.mp_token_id.state == 'valid':
@@ -445,7 +445,7 @@ class SaleOrder(models.Model):
             else:
                 raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
 
-    @api.multi
+    # @api.multi
     def shopee_pickup(self):
         mp_shopee_shop_address_obj = self.env['mp.shopee.shop.address']
         mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
@@ -526,7 +526,7 @@ class SaleOrder(models.Model):
                 },
             }
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_get_awb_num(self):
         sp_account = False

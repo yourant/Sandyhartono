@@ -71,7 +71,7 @@ class MarketplaceAccount(models.Model):
                 self.shopee_get_token(**{'refresh_token': current_token.refresh_token,
                                          'shop_id': current_token.sp_shop_id})
 
-    @api.multi
+    # @api.multi
     def shopee_get_token(self, **kwargs):
         mp_token_obj = self.env['mp.token']
         sp_account = self.shopee_get_account(**kwargs)
@@ -83,7 +83,7 @@ class MarketplaceAccount(models.Model):
         self.write({'state': 'authenticated',
                     'auth_message': 'Congratulations, you have been successfully authenticated!'})
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_get_shop(self):
         self.ensure_one()
@@ -110,7 +110,7 @@ class MarketplaceAccount(models.Model):
             mp_account_ctx).check_existing_records(**check_existing_records_params)
         mp_shopee_shop_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_get_logistic(self):
         self.ensure_one()
@@ -135,13 +135,13 @@ class MarketplaceAccount(models.Model):
             mp_account_ctx).check_existing_records(**check_existing_records_params)
         mp_shopee_logistic_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    # @api.multi
     def shopee_get_active_logistics(self):
         mp_account_ctx = self.generate_context()
         self.ensure_one()
         self.sp_shop_id.with_context(mp_account_ctx).get_active_logistics()
 
-    @api.multi
+    # @api.multi
     def shopee_get_dependencies(self):
         self.ensure_one()
         self.shopee_get_shop()
@@ -155,7 +155,7 @@ class MarketplaceAccount(models.Model):
             }
         }
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_get_mp_product(self):
         mp_product_obj = self.env['mp.product']
@@ -191,7 +191,7 @@ class MarketplaceAccount(models.Model):
             mp_product_obj.with_context(mp_account_ctx).log_skip(
                 self.marketplace, check_existing_records['need_skip_records'])
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_get_mp_product_variant(self):
         mp_product_obj = self.env['mp.product']
@@ -223,7 +223,7 @@ class MarketplaceAccount(models.Model):
             mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
                 check_existing_records)
 
-    @api.multi
+    # @api.multi
     def shopee_get_products(self):
         self.ensure_one()
         self.shopee_get_mp_product()
@@ -233,7 +233,7 @@ class MarketplaceAccount(models.Model):
             'tag': 'close_notifications'
         }
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_get_sale_order(self, time_mode=False, **kwargs):
         mp_account_ctx = self.generate_context()
@@ -350,7 +350,7 @@ class MarketplaceAccount(models.Model):
             _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
                     notif_sticky=True)
 
-    @api.multi
+    # @api.multi
     def shopee_get_orders(self, **kwargs):
         rec = self
         if kwargs.get('id', False):

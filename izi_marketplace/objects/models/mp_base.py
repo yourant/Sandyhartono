@@ -17,7 +17,7 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_external_id = None
     _rec_mp_field_mapping = {}
 
-    @api.multi
+    # @api.multi
     def _check_required_if_marketplace(self):
         """ If the field has 'required_if_marketplace="<marketplace>"' attribute, then it
         required if record.marketplace is <marketplace>. """
@@ -104,7 +104,7 @@ class MarketplaceBase(models.AbstractModel):
     def _get_rec_mp_field_mapping(self, marketplace):
         return self._rec_mp_field_mapping.get(marketplace, None)
 
-    @api.multi
+    # @api.multi
     def _compute_mp_external_id(self):
         for rec in self:
             mp_external_id = False

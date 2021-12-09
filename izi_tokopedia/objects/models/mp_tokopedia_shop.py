@@ -68,7 +68,7 @@ class MPTokopediaShop(models.Model):
         mp_account.write({'tp_shop_id': records[0].id})
         return records
 
-    @api.multi
+    # @api.multi
     def get_active_logistics(self):
         mp_tokopedia_logistic_obj = self.env['mp.tokopedia.logistic']
         mp_tokopedia_logistic_service_obj = self.env['mp.tokopedia.logistic.service']

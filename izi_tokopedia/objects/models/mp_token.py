@@ -26,7 +26,7 @@ class MarketplaceToken(models.Model):
         }
         mp_token_obj.create(values)
 
-    @api.multi
+    # @api.multi
     def tokopedia_validate_current_token(self):
         self.ensure_one()
         if self.state != 'valid':

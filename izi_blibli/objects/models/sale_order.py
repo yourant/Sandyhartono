@@ -54,7 +54,7 @@ class SaleOrder(models.Model):
         mp_order_status_notes.append((marketplace, dict(cls.BLI_ORDER_STATUSES)))
         super(SaleOrder, cls)._add_rec_mp_order_status(mp_order_statuses, mp_order_status_notes)
 
-    @api.multi
+    # @api.multi
     @api.depends('bli_order_status')
     def _compute_mp_order_status(self):
         super(SaleOrder, self)._compute_mp_order_status()
@@ -223,7 +223,7 @@ class SaleOrder(models.Model):
 
         return records
 
-    @api.multi
+    # @api.multi
     def blibli_generate_delivery_line(self):
         bli_logistic_obj = self.env['mp.blibli.logistic']
 

@@ -137,7 +137,7 @@ class SaleOrder(models.Model):
         records.generate_adjusment_line()
         return records
 
-    @api.multi
+    # @api.multi
     def _compute_mp_order_status(self):
         for order in self:
             if order.marketplace not in order._rec_mp_order_statuses.keys():
@@ -163,7 +163,7 @@ class SaleOrder(models.Model):
                 else:
                     order.mp_order_status_notes = False
 
-    @api.multi
+    # @api.multi
     def _compute_mp_amount_total_info(self):
         for order in self:
             order.mp_amount_total_info = False
@@ -222,37 +222,37 @@ class SaleOrder(models.Model):
         # Finally return the partner shipping and its parent as customer
         return partner_shipping, partner_shipping.parent_id
 
-    @api.multi
+    # @api.multi
     def generate_delivery_line(self):
         for order in self:
             if hasattr(order, '%s_generate_delivery_line' % order.marketplace):
                 getattr(order, '%s_generate_delivery_line' % order.marketplace)()
 
-    @api.multi
+    # @api.multi
     def generate_insurance_line(self):
         for order in self:
             if hasattr(order, '%s_generate_insurance_line' % order.marketplace):
                 getattr(order, '%s_generate_insurance_line' % order.marketplace)()
 
-    @api.multi
+    # @api.multi
     def generate_global_discount_line(self):
         for order in self:
             if hasattr(order, '%s_generate_global_discount_line' % order.marketplace):
                 getattr(order, '%s_generate_global_discount_line' % order.marketplace)()
 
-    @api.multi
+    # @api.multi
     def generate_adjusment_line(self):
         for order in self:
             if hasattr(order, '%s_generate_adjusment_line' % order.marketplace):
                 getattr(order, '%s_generate_adjusment_line' % order.marketplace)()
 
-    @api.multi
+    # @api.multi
     def accept_order(self):
         for order in self:
             if hasattr(order, '%s_accept_order' % order.marketplace):
                 getattr(order, '%s_accept_order' % order.marketplace)()
 
-    @api.multi
+    # @api.multi
     def reject_order(self):
         marketplace = self.mapped('marketplace')
         mp_account_ids = self.mapped('mp_account_id.id')
@@ -265,7 +265,7 @@ class SaleOrder(models.Model):
         else:
             raise ValidationError('Please select the same marketplace channel.')
 
-    @api.multi
+    # @api.multi
     def get_label(self):
         marketplace = self.mapped('marketplace')
         mp_account_ids = self.mapped('mp_account_id.id')
@@ -278,7 +278,7 @@ class SaleOrder(models.Model):
         else:
             raise ValidationError('Please select the same marketplace channel.')
 
-    @api.multi
+    # @api.multi
     def get_awb_num(self):
         marketplace = self.mapped('marketplace')
         mp_account_ids = self.mapped('mp_account_id.id')

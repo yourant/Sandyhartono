@@ -71,7 +71,7 @@ class MPShopeeShop(models.Model):
         mp_account.write({'sp_shop_id': records[0].id})
         return records
 
-    @api.multi
+    # @api.multi
     def get_active_logistics(self):
         mp_shopee_logistic_obj = self.env['mp.shopee.logistic']
         mp_shopee_shop_logistic_obj = self.env['mp.shopee.shop.logistic']

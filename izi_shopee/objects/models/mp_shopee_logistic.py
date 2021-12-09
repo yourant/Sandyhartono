@@ -88,7 +88,7 @@ class MPShopeeLogistic(models.Model):
         })
         return sanitized_data, values
 
-    @api.multi
+    # @api.multi
     def get_delivery_product(self):
         self.ensure_one()
         if self.product_id:

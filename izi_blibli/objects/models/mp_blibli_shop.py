@@ -54,7 +54,7 @@ class MPBlibliShop(models.Model):
         mp_account.write({'bli_shop_id': records[0].id})
         return records
 
-    @api.multi
+    # @api.multi
     def get_active_logistics(self):
         mp_blibli_logistic_obj = self.env['mp.blibli.logistic']
         mp_blibli_shop_logistic_obj = self.env['mp.blibli.shop.logistic']

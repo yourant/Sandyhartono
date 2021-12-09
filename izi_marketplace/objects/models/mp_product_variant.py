@@ -35,7 +35,7 @@ class MarketplaceProductVariant(models.Model):
                                      "resized as a 64x64px image, with aspect ratio preserved. "
                                      "Use this field anywhere a small image is required.")
 
-    @api.multi
+    # @api.multi
     def get_product(self):
         mp_map_product_line_obj = self.env['mp.map.product.line']
 
@@ -47,7 +47,7 @@ class MarketplaceProductVariant(models.Model):
         ])
         return map_line.product_id
 
-    @api.multi
+    # @api.multi
     def _prepare_product_values(self):
         product_obj = self.env['product.product']
 
@@ -71,7 +71,7 @@ class MarketplaceProductVariant(models.Model):
 
         return values
 
-    @api.multi
+    # @api.multi
     def create_product(self, product_tmpl):
         _logger = self.env['mp.base']._logger
         product_obj = self.env['product.product']

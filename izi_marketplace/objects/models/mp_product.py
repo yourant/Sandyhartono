@@ -59,7 +59,7 @@ class MarketplaceProduct(models.Model):
             mp_product.write({'image': mp_product_image.image})
         return mp_product
 
-    @api.multi
+    # @api.multi
     def write(self, values):
         tools.image_resize_images(values)
         res = super(MarketplaceProduct, self).write(values)
@@ -81,7 +81,7 @@ class MarketplaceProduct(models.Model):
             if mp_product_image.exists():
                 mp_product_image.sequence -= len(self.mp_product_image_ids)
 
-    @api.multi
+    # @api.multi
     def get_product(self):
         mp_map_product_line_obj = self.env['mp.map.product.line']
 
@@ -93,7 +93,7 @@ class MarketplaceProduct(models.Model):
         ])
         return map_line.product_id
 
-    @api.multi
+    # @api.multi
     def _prepare_product_tmpl_values(self):
         product_tmpl_obj = self.env['product.template']
 
@@ -125,7 +125,7 @@ class MarketplaceProduct(models.Model):
 
         return values
 
-    @api.multi
+    # @api.multi
     def create_product_tmpl(self):
         _logger = self.env['mp.base']._logger
         product_tmpl_obj = self.env['product.template']
@@ -149,7 +149,7 @@ class MarketplaceProduct(models.Model):
 
         return product_tmpl
 
-    @api.multi
+    # @api.multi
     def get_main_image(self):
         self.ensure_one()
         if self.mp_product_image_ids.exists():
@@ -168,7 +168,7 @@ class MarketplaceProduct(models.Model):
         # do not pollute variants to be prefetched when counting variants
         self.mp_product_variant_count = len(self.with_prefetch().mp_product_variant_ids)
 
-    @api.multi
+    # @api.multi
     def action_view_mp_product_variant(self):
         self.ensure_one()
         action = self.env.ref('izi_marketplace.action_window_mp_product_variant_view_per_mp_product').read()[0]

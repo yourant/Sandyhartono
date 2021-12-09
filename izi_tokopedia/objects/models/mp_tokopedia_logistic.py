@@ -135,7 +135,7 @@ class MPTokopediaLogisticService(models.Model):
         domain = ['&', ('logistic_id', '=', context.get('logistic_id'))] + domain
         return super(MPTokopediaLogisticService, self).search_read(domain, fields, offset, limit, order)
 
-    @api.multi
+    # @api.multi
     def get_delivery_product(self):
         self.ensure_one()
         if self.product_id:

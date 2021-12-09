@@ -21,7 +21,7 @@ class MarketplaceToken(models.Model):
     state = fields.Selection(string="Status", selection=TOKEN_STATES, compute="_compute_state")
     refresh_token = fields.Char(string="Refresh Token")
 
-    @api.multi
+    # @api.multi
     def _compute_state(self):
         for token in self:
             if datetime.now() > fields.Datetime.from_string(token.expired_date):
@@ -34,7 +34,7 @@ class MarketplaceToken(models.Model):
         if hasattr(self, '%s_create_token' % mp_account.marketplace):
             getattr(self, '%s_create_token' % mp_account.marketplace)(mp_account, raw_token)
 
-    @api.multi
+    # @api.multi
     def validate_current_token(self):
         self.ensure_one()
         if hasattr(self, '%s_validate_current_token' % self.marketplace):

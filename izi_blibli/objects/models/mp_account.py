@@ -44,7 +44,7 @@ class MarketplaceAccount(models.Model):
         bli_account = BlibliAccount(**credentials)
         return bli_account
 
-    @api.multi
+    # @api.multi
     def blibli_authenticate(self):
         bli_account = self.blibli_get_account()
         result = bli_account.authenticate()
@@ -54,7 +54,7 @@ class MarketplaceAccount(models.Model):
                 'auth_message': 'Congratulations, you have been successfully authenticated!'
             })
 
-    @api.multi
+    # @api.multi
     @mp.blibli.capture_error
     def blibli_get_logistic(self):
         mp_account_ctx = self.generate_context()
@@ -77,7 +77,7 @@ class MarketplaceAccount(models.Model):
         # mp_blibli_logistic_obj.with_context({'mp_account_id': self.id}).create_records(
         #     bli_data_raw, bli_data_sanitized, isinstance(bli_data_sanitized, list))
 
-    @api.multi
+    # @api.multi
     @mp.blibli.capture_error
     def blibli_get_shop(self):
         self.ensure_one()
@@ -104,13 +104,13 @@ class MarketplaceAccount(models.Model):
             mp_account_ctx).check_existing_records(**check_existing_records_params)
         mp_blibli_shop_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    # @api.multi
     def blibli_get_active_logistics(self):
         mp_account_ctx = self.generate_context()
         self.ensure_one()
         self.bli_shop_id.with_context(mp_account_ctx).get_active_logistics()
 
-    @api.multi
+    # @api.multi
     def blibli_get_dependencies(self):
         self.ensure_one()
         self.blibli_get_shop()
@@ -124,7 +124,7 @@ class MarketplaceAccount(models.Model):
             }
         }
 
-    @api.multi
+    # @api.multi
     @mp.blibli.capture_error
     def blibli_get_mp_product(self):
         mp_product_obj = self.env['mp.product']
@@ -157,7 +157,7 @@ class MarketplaceAccount(models.Model):
         if check_existing_records['need_skip_records']:
             mp_product_obj.log_skip(self.marketplace, check_existing_records['need_skip_records'])
 
-    @api.multi
+    # @api.multi
     @mp.blibli.capture_error
     def blibli_get_mp_product_variant(self):
         mp_product_obj = self.env['mp.product']
@@ -189,7 +189,7 @@ class MarketplaceAccount(models.Model):
                 mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
                     check_existing_records)
 
-    @api.multi
+    # @api.multi
     def blibli_get_products(self):
         self.ensure_one()
         self.blibli_get_mp_product()
@@ -199,7 +199,7 @@ class MarketplaceAccount(models.Model):
             'tag': 'close_notifications'
         }
 
-    @api.multi
+    # @api.multi
     @mp.blibli.capture_error
     def blibli_get_sale_order(self, **kwargs):
         sale_order_obj = self.env['sale.order']
@@ -241,7 +241,7 @@ class MarketplaceAccount(models.Model):
             **check_existing_records_params)
         sale_order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
 
-    @api.multi
+    # @api.multi
     def blibli_get_orders(self, **kwargs):
         self.ensure_one()
         self.blibli_get_sale_order(**kwargs)

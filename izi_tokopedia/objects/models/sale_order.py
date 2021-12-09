@@ -60,7 +60,7 @@ class SaleOrder(models.Model):
                                        required_if_marketplace="tokopedia")
     tp_invoice_url = fields.Char(string="Tokpedia Invoice URL", required=False)
 
-    @api.multi
+    # @api.multi
     @api.depends('tp_order_status')
     def _compute_mp_order_status(self):
         super(SaleOrder, self)._compute_mp_order_status()
@@ -286,7 +286,7 @@ class SaleOrder(models.Model):
                                  'please try again later!' % (invoice_number, retried), level='warning')
         return None
 
-    @api.multi
+    # @api.multi
     def tokopedia_generate_delivery_line(self):
         tp_logistic_service_obj = self.env['mp.tokopedia.logistic.service']
 
@@ -313,7 +313,7 @@ class SaleOrder(models.Model):
                     })]
                 })
 
-    @api.multi
+    # @api.multi
     def tokopedia_generate_insurance_line(self):
         for order in self:
             insurance_line = order.order_line.filtered(lambda l: l.is_insurance)
@@ -335,7 +335,7 @@ class SaleOrder(models.Model):
                         })]
                     })
 
-    @api.multi
+    # @api.multi
     def tokopedia_generate_global_discount_line(self):
         for order in self:
             global_discount_line = order.order_line.filtered(lambda l: l.is_global_discount)
@@ -359,7 +359,7 @@ class SaleOrder(models.Model):
                         })]
                     })
 
-    @api.multi
+    # @api.multi
     def tokopedia_generate_adjusment_line(self):
         for order in self:
             adjustment_line = order.order_line.filtered(lambda l: l.is_adjustment)
@@ -385,7 +385,7 @@ class SaleOrder(models.Model):
                         })]
                     })
 
-    @api.multi
+    # @api.multi
     def tokopedia_fetch_order(self):
         wiz_mp_order_obj = self.env['wiz.mp.order']
 
@@ -398,7 +398,7 @@ class SaleOrder(models.Model):
         })
         return wiz_mp_order.get_order()
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_accept_order(self):
         for order in self:
@@ -410,7 +410,7 @@ class SaleOrder(models.Model):
                 order.action_confirm()
                 order.tokopedia_fetch_order()
 
-    @api.multi
+    # @api.multi
     def tokopedia_reject_order(self):
         allowed_status = ['to_process']
         order_statuses = self.mapped('mp_order_status')
@@ -429,7 +429,7 @@ class SaleOrder(models.Model):
             },
         }
 
-    @api.multi
+    # @api.multi
     def tokopedia_print_label(self):
         return {
             'name': 'Print Shipping Label(s)',
@@ -442,7 +442,7 @@ class SaleOrder(models.Model):
             },
         }
 
-    @api.multi
+    # @api.multi
     def tokopedia_get_booking_code(self):
         for order in self:
             mp_account_ctx = order.mp_account_id.generate_context()
@@ -457,7 +457,7 @@ class SaleOrder(models.Model):
             label_url = tp_order_seller.action_print_shipping_label(order_ids=[order.mp_external_id], printed=0)
             order.write(dict(booking_code[0], **{'mp_awb_url': label_url}))
 
-    @api.multi
+    # @api.multi
     def tokopedia_confirm_shipping(self):
         return {
             'name': 'Confirm Shipping Order(s)',
@@ -471,7 +471,7 @@ class SaleOrder(models.Model):
             },
         }
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_request_pickup(self):
         for order in self:

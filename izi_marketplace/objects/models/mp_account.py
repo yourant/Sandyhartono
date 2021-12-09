@@ -9,7 +9,7 @@ class MarketplaceAccount(models.Model):
     _name = 'mp.account'
     _description = 'Marketplace Account'
 
-    @api.multi
+    # @api.multi
     def _check_required_if_marketplace(self):
         """ If the field has 'required_if_marketplace="<marketplace>"' attribute, then it
         required if record.marketplace is <marketplace>. """
@@ -111,7 +111,7 @@ class MarketplaceAccount(models.Model):
             self.env.ref('izi_{mp}.res_partner_{mp}'.format(**{'mp': self.marketplace}), raise_if_not_found=False),
             'id', False)
 
-    @api.multi
+    # @api.multi
     def _compute_mp_token(self):
         for mp_account in self:
             if mp_account.mp_token_ids:
@@ -144,7 +144,7 @@ class MarketplaceAccount(models.Model):
             return mp_adjustment_product_tmpl.product_variant_id.id
         return False
 
-    @api.multi
+    # @api.multi
     def generate_context(self):
         self.ensure_one()
         context = self._context.copy()
@@ -158,30 +158,30 @@ class MarketplaceAccount(models.Model):
         })
         return context
 
-    @api.multi
+    # @api.multi
     def action_reauth(self):
         self.ensure_one()
         self.write({'state': 'authenticating'})
 
-    @api.multi
+    # @api.multi
     def action_authenticate(self):
         self.ensure_one()
         if hasattr(self, '%s_authenticate' % self.marketplace):
             return getattr(self, '%s_authenticate' % self.marketplace)()
 
-    @api.multi
+    # @api.multi
     def action_get_dependencies(self):
         self.ensure_one()
         if hasattr(self, '%s_get_dependencies' % self.marketplace):
             return getattr(self, '%s_get_dependencies' % self.marketplace)()
 
-    @api.multi
+    # @api.multi
     def action_get_products(self):
         self.ensure_one()
         if hasattr(self, '%s_get_products' % self.marketplace):
             return getattr(self, '%s_get_products' % self.marketplace)()
 
-    @api.multi
+    # @api.multi
     def action_map_product(self):
         product_map_obj = self.env['mp.map.product']
 
@@ -206,7 +206,7 @@ class MarketplaceAccount(models.Model):
         })
         return action
 
-    @api.multi
+    # @api.multi
     def action_view_mp_product(self):
         self.ensure_one()
         action = self.env.ref('izi_marketplace.action_window_mp_product_view_per_marketplace').read()[0]

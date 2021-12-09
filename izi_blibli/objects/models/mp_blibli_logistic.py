@@ -80,7 +80,7 @@ class MPBlibliLogistic(models.Model):
             return mp_delivery_product_tmpl.product_variant_id.id
         return False
 
-    @api.multi
+    # @api.multi
     def get_delivery_product(self):
         self.ensure_one()
         if self.product_id:
