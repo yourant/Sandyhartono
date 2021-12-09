@@ -2,6 +2,7 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 import json
 from datetime import datetime, timedelta
+import io
 
 from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
@@ -29,17 +30,17 @@ class MarketplaceAccount(models.Model):
         'authenticating': [('readonly', False)],
     }
 
-    marketplace = fields.Selection(selection_add=[('tokopedia', 'Tokopedia')])
+    # marketplace = fields.Selection(selection_add=[('tokopedia', 'Tokopedia')], ondelete={'tokopedia': 'cascade'})
     tp_client_id = fields.Char(string="Client ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_client_secret = fields.Char(string="Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_url = fields.Char(string="Shop URL", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop", readonly=True)
     tp_private_key_file = fields.Binary(string="Secret Key File")
-    tp_private_key_file_name = fields.Char(string="Secret Key File Name")
+    # tp_private_key_file_name = fields.Char(string="Secret Key File Name")
     tp_private_key = fields.Char(string="Secret Key", compute="_compute_tp_private_key")
-    tp_public_key_file = fields.Binary(string="Public Key File")
-    tp_public_key_file_name = fields.Char(string="Public Key File Name")
+    tp_public_key_file = fields.Text(string="Public Key File")
+    # tp_public_key_file_name = fields.Char(string="Public Key File Name")
     tp_public_key = fields.Char(string="Public Key", compute="_compute_tp_public_key")
 
     @api.onchange('marketplace')
@@ -49,15 +50,15 @@ class MarketplaceAccount(models.Model):
 
     # @api.multi
     def _compute_tp_private_key(self):
-        self.ensure_one()
-        if self.tp_private_key_file:
-            self.tp_private_key = self.with_context({'bin_size': False}).tp_private_key_file
+        self.tp_private_key = None
+        for rec in self.filtered(lambda r: (r.marketplace == 'tokopedia') and r.tp_private_key_file):
+            rec.tp_private_key = rec.with_context({'bin_size': False}).tp_private_key_file
 
     # @api.multi
     def _compute_tp_public_key(self):
-        self.ensure_one()
-        if self.tp_public_key_file:
-            self.tp_public_key = self.with_context({'bin_size': False}).tp_public_key_file
+        self.tp_public_key = None
+        for rec in self.filtered(lambda r: (r.marketplace == 'tokopedia') and r.tp_public_key_file):
+            rec.tp_public_key = rec.with_context({'bin_size': False}).tp_public_key_file
 
     # @api.multi
     def generate_rsa_key(self):
@@ -65,7 +66,7 @@ class MarketplaceAccount(models.Model):
 
         self.ensure_one()
         key = RSA.generate(2048)
-        private_key, public_key = key.export_key(), key.publickey().export_key()
+        private_key, public_key = key.export_key().decode('utf-8'), key.publickey().export_key().decode('utf-8')
         self.write({
             'tp_private_key_file': private_key,
             'tp_public_key_file': public_key
@@ -124,9 +125,10 @@ class MarketplaceAccount(models.Model):
 
         self.ensure_one()
 
-        public_key = self.with_context({'bin_size': False}).tp_public_key_file
-        if not public_key:
-            public_key = self.with_context({'get_public_key': True}).generate_rsa_key()
+        if self.with_context({'bin_size': False}).tp_public_key_file:
+            public_key = io.StringIO(self.with_context({'bin_size': False}).tp_public_key_file)
+        else:
+            public_key = io.StringIO(self.with_context({'get_public_key': True}).generate_rsa_key())
 
         tp_account = self.tokopedia_get_account()
         tp_encryption = TokopediaEncryption(tp_account)
