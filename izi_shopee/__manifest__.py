@@ -77,6 +77,7 @@
 
         # security
         'security/ir.model.access.csv',
+        'security2/ir.model.access.csv',
         # 'security/ir.rule.csv',
 
         # data

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_wiz_upload_public_key,access_wiz_upload_public_key,model_wiz_upload_public_key,,1,1,1,1
+access_wiz_tp_order_reject,access_wiz_tp_order_reject,model_wiz_tp_order_reject,,1,1,1,1
+access_wiz_tp_order_print_label,access_wiz_tp_order_print_label,model_wiz_tp_order_print_label,,1,1,1,1
+access_wiz_tp_order_confirm_shipping,access_wiz_tp_order_confirm_shipping,model_wiz_tp_order_confirm_shipping,,1,1,1,1
