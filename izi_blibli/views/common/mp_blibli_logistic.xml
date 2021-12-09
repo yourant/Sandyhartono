@@ -38,7 +38,7 @@
                   <field name="geolocation"/>
                   <field name="marketplace"/>
                   <field name="mp_account_id"/>
-                  <field name="signature"/>
+                  <field name="md5sign"/>
                   <field name="raw"/>
                   <field name="info_additional"/>
                   <field name="info_highlight"/>

@@ -54,7 +54,7 @@
               <page string="Debug" groups="base.group_no_one">
                 <group>
                   <field name="mp_external_id"/>
-                  <field name="signature"/>
+                  <field name="md5sign"/>
                   <field name="raw"/>
                 </group>
               </page>
