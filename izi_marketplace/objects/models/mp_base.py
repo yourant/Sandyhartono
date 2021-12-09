@@ -10,6 +10,8 @@ from odoo.exceptions import ValidationError
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger, StringIteratorIO, clean_csv_value
 
+_logger = logging.getLogger(__name__)
+
 
 class MarketplaceBase(models.AbstractModel):
     _name = 'mp.base'
@@ -18,7 +20,7 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_field_mapping = {}
 
     # @api.multi
-    @api.constrains('marketplace')
+    @api.constrains()
     def _check_required_if_marketplace(self):
         """ If the field has 'required_if_marketplace="<marketplace>"' attribute, then it
         required if record.marketplace is <marketplace>. """
@@ -26,8 +28,13 @@ class MarketplaceBase(models.AbstractModel):
         for record in self:
             for k, f in record._fields.items():
                 if getattr(f, 'required_if_marketplace', None) == record.marketplace and not record[k]:
-                    empty_field.append(self.env['ir.model.fields'].search(
-                        [('name', '=', k), ('model', '=', record._name)]).field_description)
+                    empty_field.append('Field %(field)s at ID %(id)s is empty.' % {
+                        'field': self.env['ir.model.fields'].search([
+                            ('name', '=', k),
+                            ('model', '=', record._name)
+                        ]).field_description,
+                        'id': record.id,
+                    })
         if empty_field:
             raise ValidationError(', '.join(empty_field))
         return True
@@ -41,8 +48,8 @@ class MarketplaceBase(models.AbstractModel):
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
                                    related="mp_account_id.marketplace", store=True)
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
-    signature = fields.Char(string="Signature", readonly=True, required=False, default="",
-                            help="MD5 hash of the marketplace data.")
+    md5sign = fields.Char(string="MD5 Sign", readonly=True, required=False, default="",
+                          help="MD5 hash of the marketplace data.")
     mp_external_id = fields.Char(string="Marketplace External ID", compute="_compute_mp_external_id")
 
     @classmethod
@@ -69,19 +76,20 @@ class MarketplaceBase(models.AbstractModel):
         """You can add validation for _rec_mp_field_mapping here!"""
         pass
 
-    @api.model
-    def _create_new_env(self):
-        new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
-        uid, context = self.env.uid, self.env.context
-        new_env = api.Environment(new_cr, uid, context)
-        return new_env
+    # @api.model
+    # def _create_new_env(self):
+    #     new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
+    #     uid, context = self.env.uid, self.env.context
+    #     new_env = api.Environment(new_cr, uid, context)
+    #     return new_env
 
     @api.model
     def _notify(self, notif_type, message, title=None, notif_sticky=False):
-        notif_env = self._create_new_env()
-        getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
-        notif_env.cr.commit()
-        notif_env.cr.close()
+        # notif_env = self._create_new_env()
+        # getattr(notif_env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
+        # notif_env.cr.commit()
+        # notif_env.cr.close()
+        getattr(self.env.user, 'notify_%s' % notif_type)(message, title=title, sticky=notif_sticky)
 
     @api.model
     def _logger(self, marketplace, message, level="info", notify=False, notif_type="info", notif_sticky=False):
@@ -263,7 +271,7 @@ class MarketplaceBase(models.AbstractModel):
         values.update({
             'mp_account_id': mp_account.id,
             'raw': self.format_raw_data(raw_data),
-            'signature': self.generate_signature(sanitized_data)
+            'md5sign': self.generate_signature(sanitized_data)
         })
 
         return self.with_context(context)._finish_mapping_raw_data(sanitized_data, values)
@@ -444,7 +452,7 @@ class MarketplaceBase(models.AbstractModel):
             record = identifier_method(record_obj, values)
         if record.exists():
             current_signature = self.generate_signature(sanitized_data)
-            if current_signature != record.signature or context.get('force_update') or record.id in context.get(
+            if current_signature != record.md5sign or context.get('force_update') or record.id in context.get(
                     'force_update_ids', []):
                 self._logger(marketplace, log_msg_updating.format(**{
                     'num': context.get('index', 0) + 1,
@@ -529,6 +537,7 @@ class MarketplaceBase(models.AbstractModel):
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
         record = record_obj.create(values)
+        self._cr.commit()
         self._logger(marketplace, log_message.format(**{
             'model': record_obj._name,
             'rec_id': record.id,
@@ -635,17 +644,41 @@ class MarketplaceBase(models.AbstractModel):
          This is EXPERIMENTAL FEATURE, use it wisely!
          """
 
+        record2_datas = []
         for record_data in record_datas:
+            record2_data = {}
             for field, value in record_data.items():
-                if not value:
-                    record_data[field] = null_value
+                if self.pg_check_column(table_name=table_name, column_name=field):
+                    if not value:
+                        record2_data[field] = null_value
+                    else:
+                        record2_data[field] = value
+            record2_datas.append(record2_data)
+
+        _logger.info(json.dumps(record2_datas, indent=1))
 
         # Prepare CSV file like object
         records_string_iterator = StringIteratorIO(
-            ('|'.join(map(clean_csv_value, tuple(record_data.values()))) + '\n') for record_data in record_datas)
+            ('|'.join(map(clean_csv_value, tuple(record_data.values()))) + '\n') for record_data in record2_datas)
 
         # Import CSV file like object into DB
-        self._cr._obj.copy_from(records_string_iterator, table_name, sep='|', columns=list(record_datas[0].keys()))
+        self._cr.copy_from(records_string_iterator, table_name, sep='|', columns=list(record2_datas[0].keys()))
+
+    @api.model
+    def pg_check_column(self, **kw):
+        self._cr.execute('''
+            select
+                column_name
+            from
+                information_schema.columns
+            where
+                table_name=%(table_name)s
+            and
+                column_name=%(column_name)s
+        ''', kw)
+        if self._cr.fetchone():
+            return True
+        return False
 
     @api.model
     def do_recompute(self, model, domain=None, records=None, skip_fields=None):
@@ -659,18 +692,23 @@ class MarketplaceBase(models.AbstractModel):
             records = model.search(domain)
 
         # Get compute fields of the model
-        need_recompute_fields = []
+        # need_recompute_fields = []
+        need_recompute_fnames = []
         for fname, field in model._fields.items():
             if field.store and (field.compute or field.related) and fname not in skip_fields:
-                need_recompute_fields.append(field)
+                # need_recompute_fields.append(field)
+                need_recompute_fnames.append(fname)
 
-        # Prepare to recompute
-        for need_recompute_field in need_recompute_fields:
-            records._recompute_todo(need_recompute_field)
+        # # Prepare to recompute
+        # for need_recompute_field in need_recompute_fields:
+        #     records._recompute_todo(need_recompute_field)
 
         # Do recompute
-        model.recompute()
+        model.recompute(
+            fnames=need_recompute_fnames,
+            records=records
+        )
 
-        # Finish recompute
-        for need_recompute_field in need_recompute_fields:
-            records._recompute_done(need_recompute_field)
+        # # Finish recompute
+        # for need_recompute_field in need_recompute_fields:
+        #     records._recompute_done(need_recompute_field)

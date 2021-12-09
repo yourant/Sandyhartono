@@ -114,7 +114,7 @@ class MarketplaceMapProduct(models.Model):
     # @api.multi
     def generate_map_line_data(self, record):
         self.ensure_one()
-
+        _logger.info('Record: %s' % record)
         product = self.get_product(record)
         map_line_data = {
             'map_id': self.id,
@@ -190,19 +190,17 @@ class MarketplaceMapProduct(models.Model):
             _logger.info("Creating %s mapping lines..." % len(map_line_datas))
             _notify('info', "Creating %s mapping lines..." % len(map_line_datas), notif_sticky=True)
             # Prepare CSV file like object
-            map_lines_string_iterator = StringIteratorIO(
-                ('|'.join(map(clean_csv_value, tuple(map_line_data.values()))) + '\n') for map_line_data in
-                map_line_datas)
+
             # Import CSV file like object into DB
-            self._cr._obj.copy_from(map_lines_string_iterator, 'mp_map_product_line', sep='|',
-                                    columns=list(map_line_datas[0].keys()))
+            self.env['mp.base'].pg_copy_from('mp_map_product_line', map_line_datas)
+
             # Prepare to recompute the imported records
-            self.env.add_todo(mp_map_product_line_obj._fields['name'],
-                              mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]))
-            self.env.add_todo(mp_map_product_line_obj._fields['company_id'],
-                              mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]))
+            # self.env.add_todo(mp_map_product_line_obj._fields['name'],
+            #                   mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]))
+            # self.env.add_todo(mp_map_product_line_obj._fields['company_id'],
+            #                   mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]))
             # Do recompute to fill missing field's values
-            mp_map_product_line_obj.recompute()
+            mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]).recompute()
             self.invalidate_cache()
             _logger.info("Created %s mapping lines." % len(map_line_datas))
             _notify('info', "Created %s mapping lines." % len(map_line_datas), notif_sticky=True)
@@ -258,9 +256,8 @@ class MarketplaceMapProduct(models.Model):
             ]
             self.env['mp.base'].pg_copy_from('product_template', product_tmpl_datas)
             product_tmpls = product_tmpl_obj.search([('product_map_ref', '=', '%s,%s' % (self._name, self.id))])
-            self.env['mp.base'].do_recompute(product_tmpl_obj, records=product_tmpls,
-                                             skip_fields=['barcode', 'default_code', 'standard_price', 'volume',
-                                                          'weight'])
+            product_tmpls.recompute()
+            self.invalidate_cache()
 
             # Process mp_products_without_variant: Create product.product
             product_fields_list = ['id AS product_tmpl_id', 'default_code', 'weight', 'volume']
@@ -270,7 +267,8 @@ class MarketplaceMapProduct(models.Model):
                 'active': True
             })) for product_data in product_datas]
             self.env['mp.base'].pg_copy_from('product_product', product_datas)
-            self.env['mp.base'].do_recompute(product_obj, domain=[('product_tmpl_id', 'in', product_tmpls.ids)])
+            product_obj.search([('product_tmpl_id', 'in', product_tmpls.ids)]).recompute()
+            self.invalidate_cache()
 
         if mp_products_with_variant:
             # Process mp_products_with_variant: Create product.template
@@ -286,9 +284,8 @@ class MarketplaceMapProduct(models.Model):
             product_tmpls = product_tmpls.filtered(lambda pt: any(
                 [int(mp_product_id) in mp_products_with_variant.ids for mp_product_id in
                  pt.mp_product_ids_ref.split(',')]))
-            self.env['mp.base'].do_recompute(product_tmpl_obj, records=product_tmpls,
-                                             skip_fields=['barcode', 'default_code', 'standard_price', 'volume',
-                                                          'weight'])
+            product_tmpls.recompute()
+            self.invalidate_cache()
 
             # Process mp_products_with_variant: Create product.product
             product_fields_list = ['mp_product_id', 'default_code', 'weight', 'volume']
@@ -305,7 +302,8 @@ class MarketplaceMapProduct(models.Model):
                     'product_tmpl_id': product_tmpl.id
                 })
             self.env['mp.base'].pg_copy_from('product_product', product_datas)
-            self.env['mp.base'].do_recompute(product_obj, domain=[('product_tmpl_id', 'in', product_tmpls.ids)])
+            product_obj.search([('product_tmpl_id', 'in', product_tmpls.ids)]).recompute()
+            self.invalidate_cache()
 
         # Do mapping
         _logger.info("Processing %s unmapped map lines..." % len(unmapped_map_lines))
@@ -377,8 +375,8 @@ class MarketplaceMapProductLine(models.Model):
     ]
 
     map_id = fields.Many2one(comodel_name="mp.map.product", string="Product Mapping", required=True)
-    name = fields.Char(string="Name", compute="_compute_line", store=True)
-    default_code = fields.Char(string="Internal Reference", compute="_compute_line", store=True)
+    name = fields.Char(string="Name", compute="_compute_line", store=False)
+    default_code = fields.Char(string="Internal Reference", compute="_compute_line", store=False)
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     marketplace = fields.Selection(string="Marketplace", required=True,
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,

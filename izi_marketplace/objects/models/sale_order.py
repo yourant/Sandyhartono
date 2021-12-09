@@ -141,7 +141,7 @@ class SaleOrder(models.Model):
     def _compute_mp_order_status(self):
         for order in self:
             if order.marketplace not in order._rec_mp_order_statuses.keys():
-                order.mp_order_status = False
+                order.mp_order_status = None
             else:
                 mp_order_status_field, mp_order_statuses = order._rec_mp_order_statuses[order.marketplace]
                 mp_order_status_value = 'new'
@@ -152,7 +152,7 @@ class SaleOrder(models.Model):
                 order.mp_order_status = mp_order_status_value
 
             if order.marketplace not in order._rec_mp_order_status_notes.keys():
-                order.mp_order_status_notes = False
+                order.mp_order_status_notes = None
             else:
                 mp_order_status_notes = order._rec_mp_order_status_notes[order.marketplace]
                 if order.mp_order_status:
@@ -161,7 +161,7 @@ class SaleOrder(models.Model):
                                         order.mp_order_status, order.marketplace.upper())
                     order.mp_order_status_notes = mp_order_status_notes.get(order.mp_order_status, default_notes)
                 else:
-                    order.mp_order_status_notes = False
+                    order.mp_order_status_notes = None
 
     # @api.multi
     def _compute_mp_amount_total_info(self):

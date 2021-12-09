@@ -150,9 +150,9 @@ class MarketplaceProduct(models.Model):
     # @api.multi
     def get_main_image(self):
         self.ensure_one()
-        if self.mp_product_image_ids.exists():
+        if self.mp_product_image_ids:
             return self.mp_product_image_ids.sorted('sequence')[0]
-        return self.mp_product_image_ids
+        return None
 
     @api.depends('mp_product_image_ids.sequence', 'mp_product_image_ids.name')
     def _compute_mp_product_main_image_url(self):
