@@ -18,6 +18,7 @@ class MarketplaceBase(models.AbstractModel):
     _rec_mp_field_mapping = {}
 
     # @api.multi
+    @api.constrains('marketplace')
     def _check_required_if_marketplace(self):
         """ If the field has 'required_if_marketplace="<marketplace>"' attribute, then it
         required if record.marketplace is <marketplace>. """
@@ -31,9 +32,9 @@ class MarketplaceBase(models.AbstractModel):
             raise ValidationError(', '.join(empty_field))
         return True
 
-    _constraints = [
-        (_check_required_if_marketplace, 'Required fields not filled', []),
-    ]
+    # _constraints = [
+    #     (_check_required_if_marketplace, 'Required fields not filled', []),
+    # ]
 
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     marketplace = fields.Selection(string="Marketplace", readonly=True,
@@ -107,7 +108,7 @@ class MarketplaceBase(models.AbstractModel):
     # @api.multi
     def _compute_mp_external_id(self):
         for rec in self:
-            mp_external_id = False
+            mp_external_id = None
             if isinstance(rec._rec_mp_external_id, str):
                 mp_external_id = getattr(rec, rec._rec_mp_external_id, False)
             elif isinstance(rec._rec_mp_external_id, dict):
