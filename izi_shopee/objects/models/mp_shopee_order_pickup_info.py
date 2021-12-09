@@ -18,7 +18,7 @@ class MPShopeeOrderPickupInfo(models.Model):
     address_id = fields.Many2one(comodel='mp.shop.address', string='Shop Address')
     active = fields.Boolean(string='Active', default=True)
 
-    @api.multi
+    # @api.multi
     def name_get(self):
         res = []
         date_dict = {
