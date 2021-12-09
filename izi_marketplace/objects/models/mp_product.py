@@ -21,9 +21,9 @@ class MarketplaceProduct(models.Model):
                                         "This description will be copied to every Sales Order, Delivery Order and "
                                         "Customer Invoice/Credit Note")
     default_code = fields.Char(string="Internal Reference")
-    list_price = fields.Float(string="Sales Price", default=1.0, digits=dp.get_precision('Product Price'),
+    list_price = fields.Float(string="Sales Price", default=1.0, digits='Product Price',
                               help="Base price to compute the customer price. Sometimes called the catalog price.")
-    weight = fields.Float(string="Weight", digits=dp.get_precision('Stock Weight'),
+    weight = fields.Float(string="Weight", digits='Stock Weight',
                           help="The weight of the contents in Kg, not including any packaging, etc.")
     volume = fields.Float("Volume", help="The volume in m3.")
     length = fields.Float(string="Length", required=False)
@@ -160,11 +160,11 @@ class MarketplaceProduct(models.Model):
             mp_product_main_img = mp_product.get_main_image()
             mp_product.mp_product_main_image_url = mp_product_main_img.name
 
-    @api.one
     @api.depends('mp_product_variant_ids.mp_product_id')
     def _compute_product_variant_count(self):
         # do not pollute variants to be prefetched when counting variants
-        self.mp_product_variant_count = len(self.with_prefetch().mp_product_variant_ids)
+        for rec in self:
+            rec.mp_product_variant_count = len(rec.with_prefetch().mp_product_variant_ids)
 
     # @api.multi
     def action_view_mp_product_variant(self):

@@ -355,7 +355,8 @@ class MarketplaceMapProductField(models.Model):
                                                   default=lambda self: self.env.ref(
                                                       'izi_marketplace.model_mp_product_variant').id,
                                                   string="MP Product Variant Model")
-    product_field_id = fields.Many2one(comodel_name="ir.model.fields", string="Product Field", required=True)
+    product_field_id = fields.Many2one(comodel_name="ir.model.fields",
+                                       string="Product Field", ondelete='cascade', required=True)
     mp_product_field_id = fields.Many2one(comodel_name="ir.model.fields", string="MP Product Field")
     mp_product_variant_field_id = fields.Many2one(comodel_name="ir.model.fields", string="MP Product Variant Field")
 

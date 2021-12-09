@@ -18,9 +18,9 @@ class MarketplaceProductVariant(models.Model):
     currency_id = fields.Many2one(related="mp_account_id.currency_id")
     company_id = fields.Many2one(related="mp_account_id.company_id")
     default_code = fields.Char(string="Internal Reference")
-    list_price = fields.Float(string="Sales Price", default=1.0, digits=dp.get_precision('Product Price'),
+    list_price = fields.Float(string="Sales Price", default=1.0, digits='Product Price',
                               help="Base price to compute the customer price. Sometimes called the catalog price.")
-    weight = fields.Float(string="Weight", digits=dp.get_precision('Stock Weight'),
+    weight = fields.Float(string="Weight", digits='Stock Weight',
                           help="The weight of the contents in Kg, not including any packaging, etc.")
     volume = fields.Float("Volume", help="The volume in m3.")
     image = fields.Binary(string="Image", attachment=True,
