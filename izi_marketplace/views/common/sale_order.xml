@@ -35,7 +35,7 @@
       <field name="model">sale.order</field>
       <field name="inherit_id" ref="sale.view_quotation_tree"/>
       <field name="arch" type="xml">
-        <field name="date_order" position="after">
+        <field name="create_date" position="after">
           <field name="mp_accept_deadline" string="Confirmation Deadline"/>
           <field name="mp_shipping_deadline" string="Delivery Deadline"/>
         </field>
@@ -53,7 +53,7 @@
       <field name="model">sale.order</field>
       <field name="inherit_id" ref="sale.view_order_tree"/>
       <field name="arch" type="xml">
-        <field name="confirmation_date" position="after">
+        <field name="date_order" position="after">
           <field name="mp_accept_deadline" string="Confirmation Deadline"/>
           <field name="mp_shipping_deadline" string="Delivery Deadline"/>
         </field>
@@ -148,7 +148,6 @@
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">5</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -167,7 +166,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">6</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -186,7 +184,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">7</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
@@ -205,7 +202,6 @@ else:
       <field name="binding_model_id" ref="sale.model_sale_order"/>
       <field name="type">ir.actions.server</field>
       <field name="state">code</field>
-      <field name="priority">8</field>
       <field name="code">
 if records:
     order_statuses = records.mapped('mp_order_status')
