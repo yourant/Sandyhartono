@@ -52,7 +52,6 @@ class MarketplaceProduct(models.Model):
 
     @api.model
     def create(self, values):
-        tools.image_resize_images(values)
         mp_product = super(MarketplaceProduct, self).create(values)
         if mp_product.mp_product_image_ids:
             mp_product_image = mp_product.get_main_image()
@@ -61,7 +60,6 @@ class MarketplaceProduct(models.Model):
 
     # @api.multi
     def write(self, values):
-        tools.image_resize_images(values)
         res = super(MarketplaceProduct, self).write(values)
         for mp_product in self:
             if mp_product.mp_product_image_ids:
