@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="izi_shopee.search_mp_map_product_line" model="ir.ui.view">
+            <field name="name">Marketplace Map Product Line Search View</field>
+            <field name="model">mp.map.product.line</field>
+            <field name="inherit_id" ref="izi_marketplace.search_mp_map_product_line"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='filter_per_mp']" position="inside">
+                    <filter string="Shopee" name="filter_to_shopee" domain="[('marketplace','=', 'shopee')]"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

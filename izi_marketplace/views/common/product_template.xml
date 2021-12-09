@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.form_product_template" model="ir.ui.view">
+      <field name="name">Product Template Form View</field>
+      <field name="model">product.template</field>
+      <field name="inherit_id" ref="product.product_template_form_view"/>
+      <field name="arch" type="xml">
+        <xpath expr="//page[@name='general_information']" position="inside">
+          <notebook attrs="{'invisible':[('map_line_ids', '=', [])]}">
+            <page string="Marketplace Product">
+              <group name="marketplace" string="Marketplace Products">
+                <field name="map_line_ids" nolabel="1">
+                  <tree order="marketplace">
+                    <field name="marketplace"/>
+                    <field name="mp_account_id"/>
+                    <field name="name"/>
+                    <field name="default_code"/>
+                    <field name="map_type"/>
+                    <field name="state"/>
+                  </tree>
+                </field>
+              </group>
+            </page>
+          </notebook>
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>

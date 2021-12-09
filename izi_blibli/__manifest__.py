@@ -19,7 +19,6 @@
     # "images": [
     #     'images/main_screenshot.png'
     # ],
-
     # "price": 10.00,
     # "currency": "USD",
 
@@ -36,9 +35,15 @@
         # 'security/res_groups.xml',
 
         # data
+        'data/mp_partner.xml',
 
         # global action
-        # 'views/action/action.xml',
+        'views/common/mp_account.xml',
+        'views/common/mp_product.xml',
+        'views/common/mp_blibli_logistic.xml',
+        'views/common/mp_blibli_shop.xml',
+        'views/common/mp_map_product_line.xml',
+        'views/common/sale_order.xml',
 
         # view
 
@@ -60,16 +65,16 @@
         # 'views/action/action_onboarding.xml',
 
         # action menu
-        # 'views/action/action_menu.xml',
+        'views/action/action_menu.xml',
 
         # action onboarding
         # 'views/action/action_onboarding.xml',
 
         # menu
-        # 'views/menu.xml',
+        'views/menu.xml',
 
         # security
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
         # 'security/ir.rule.csv',
 
         # data

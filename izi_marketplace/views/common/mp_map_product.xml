@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.tree_mp_map_product" model="ir.ui.view">
+      <field name="name">Marketplace Map Product Tree View</field>
+      <field name="model">mp.map.product</field>
+      <field name="arch" type="xml">
+        <tree string="Marketplace Map Product">
+          <field name="name"/>
+          <field name="marketplace"/>
+          <field name="mp_account_id"/>
+          <field name="state"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.form_mp_map_product" model="ir.ui.view">
+      <field name="name">Marketplace Map Product Form View</field>
+      <field name="model">mp.map.product</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Map Product">
+          <header>
+            <button name="action_start" string="Start Mapping" class="oe_highlight" type="object" states="draft"/>
+            <button name="action_edit" string="Edit Mapping" class="oe_highlight" type="object" states="mapping"/>
+            <button name="action_generate" string="Generate Mapping" type="object" states="mapping"/>
+            <button name="action_generate_product" string="Generate Product for Unmapped Lines" type="object"
+                    class="btn-danger" states="mapping" groups="base.group_no_one"
+                    confirm="DANGER ALERT: This action may causing duplicate data of your master product data,
+                    please make sure that unmapped lines are really need to create the master product!
+                    This action can not be undone, do you want to continue?"/>
+            <field name="state" widget="statusbar" statusbar_visible="draft,mapping"/>
+          </header>
+          <sheet>
+            <!--suppress OdooXml -->
+            <field name="id" invisible="1"/>
+            <div class="oe_button_box" name="button_box">
+              <button name="action_view_unmapped_line" type="object" states="mapping"
+                      class="oe_stat_button" icon="fa-table">
+                <div class="o_field_widget o_stat_info">
+                  <span class="o_stat_text">Unmapped</span>
+                </div>
+              </button>
+              <button name="action_view_mapped_line" type="object" states="mapping"
+                      class="oe_stat_button" icon="fa-table">
+                <div class="o_field_widget o_stat_info">
+                  <span class="o_stat_text">Mapped</span>
+                </div>
+              </button>
+            </div>
+            <div class="oe_title">
+              <label for="name" class="oe_edit_only"/>
+              <h1>
+                <field name="name"/>
+              </h1>
+            </div>
+            <group>
+              <group>
+                <!--suppress PyUnresolvedReferences -->
+                <field name="marketplace" attrs="{'readonly': [('id', '!=', False)]}"/>
+                <!--suppress PyUnresolvedReferences -->
+                <field name="mp_account_id" domain="[('marketplace', '=', marketplace)]"
+                       attrs="{'readonly': [('id', '!=', False)]}" options="{'no_create': True}"/>
+              </group>
+              <group>
+                <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"
+                       attrs="{'invisible': [('company_id', '=', False)]}"/>
+              </group>
+            </group>
+            <notebook>
+              <page string="Field Look Up">
+                <group>
+                  <field name="field_mapping_ids" nolabel="1">
+                    <tree editable="bottom">
+                      <field name="product_model_id" invisible="1"/>
+                      <field name="mp_product_model_id" invisible="1"/>
+                      <field name="mp_product_variant_model_id" invisible="1"/>
+                      <field name="sequence" widget="handle"/>
+                      <field name="product_field_id" domain="[('model_id', '=', product_model_id)]"/>
+                      <field name="mp_product_field_id" domain="[('model_id', '=', mp_product_model_id)]"/>
+                      <field name="mp_product_variant_field_id"
+                             domain="[('model_id', '=', mp_product_variant_model_id)]"/>
+                    </tree>
+                  </field>
+                </group>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="debug_force_mapping_without_company" widget="boolean_toggle"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

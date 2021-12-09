@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_wiz_tp_order_reject" model="ir.ui.view">
+      <field name="name">Wizard Tokopedia Order Reject Form View</field>
+      <field name="model">wiz.tp_order_reject</field>
+      <field name="arch" type="xml">
+        <form string="Wizard Tp Order Reject">
+          <sheet>
+            <group>
+              <field name="order_ids" widget="many2many_tags" readonly="1" force_save="1"/>
+              <field name="reason_code"/>
+              <field name="reason"/>
+              <field name="shop_close_end_date"
+                     attrs="{'invisible': [('reason_code', '!=', '4')], 'required': [('reason_code', '=', '4')]}"/>
+              <field name="shop_close_note"
+                     attrs="{'invisible': [('reason_code', '!=', '4')], 'required': [('reason_code', '=', '4')]}"/>
+            </group>
+            <footer>
+              <button name="confirm" type="object" string="Confirm" class="btn-primary"
+                      confirm="Are you sure to reject these orders?"/>
+              <button string="Cancel" class="btn-secondary" special="cancel"/>
+            </footer>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

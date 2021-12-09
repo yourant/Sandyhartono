@@ -1,0 +1,9 @@
+<odoo>
+    <data>
+        <record model="res.partner" id="res_partner_shopee">
+            <field name="name">Partner Shopee</field>
+            <field name="customer">True</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

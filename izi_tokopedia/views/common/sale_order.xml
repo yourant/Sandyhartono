@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.search_sale_order" model="ir.ui.view">
+      <field name="name">Marketplace Order Search View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+      <field name="arch" type="xml">
+        <xpath expr="//group[@name='filter_per_mp']" position="inside">
+          <filter string="Tokopedia" name="filter_to_tokopedia" domain="[('marketplace','=', 'tokopedia')]"/>
+        </xpath>
+      </field>
+    </record>
+
+    <record id="izi_tokopedia.form_sale_order" model="ir.ui.view">
+      <field name="name">Sale Order Form View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="izi_marketplace.form_sale_order"/>
+      <field name="arch" type="xml">
+        <xpath expr="//div[@name='mp_actions']" position="inside">
+          <div style="margin: 10px" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
+            <button name="tokopedia_accept_order" string="Accept Order" class="btn-info" type="object"
+                    icon="fa-check-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_process')]}"
+                    style="margin-right: 5px;"/>
+            <button name="tokopedia_reject_order" string="Reject Order" class="btn-danger" type="object"
+                    icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_process')]}"
+                    style="margin-right: 5px;"/>
+            <button name="tokopedia_get_booking_code" string="Get Booking Code" type="object" icon="fa-barcode"
+                    attrs="{'invisible': ['|', ('mp_awb_number', 'not in', [False, '']),
+                                          ('mp_order_status', 'not in', ['to_ship', 'in_ship', 'done'])]}"
+                    style="margin-right: 5px;"/>
+            <button name="tokopedia_request_pickup" string="Request Pickup" type="object" icon="fa-print"
+                    attrs="{'invisible': ['|',('mp_order_status', 'not in', ['to_ship']),
+                                            ('mp_delivery_type', '!=', 'pickup')]}"
+                    style="margin-right: 5px;"/>
+            <button name="tokopedia_confirm_shipping" string="Confirm Shipping" type="object" icon="fa-print"
+                    attrs="{'invisible': ['|',('mp_order_status', 'not in', ['to_ship']),
+                                            ('mp_delivery_type', '!=', 'drop off')]}"
+                    style="margin-right: 5px;"/>
+            <button name="tokopedia_print_label" string="Print Shipping Label" type="object" icon="fa-print" 
+                    attrs="{'invisible': [('mp_order_status', 'not in', ['to_ship', 'in_ship', 'done'])]}" 
+                    style="margin-right: 5px;"/>
+            <button name="tokopedia_fetch_order" string="Re-Fetch MP Order Data" type="object" icon="fa-refresh"
+                    context="{'force_update': True}"/>
+          </div>
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>
