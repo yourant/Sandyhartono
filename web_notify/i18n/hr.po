@@ -9,42 +9,43 @@ msgstr ""
 "Project-Id-Version: Odoo Server 10.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-04-28 18:03+0000\n"
-"PO-Revision-Date: 2019-11-18 14:34+0000\n"
-"Last-Translator: Bole <bole@dajmi5.com>\n"
+"PO-Revision-Date: 2017-04-28 18:03+0000\n"
+"Last-Translator: Bole <bole@dajmi5.com>, 2017\n"
 "Language-Team: Croatian (https://www.transifex.com/oca/teams/23907/hr/)\n"
 "Language: hr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<="
-"4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 3.8\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
 #. module: web_notify
-#: code:addons/web_notify/models/res_users.py:44
+#: code:addons/web_notify/models/res_users.py:0
 #, python-format
 msgid "Danger"
-msgstr "Opasnost"
+msgstr ""
 
 #. module: web_notify
-#: code:addons/web_notify/models/res_users.py:60
+#: code:addons/web_notify/models/res_users.py:0
 #, python-format
 msgid "Default"
-msgstr "Zadano"
+msgstr ""
 
 #. module: web_notify
-#: code:addons/web_notify/models/res_users.py:54
+#: code:addons/web_notify/models/res_users.py:0
 #, python-format
 msgid "Information"
 msgstr "Informacija"
 
 #. module: web_notify
 #: model:ir.model.fields,field_description:web_notify.field_res_users__notify_danger_channel_name
+#, fuzzy
 msgid "Notify Danger Channel Name"
 msgstr "Naziv kanala upozorenja"
 
 #. module: web_notify
 #: model:ir.model.fields,field_description:web_notify.field_res_users__notify_default_channel_name
+#, fuzzy
 msgid "Notify Default Channel Name"
 msgstr "Naziv kanala informacija"
 
@@ -67,26 +68,26 @@ msgid "Notify Warning Channel Name"
 msgstr "Naziv kanala upozorenja"
 
 #. module: web_notify
-#: code:addons/web_notify/models/res_users.py:75
+#: code:addons/web_notify/models/res_users.py:0
 #, python-format
 msgid "Sending a notification to another user is forbidden."
-msgstr "Slanje obavijesti drugom korisniku je zabranjeno."
+msgstr ""
 
 #. module: web_notify
-#: code:addons/web_notify/models/res_users.py:38
+#: code:addons/web_notify/models/res_users.py:0
 #, python-format
 msgid "Success"
-msgstr "Uspješno"
+msgstr ""
 
 #. module: web_notify
 #: model_terms:ir.ui.view,arch_db:web_notify.view_users_form_simple_modif_inherit
 msgid "Test danger notification"
-msgstr "Testiraj obavjesti o opasnosti"
+msgstr ""
 
 #. module: web_notify
 #: model_terms:ir.ui.view,arch_db:web_notify.view_users_form_simple_modif_inherit
 msgid "Test default notification"
-msgstr "Testiraj zadane obavijesti"
+msgstr ""
 
 #. module: web_notify
 #: model_terms:ir.ui.view,arch_db:web_notify.view_users_form_simple_modif_inherit
@@ -114,7 +115,7 @@ msgid "Users"
 msgstr "Korisnici"
 
 #. module: web_notify
-#: code:addons/web_notify/models/res_users.py:50
+#: code:addons/web_notify/models/res_users.py:0
 #, python-format
 msgid "Warning"
 msgstr "Upozorenje"
