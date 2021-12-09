@@ -7,3 +7,7 @@
 "izi_tokopedia.access_mp_tokopedia_shop_crud_mp_manager","MP TP Shop Access for MP Manager: CRUD","izi_tokopedia.model_mp_tokopedia_shop","izi_marketplace.group_mp_manager",1,1,1,1
 "izi_tokopedia.access_mp_tokopedia_logistic_crud_mp_manager","MP TP Logistic Access for MP Manager: CRUD","izi_tokopedia.model_mp_tokopedia_logistic","izi_marketplace.group_mp_manager",1,1,1,1
 "izi_tokopedia.access_mp_tokopedia_logistic_service_crud_mp_manager","MP TP Logistic Service Access for MP Manager: CRUD","izi_tokopedia.model_mp_tokopedia_logistic_service","izi_marketplace.group_mp_manager",1,1,1,1
+
+"izi_tokopedia.access_wiz_upload_public_key","access_wiz_upload_public_key","model_wiz_upload_public_key",,1,1,1,1 
+"izi_tokopedia.access_wiz_tp_order_reject","access_wiz_tp_order_reject","model_wiz_tp_order_reject",,1,1,1,1 
+"izi_tokopedia.access_wiz_tp_order_print_label","access_wiz_tp_order_print_label","model_wiz_tp_order_print_label",,1,1,1,1 
