@@ -35,8 +35,9 @@ class MarketplaceAccount(models.Model):
     tp_client_secret = fields.Char(string="Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_url = fields.Char(string="Shop URL", required_if_marketplace="tokopedia", states=READONLY_STATES)
-    tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop", readonly=True)
-    tp_private_key_file = fields.Binary(string="Secret Key File")
+    tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Current Shop",
+                                 readonly=True, ondelete='set null')
+    tp_private_key_file = fields.Text(string="Secret Key File")
     # tp_private_key_file_name = fields.Char(string="Secret Key File Name")
     tp_private_key = fields.Char(string="Secret Key", compute="_compute_tp_private_key")
     tp_public_key_file = fields.Text(string="Public Key File")
@@ -125,10 +126,9 @@ class MarketplaceAccount(models.Model):
 
         self.ensure_one()
 
-        if self.with_context({'bin_size': False}).tp_public_key_file:
-            public_key = io.StringIO(self.with_context({'bin_size': False}).tp_public_key_file)
-        else:
-            public_key = io.StringIO(self.with_context({'get_public_key': True}).generate_rsa_key())
+        public_key = self.with_context({'bin_size': False}).tp_public_key_file
+        if not public_key:
+            public_key = self.with_context({'get_public_key': True}).generate_rsa_key()
 
         tp_account = self.tokopedia_get_account()
         tp_encryption = TokopediaEncryption(tp_account)
