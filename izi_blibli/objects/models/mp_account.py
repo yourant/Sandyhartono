@@ -20,7 +20,7 @@ class MarketplaceAccount(models.Model):
         'authenticating': [('readonly', False)],
     }
 
-    marketplace = fields.Selection(selection_add=[('blibli', 'Blibli')])
+    # marketplace = fields.Selection(selection_add=[('blibli', 'Blibli')], ondelete={'blibli': 'cascade'})
     bli_usermail = fields.Char(string='User Email', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_shop_name = fields.Char(string='Shop Name', required_if_marketplace="blibli", states=READONLY_STATES)
     bli_shop_code = fields.Char(string='Shop Code', required_if_marketplace="blibli", states=READONLY_STATES)

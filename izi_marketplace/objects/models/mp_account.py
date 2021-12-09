@@ -39,7 +39,12 @@ class MarketplaceAccount(models.Model):
     }
 
     name = fields.Char(string="Name", required=True)
-    marketplace = fields.Selection(string="Marketplace", selection=[], required=True, states=READONLY_STATES)
+    marketplace = fields.Selection(string="Marketplace", selection=[
+        ('tokopedia', 'Tokopedia'),
+        ('shopee', 'Shopee'),
+        ('blibli', 'Blibli'),
+        ('lazada', 'Lazada'),
+    ], required=True, states=READONLY_STATES)
     active = fields.Boolean(default=True)
     company_id = fields.Many2one(comodel_name="res.company", string="Company", index=1, readonly=False, required=True,
                                  default=lambda self: self.env['res.company']._company_default_get(),

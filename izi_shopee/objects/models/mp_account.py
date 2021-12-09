@@ -21,7 +21,7 @@ class MarketplaceAccount(models.Model):
         'authenticating': [('readonly', False)],
     }
 
-    marketplace = fields.Selection(selection_add=[('shopee', 'Shopee')])
+    # marketplace = fields.Selection(selection_add=[('shopee', 'Shopee')], ondelete={'shopee': 'cascade'})
     sp_partner_id = fields.Char(string="Partner ID", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_partner_key = fields.Char(string="Partner Key", required_if_marketplace="shopee", states=READONLY_STATES)
     sp_shop_id = fields.Many2one(comodel_name="mp.shopee.shop", string="Current Shop")
