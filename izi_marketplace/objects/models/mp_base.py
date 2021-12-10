@@ -412,7 +412,7 @@ class MarketplaceBase(models.AbstractModel):
             }
 
             self._logger(marketplace, "Looking for existing records of %s is started... Please wait!" % self._name,
-                         notify=True, notif_sticky=True)
+                         notify=True, notif_sticky=False)
 
             for index, mp_data in enumerate(mp_datas):
                 context['index'] = index
@@ -437,13 +437,13 @@ class MarketplaceBase(models.AbstractModel):
                 },
             }
             self._logger(marketplace, "Looking for existing records of %s is finished!" % self._name, notify=True,
-                         notif_sticky=True)
+                         notif_sticky=False)
             self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_update']), notify=True,
-                         notif_sticky=True)
+                         notif_sticky=False)
             self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_create']), notify=True,
-                         notif_sticky=True)
+                         notif_sticky=False)
             self._logger(marketplace, log_msg_data['log_msg'].format(**log_msg_data['need_skip']), notify=True,
-                         notif_sticky=True)
+                         notif_sticky=False)
             return check_existing_records
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
@@ -528,7 +528,7 @@ class MarketplaceBase(models.AbstractModel):
             records = record_obj
             self._logger(marketplace,
                          "Creating %d record(s) of %s started... Please wait!" % (len(mp_datas), record_obj._name),
-                         notify=True, notif_sticky=True)
+                         notify=True, notif_sticky=False)
 
             # Prepare Server Log
             mp_logs = mp_log_error_obj.search([('model_name', '=', self._name),
@@ -617,7 +617,7 @@ class MarketplaceBase(models.AbstractModel):
             need_update_records = [need_update_records]
 
         self._logger(marketplace, "Updating %d record(s) of %s started... Please wait!" % (
-            len(need_update_records), record_obj._name), notify=True, notif_sticky=True)
+            len(need_update_records), record_obj._name), notify=True, notif_sticky=False)
 
         for need_update_record in need_update_records:
             record, values, raw_data, sanitized_data = need_update_record

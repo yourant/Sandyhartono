@@ -142,7 +142,7 @@ class MarketplaceAccount(models.Model):
                 self.write({
                     'mp_webhook_state': 'no_register'
                 })
-            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=False)
         else:
             raise UserError('Select at least 1 feature for register webhook')
 
@@ -176,7 +176,7 @@ class MarketplaceAccount(models.Model):
                     self.write({
                         'mp_webhook_state': 'no_register'
                     })
-            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=False)
         else:
             raise UserError('Select at least 1 feature for register webhook')
 
@@ -193,7 +193,7 @@ class MarketplaceAccount(models.Model):
         sp_account = self.shopee_get_account(**params)
         sp_shop = ShopeeShop(sp_account, sanitizers=mp_shopee_shop_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing shop from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         sp_shop_raw = sp_shop.get_shop_info()
         sp_data_raw, sp_data_sanitized = mp_shopee_shop_obj.with_context(
             mp_account_ctx)._prepare_mapping_raw_data(raw_data=sp_shop_raw)
@@ -220,7 +220,7 @@ class MarketplaceAccount(models.Model):
         sp_account = self.shopee_get_account(**params)
         sp_logistic = ShopeeLogistic(sp_account, sanitizers=mp_shopee_logistic_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing logistic from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         sp_data_raw, sp_data_sanitized = sp_logistic.get_logsitic_list()
         check_existing_records_params = {
             'identifier_field': 'logistics_channel_id',
@@ -265,7 +265,7 @@ class MarketplaceAccount(models.Model):
         sp_account = self.shopee_get_account(**params)
         sp_product = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing product from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         sp_data_raw, sp_data_sanitized = sp_product.get_product_list(limit=mp_account_ctx.get('product_limit'))
         check_existing_records_params = {
             'identifier_field': 'sp_product_id',
@@ -347,7 +347,7 @@ class MarketplaceAccount(models.Model):
         sp_order_v2 = ShopeeOrder(sp_account, sanitizers=order_obj.get_sanitizers(self.marketplace))
         sp_order_v1 = ShopeeOrder(sp_account, api_version="v1")
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
 
         skipped = 0
         force_update_ids = []
@@ -366,7 +366,7 @@ class MarketplaceAccount(models.Model):
                 notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
                     str(index + 1), len(sp_data_raws), sp_order_invoice
                 )
-                _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+                _logger(self.marketplace, notif_msg, notify=True, notif_sticky=False)
                 # get_income
                 income_data = sp_order_v1.get_income(**{'order_sn': data['order_sn']})
                 data.update({'order_income': income_data.get('order_income', False)})
@@ -458,7 +458,7 @@ class MarketplaceAccount(models.Model):
 
         _logger(self.marketplace, 'Processed %s order(s) from %s of total orders imported!' % (
                 len(sp_data_raws), len(sp_order_list)
-                ), notify=True, notif_sticky=True)
+                ), notify=True, notif_sticky=False)
 
         if force_update_ids:
             order_obj = order_obj.with_context(dict(order_obj._context.copy(), **{
@@ -477,7 +477,7 @@ class MarketplaceAccount(models.Model):
             order_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
         else:
             _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
-                    notif_sticky=True)
+                    notif_sticky=False)
 
     # @api.multi
     def shopee_get_orders(self, **kwargs):

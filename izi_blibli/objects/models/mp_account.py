@@ -90,7 +90,7 @@ class MarketplaceAccount(models.Model):
         bli_account = self.blibli_get_account(**params)
         bli_shop = BlibliShop(bli_account, sanitizers=mp_blibli_shop_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing shop from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         bli_shop_raw = bli_shop.get_shop_info()
         bli_data_raw, bli_data_sanitized = mp_blibli_shop_obj.with_context(
             mp_account_ctx)._prepare_mapping_raw_data(raw_data=bli_shop_raw)
@@ -209,7 +209,7 @@ class MarketplaceAccount(models.Model):
         bli_account = self.blibli_get_account(**params)
         bli_order = BlibliOrder(bli_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         if kwargs.get('params') == 'by_date_range':
             params.update({
                 'from_date': kwargs.get('from_date'),

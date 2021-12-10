@@ -175,7 +175,7 @@ class MarketplaceAccount(models.Model):
                 self.write({
                     'mp_webhook_state': 'no_register'
                 })
-            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+            _logger(self.marketplace, notif_msg, notify=True, notif_sticky=False)
         else:
             raise UserError('Select at least 1 feature for register webhook')
 
@@ -186,7 +186,7 @@ class MarketplaceAccount(models.Model):
         self.write({
             'mp_webhook_state': 'no_register'
         })
-        _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+        _logger(self.marketplace, notif_msg, notify=True, notif_sticky=False)
 
     # @api.multi
     @mp.tokopedia.capture_error
@@ -200,7 +200,7 @@ class MarketplaceAccount(models.Model):
         tp_account = self.tokopedia_get_account()
         tp_shop = TokopediaShop(tp_account, sanitizers=mp_tokopedia_shop_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing shop from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         tp_data_raw, tp_data_sanitized = tp_shop.get_shop_info()
         check_existing_records_params = {
             'identifier_field': 'shop_id',
@@ -224,7 +224,7 @@ class MarketplaceAccount(models.Model):
         tp_logistic = TokopediaLogistic(tp_account, api_version="v2",
                                         sanitizers=mp_tokopedia_logistic_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing logistic from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         tp_data_raw, tp_data_sanitized = tp_logistic.get_logistic_info(shop_id=self.tp_shop_id.shop_id)
         check_existing_records_params = {
             'identifier_field': 'shipper_id',
@@ -269,7 +269,7 @@ class MarketplaceAccount(models.Model):
         tp_account = self.tokopedia_get_account()
         tp_product = TokopediaProduct(tp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
         _notify('info', 'Importing product from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
         tp_data_raw, tp_data_sanitized = tp_product.get_product_info(shop_id=self.tp_shop_id.shop_id,
                                                                      limit=mp_account_ctx.get('product_limit'))
         check_existing_records_params = {
@@ -338,7 +338,7 @@ class MarketplaceAccount(models.Model):
         tp_account = self.tokopedia_get_account()
         tp_order = TokopediaOrder(tp_account, api_version="v2")
         _notify('info', 'Importing order from {} is started... Please wait!'.format(self.marketplace.upper()),
-                notif_sticky=True)
+                notif_sticky=False)
 
         skipped = 0
         force_update_ids = []
@@ -378,7 +378,7 @@ class MarketplaceAccount(models.Model):
                     notif_msg = "(%s/%d) Getting order detail of %s... Please wait!" % (
                         str(index + 1), len(tp_data_orders), tp_invoice_number
                     )
-                    _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
+                    _logger(self.marketplace, notif_msg, notify=True, notif_sticky=False)
                     time.sleep(0.02)
                     tp_data_detail_order = tp_order.get_order_detail(order_id=tp_order_id)
                     tp_data_detail_order.update({'order_summary': tp_data_order})
@@ -392,7 +392,7 @@ class MarketplaceAccount(models.Model):
 
             _logger(self.marketplace, 'Processed %s order(s) from %s of total orders imported!' % (
                 len(tp_data_detail_orders), len(tp_data_orders)
-            ), notify=True, notif_sticky=True)
+            ), notify=True, notif_sticky=False)
         elif kwargs.get('params') == 'by_mp_invoice_number':
             mp_invoice_number = kwargs.get('mp_invoice_number', False)
             mp_order_id = kwargs.get('mp_order_id', False)
@@ -421,7 +421,7 @@ class MarketplaceAccount(models.Model):
             tp_data_sanitizeds.extend(tp_data_sanitized)
 
             _logger(self.marketplace, 'Processed order %s!' %
-                    tp_data_order.get('invoice_ref_num'), notify=True, notif_sticky=True)
+                    tp_data_order.get('invoice_ref_num'), notify=True, notif_sticky=False)
 
         if force_update_ids:
             order_obj = order_obj.with_context(dict(order_obj._context.copy(), **{
@@ -441,7 +441,7 @@ class MarketplaceAccount(models.Model):
             order_obj.handle_result_check_existing_records(check_existing_records)
         else:
             _logger(self.marketplace, 'There is no update, skipped %s order(s)!' % skipped, notify=True,
-                    notif_sticky=True)
+                    notif_sticky=False)
 
     # @api.multi
     def tokopedia_get_orders(self, **kwargs):

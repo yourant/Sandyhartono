@@ -155,7 +155,7 @@ class MarketplaceMapProduct(models.Model):
         mp_map_product_line_obj = self.env['mp.map.product.line']
         self.ensure_one()
 
-        _notify('info', "Collecting information to start mapping... Please wait!", notif_sticky=True)
+        _notify('info', "Collecting information to start mapping... Please wait!", notif_sticky=False)
 
         # Get mp_products without variant
         mp_products = self.mp_account_id.mp_product_ids.filtered(lambda mpp: not mpp.mp_product_variant_ids)
@@ -188,7 +188,7 @@ class MarketplaceMapProduct(models.Model):
 
         if map_line_datas:
             _logger.info("Creating %s mapping lines..." % len(map_line_datas))
-            _notify('info', "Creating %s mapping lines..." % len(map_line_datas), notif_sticky=True)
+            _notify('info', "Creating %s mapping lines..." % len(map_line_datas), notif_sticky=False)
             # Prepare CSV file like object
 
             # Import CSV file like object into DB
@@ -203,17 +203,17 @@ class MarketplaceMapProduct(models.Model):
             mp_map_product_line_obj.search([('marketplace', '=', self.marketplace)]).recompute()
             self.invalidate_cache()
             _logger.info("Created %s mapping lines." % len(map_line_datas))
-            _notify('info', "Created %s mapping lines." % len(map_line_datas), notif_sticky=True)
+            _notify('info', "Created %s mapping lines." % len(map_line_datas), notif_sticky=False)
 
         # After creating new map lines, then let's process existing map line that we retrieved previously
         unmapped_map_lines = existing_map_lines.filtered(lambda ml: ml.state == 'unmapped')
         _logger.info("Processing %s unmapped map lines..." % len(unmapped_map_lines))
-        _notify('info', "Processing %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=True)
+        _notify('info', "Processing %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=False)
         processed, skipped = unmapped_map_lines.do_mapping()
         _logger.info("Processed %s map lines..." % processed)
-        _notify('info', "Processed %s map lines..." % processed, notif_sticky=True)
+        _notify('info', "Processed %s map lines..." % processed, notif_sticky=False)
         _logger.info("Skipped %s map lines..." % skipped)
-        _notify('info', "Skipped %s map lines..." % skipped, notif_sticky=True)
+        _notify('info', "Skipped %s map lines..." % skipped, notif_sticky=False)
 
     # @api.multi
     def action_generate_product(self):
@@ -242,7 +242,7 @@ class MarketplaceMapProduct(models.Model):
 
         # Process mp_products
         _logger.info("Creating products for %s unmapped map lines..." % len(unmapped_map_lines))
-        _notify('info', "Creating products for %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=True)
+        _notify('info', "Creating products for %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=False)
 
         set_values = {
             'generated_by_mapping': True,
@@ -307,12 +307,12 @@ class MarketplaceMapProduct(models.Model):
 
         # Do mapping
         _logger.info("Processing %s unmapped map lines..." % len(unmapped_map_lines))
-        _notify('info', "Processing %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=True)
+        _notify('info', "Processing %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=False)
         processed, skipped = unmapped_map_lines.do_mapping()
         _logger.info("Processed %s map lines..." % processed)
-        _notify('info', "Processed %s map lines..." % processed, notif_sticky=True)
+        _notify('info', "Processed %s map lines..." % processed, notif_sticky=False)
         _logger.info("Skipped %s map lines..." % skipped)
-        _notify('info', "Skipped %s map lines..." % skipped, notif_sticky=True)
+        _notify('info', "Skipped %s map lines..." % skipped, notif_sticky=False)
 
     # @api.multi
     def action_edit(self):
