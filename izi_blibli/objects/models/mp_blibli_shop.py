@@ -13,7 +13,6 @@ class MPBlibliShop(models.Model):
     _inherit = 'mp.base'
     _description = 'Marketplace Blibli Shop'
     _rec_name = 'shop_name'
-    _rec_mp_external_id = 'shop_id'
 
     shop_id = fields.Char(string="Blibli Shop ID", readonly=True)
     shop_name = fields.Char(string="Blibli Shop Name", readonly=True)
@@ -28,6 +27,7 @@ class MPBlibliShop(models.Model):
         marketplace = 'blibli'
         mp_field_mapping = {
             'shop_name': ('shop_name', None),
+            'mp_external_id': ('shop_id', None),
             'shop_id': ('shop_id', None),
         }
         mp_field_mappings.append((marketplace, mp_field_mapping))

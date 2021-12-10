@@ -9,13 +9,13 @@ class SaleOrderLine(models.Model):
 
     bli_order_item_id = fields.Char(string="Blibli Order Item ID", required_if_marketplace="blibli")
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('blibli', 'bli_order_item_id'))
-        super(SaleOrderLine, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('blibli', 'bli_order_item_id'))
+    #     super(SaleOrderLine, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -25,6 +25,7 @@ class SaleOrderLine(models.Model):
         marketplace = 'blibli'
         mp_field_mapping = {
             'order_id': ('order_id', None),
+            'mp_external_id': ('orderItemNo', lambda env, r: str(r)),
             'bli_order_item_id': ('orderItemNo', lambda env, r: str(r)),
             'name': ('productName', None),
             'price_unit': ('productPrice', None),

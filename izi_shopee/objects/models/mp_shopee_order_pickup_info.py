@@ -9,7 +9,6 @@ class MPShopeeOrderPickupInfo(models.Model):
     _name = 'mp.shopee.order.pickup.info'
     _inherit = 'mp.base'
     _description = 'Marketplace Shopee Order Pickup Information'
-    _rec_mp_external_id = 'pickup_time_id'
 
     pickup_time_id = fields.Char(string='Pickup Time ID')
     start_datetime = fields.Datetime(string='Start Datetime')
@@ -59,6 +58,7 @@ class MPShopeeOrderPickupInfo(models.Model):
 
         marketplace = 'shopee'
         mp_field_mapping = {
+            'mp_external_id': ('pickup_time_id', None),
             'pickup_time_id': ('pickup_time_id', None),
             'order_id': ('order_id', None),
             'address_id': ('address_id', None),

@@ -12,7 +12,6 @@ class MPShopeeShop(models.Model):
     _inherit = 'mp.base'
     _description = 'Marketplace Shopee Shop'
     _rec_name = 'shop_name'
-    _rec_mp_external_id = 'shop_id'
 
     shop_id = fields.Char(string="Shop ID", readonly=True)
     shop_name = fields.Char(string="Shop Name", readonly=True)
@@ -35,6 +34,7 @@ class MPShopeeShop(models.Model):
 
         marketplace = 'shopee'
         mp_field_mapping = {
+            'mp_external_id': ('shop_id', lambda env, r: str(r)),
             'shop_id': ('shop_id', lambda env, r: str(r)),
             'shop_name': ('shop_name', None),
             'shop_description': ('description', None),

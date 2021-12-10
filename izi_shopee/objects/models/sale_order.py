@@ -70,13 +70,13 @@ class SaleOrder(models.Model):
     def _compute_mp_order_status(self):
         super(SaleOrder, self)._compute_mp_order_status()
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('shopee', 'sp_order_id'))
-        super(SaleOrder, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('shopee', 'sp_order_id'))
+    #     super(SaleOrder, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -86,6 +86,7 @@ class SaleOrder(models.Model):
         marketplace = 'shopee'
         mp_field_mapping = {
             'mp_invoice_number': ('order_sn', None),
+            'mp_external_id': ('order_sn', None),
             'sp_order_id': ('order_sn', None),
             'sp_order_status': ('order_status', None),
             'mp_buyer_id': ('buyer_user_id', lambda env, r: str(r)),

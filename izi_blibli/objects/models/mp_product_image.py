@@ -9,13 +9,6 @@ class MPProductImage(models.Model):
 
     bli_image_id = fields.Char(string='Blibli Product Image External ID')
 
-    @classmethod
-    def _build_model_attributes(cls, pool):
-        cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **{
-            'blibli': 'bli_image_id'
-        })
-
-        super(MPProductImage, cls)._build_model_attributes(pool)
 
     @api.model
     def blibli_get_sanitizers(self, mp_field_mapping):

@@ -8,7 +8,6 @@ class MarketplaceProductImage(models.Model):
     _name = 'mp.product.image'
     _inherit = 'mp.base'
     _description = 'Marketplace Product Image'
-    _rec_mp_external_id = {}
 
     sequence = fields.Integer(string="Sequence", default=1)
     name = fields.Char(string="Image URL", readonly=True)

@@ -11,13 +11,13 @@ class MarketplaceProductVariant(models.Model):
 
     bli_variant_id = fields.Char(string="Blibli Product Variant ID", readonly=True)
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('blibli', 'bli_variant_id'))
-        super(MarketplaceProductVariant, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('blibli', 'bli_variant_id'))
+    #     super(MarketplaceProductVariant, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -99,6 +99,7 @@ class MarketplaceProductVariant(models.Model):
             'length': ('items', _handle_length),
             'width': ('items', _handle_width),
             'height': ('items', _handle_height),
+            'mp_external_id': ('items', _handle_product_id),
             'bli_variant_id': ('items', _handle_product_id)
         })
 

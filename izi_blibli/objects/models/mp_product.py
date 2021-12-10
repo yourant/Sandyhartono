@@ -12,13 +12,13 @@ class MarketplaceProduct(models.Model):
     bli_product_id = fields.Char(string="Blibli Product ID", readonly=True)
     bli_has_variant = fields.Boolean(string="Blibli Product has Variant", readonly=True)
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('blibli', 'bli_product_id'))
-        super(MarketplaceProduct, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('blibli', 'bli_product_id'))
+    #     super(MarketplaceProduct, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -85,6 +85,7 @@ class MarketplaceProduct(models.Model):
                 for index, pic in enumerate(data[0]['images']):
                     base_data_image = {
                             'mp_account_id': env.context['mp_account_id'],
+                            'mp_external_id': data[0]['merchantSku']+str(index),
                             'bli_image_id': data[0]['merchantSku']+str(index),
                             'name': pic['locationPath']
                             }
@@ -106,6 +107,7 @@ class MarketplaceProduct(models.Model):
             'length': ('items', _handle_length),
             'width': ('items', _handle_width),
             'height': ('items', _handle_height),
+            'mp_external_id': ('items', _handle_product_id),
             'bli_product_id': ('items', _handle_product_id)
         })
 

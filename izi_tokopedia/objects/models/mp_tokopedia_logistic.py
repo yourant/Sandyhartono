@@ -10,7 +10,6 @@ class MPTokopediaLogistic(models.Model):
     _inherit = 'mp.base'
     _description = "Marketplace Tokopedia Logistic"
     _rec_name = 'shipper_name'
-    _rec_mp_external_id = 'shipper_id'
 
     shipper_id = fields.Char(string="Shipper ID", readonly=True)
     shipper_name = fields.Char(string="Shipper Name", readonly=True)
@@ -27,6 +26,7 @@ class MPTokopediaLogistic(models.Model):
 
         marketplace = 'tokopedia'
         mp_field_mapping = {
+            'mp_external_id': ('shipper_id', lambda env, r: str(r)),
             'shipper_id': ('shipper_id', lambda env, r: str(r)),
             'shipper_name': ('shipper_name', None),
             'logo': ('logo', None),
@@ -95,7 +95,6 @@ class MPTokopediaLogisticService(models.Model):
     _inherit = 'mp.base'
     _description = 'Marketplace Tokopedia Logistic Service'
     _rec_name = 'service_name'
-    _rec_mp_external_id = 'service_id'
 
     MP_DELIVERY_TYPES = [
         ('pickup', 'Pickup'),
@@ -120,6 +119,7 @@ class MPTokopediaLogisticService(models.Model):
         marketplace = 'tokopedia'
         mp_field_mapping = {
             'logistic_id': ('logistic_id', None),
+            'mp_external_id': ('service_id', lambda env, r: str(r)),
             'service_id': ('service_id', lambda env, r: str(r)),
             'service_name': ('service_name', None),
             'service_desc': ('service_desc', None),

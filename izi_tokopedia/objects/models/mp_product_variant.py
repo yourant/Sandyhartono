@@ -11,13 +11,13 @@ class MarketplaceProductVariant(models.Model):
 
     tp_variant_id = fields.Char(string="Tokopedia Product Variant ID", readonly=True)
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('tokopedia', 'tp_variant_id'))
-        super(MarketplaceProductVariant, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('tokopedia', 'tp_variant_id'))
+    #     super(MarketplaceProductVariant, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -26,6 +26,7 @@ class MarketplaceProductVariant(models.Model):
 
         marketplace = 'tokopedia'
         mp_field_mapping = {
+            'mp_external_id': ('basic/productID', lambda env, r: str(r)),
             'tp_variant_id': ('basic/productID', lambda env, r: str(r)),
             'name': ('basic/name', None),
             'default_code': ('other/sku', lambda env, r: r if r else False),

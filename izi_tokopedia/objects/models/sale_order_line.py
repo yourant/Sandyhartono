@@ -9,13 +9,13 @@ class SaleOrderLine(models.Model):
 
     tp_order_detail_id = fields.Char(string="Tokopedia Order Detail ID", required_if_marketplace="tokopedia")
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('tokopedia', 'tp_order_detail_id'))
-        super(SaleOrderLine, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('tokopedia', 'tp_order_detail_id'))
+    #     super(SaleOrderLine, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -26,6 +26,7 @@ class SaleOrderLine(models.Model):
         mp_field_mapping = {
             'order_id': ('order_id', None),
             'mp_exid': ('mp_order_exid', None),
+            'mp_external_id': ('order_detail_id', lambda env, r: str(r)),
             'tp_order_detail_id': ('order_detail_id', lambda env, r: str(r)),
             'mp_product_name': ('product_name', None),
             'price_unit': ('product_price', None),

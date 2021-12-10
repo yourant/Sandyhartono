@@ -9,7 +9,6 @@ class MPBlibliLogistic(models.Model):
     _name = 'mp.blibli.logistic'
     _inherit = 'mp.base'
     _description = 'Marketplace Blibli Logistic'
-    _rec_mp_external_id = 'logistics_code'
 
     logistics_name = fields.Char(string="Logistic Name", readonly=True, mp_raw=True)
     info_additional = fields.Char(string="Additional Information", readonly=True, mp_raw=True)
@@ -25,6 +24,7 @@ class MPBlibliLogistic(models.Model):
 
         cls._rec_mp_field_mapping = dict(cls._rec_mp_field_mapping, **{
             'blibli': {
+                'mp_external_id': ('code', None),
                 'logistics_code': ('code', None),
                 'logistics_name': ('name', None),
                 'is_selected': ('selected', None),

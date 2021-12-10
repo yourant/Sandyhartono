@@ -75,10 +75,10 @@ class MPWebhookOrder(models.Model):
     def _compute_mp_order_status(self):
         super(MPWebhookOrder, self)._compute_mp_order_status()
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('tokopedia', 'tp_order_id'))
-        super(MPWebhookOrder, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('tokopedia', 'tp_order_id'))
+    #     super(MPWebhookOrder, cls)._add_rec_mp_external_id(mp_external_id_fields)

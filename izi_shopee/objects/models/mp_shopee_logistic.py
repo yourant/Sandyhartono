@@ -10,7 +10,6 @@ class MPShopeeLogistic(models.Model):
     _inherit = 'mp.base'
     _description = 'Marketplace Shopee Logistic'
     _rec_name = 'logistics_channel_name'
-    _rec_mp_external_id = 'logistics_channel_id'
 
     logistics_channel_id = fields.Char(string="Logistic ID", readonly=True)
     logistics_channel_name = fields.Char(string="Logistic Name", readonly=True)
@@ -34,6 +33,7 @@ class MPShopeeLogistic(models.Model):
 
         marketplace = 'shopee'
         mp_field_mapping = {
+            'mp_external_id': ('logistics_channel_list/logistics_channel_id', lambda env, r: str(r)),
             'logistics_channel_id': ('logistics_channel_list/logistics_channel_id', lambda env, r: str(r)),
             'logistics_channel_name': ('logistics_channel_list/logistics_channel_name', None),
             'item_max_weight': ('logistics_channel_list/weight_limit/item_max_weight', None),

@@ -13,7 +13,6 @@ class MPTokopediaShop(models.Model):
     _inherit = 'mp.base'
     _description = 'Marketplace Tokopedia Shop'
     _rec_name = 'shop_name'
-    _rec_mp_external_id = 'shop_id'
 
     SHOP_STATES = [
         ('0', 'Deleted'),
@@ -66,6 +65,8 @@ class MPTokopediaShop(models.Model):
         records = super(MPTokopediaShop, self)._finish_create_records(records)
         mp_account = self.get_mp_account_from_context()
         mp_account.write({'tp_shop_id': records[0].id})
+        for record in records:
+            record.write({'mp_external_id': record.shop_id})
         return records
 
     # @api.multi

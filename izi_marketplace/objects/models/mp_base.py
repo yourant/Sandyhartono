@@ -18,7 +18,6 @@ _logger = logging.getLogger(__name__)
 class MarketplaceBase(models.AbstractModel):
     _name = 'mp.base'
     _description = 'Marketplace Base Model'
-    _rec_mp_external_id = None
     _rec_mp_field_mapping = {}
 
     # @api.multi
@@ -52,21 +51,21 @@ class MarketplaceBase(models.AbstractModel):
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
     md5sign = fields.Char(string="MD5 Sign", readonly=True, required=False, default="",
                           help="MD5 hash of the marketplace data.")
-    mp_external_id = fields.Char(string="Marketplace External ID", compute="_compute_mp_external_id", store=True)
+    mp_external_id = fields.Char(string="Marketplace External ID")
 
     @classmethod
     def _build_model_attributes(cls, pool):
         super(MarketplaceBase, cls)._build_model_attributes(pool)
-        cls._add_rec_mp_external_id()
+        # cls._add_rec_mp_external_id()
         cls._add_rec_mp_field_mapping()
         cls._validate_rec_mp_field_mapping()
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if mp_external_id_fields:
-            if not cls._rec_mp_external_id:
-                cls._rec_mp_external_id = {}
-            cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **dict(mp_external_id_fields))
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if mp_external_id_fields:
+    #         if not cls._rec_mp_external_id:
+    #             cls._rec_mp_external_id = {}
+    #         cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **dict(mp_external_id_fields))
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -115,24 +114,24 @@ class MarketplaceBase(models.AbstractModel):
     def _get_rec_mp_field_mapping(self, marketplace):
         return self._rec_mp_field_mapping.get(marketplace, None)
 
-    # @api.multi
-    def _compute_mp_external_id(self):
-        for rec in self:
-            mp_external_id = None
-            if isinstance(rec._rec_mp_external_id, str):
-                mp_external_id = getattr(rec, rec._rec_mp_external_id, False)
-            elif isinstance(rec._rec_mp_external_id, dict):
-                mp_external_id = getattr(rec, rec._rec_mp_external_id.get(rec.marketplace, ''), False)
-            if mp_external_id:
-                mp_external_id = str(mp_external_id)
-            rec.mp_external_id = mp_external_id
+    # # @api.multi
+    # def _compute_mp_external_id(self):
+    #     for rec in self:
+    #         mp_external_id = None
+    #         if isinstance(rec._rec_mp_external_id, str):
+    #             mp_external_id = getattr(rec, rec._rec_mp_external_id, False)
+    #         elif isinstance(rec._rec_mp_external_id, dict):
+    #             mp_external_id = getattr(rec, rec._rec_mp_external_id.get(rec.marketplace, ''), False)
+    #         if mp_external_id:
+    #             mp_external_id = str(mp_external_id)
+    #         rec.mp_external_id = mp_external_id
 
-    @api.model
-    def _field_lookup_mp_external_id(self, marketplace):
-        if isinstance(self._rec_mp_external_id, str):
-            return self._rec_mp_external_id
-        elif isinstance(self._rec_mp_external_id, dict):
-            return self._rec_mp_external_id.get(marketplace)
+    # @api.model
+    # def _field_lookup_mp_external_id(self, marketplace):
+    #     if isinstance(self._rec_mp_external_id, str):
+    #         return self._rec_mp_external_id
+    #     elif isinstance(self._rec_mp_external_id, dict):
+    #         return self._rec_mp_external_id.get(marketplace)
 
     @api.model
     def _get_mp_raw_fields(self, marketplace=None):
@@ -374,7 +373,7 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def search_mp_records(self, marketplace, mp_external_id, operator="="):
-        mp_external_id_field = self._field_lookup_mp_external_id(marketplace)
+        mp_external_id_field = 'mp_external_id'
         return self.search([(mp_external_id_field, operator, mp_external_id)])
 
     @api.model
@@ -448,7 +447,7 @@ class MarketplaceBase(models.AbstractModel):
 
         sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
         if identifier_field:
-            mp_external_id_field = self._field_lookup_mp_external_id(marketplace)
+            mp_external_id_field = 'mp_external_id'
             record = record_obj.search([(mp_external_id_field, '=', values[identifier_field])])
         elif identifier_method:
             record = identifier_method(record_obj, values)

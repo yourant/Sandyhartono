@@ -9,7 +9,6 @@ class MPShopeeShopAddress(models.Model):
     _name = 'mp.shopee.shop.address'
     _inherit = 'mp.base'
     _description = 'Marketplace Shopee Shop Address'
-    _rec_mp_external_id = 'address_id'
     _rec_name = 'address'
 
     shop_id = fields.Many2one(comodel_name='mp.shopee.shop', string="Shop ID")
@@ -33,6 +32,7 @@ class MPShopeeShopAddress(models.Model):
         marketplace = 'shopee'
         mp_field_mapping = {
             'shop_id': ('shop_id', None),
+            'mp_external_id': ('address_id', None),
             'address_id': ('address_id', None),
             'region': ('region', None),
             'state': ('state', None),

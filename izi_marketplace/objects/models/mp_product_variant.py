@@ -9,7 +9,6 @@ class MarketplaceProductVariant(models.Model):
     _name = 'mp.product.variant'
     _inherit = 'mp.base'
     _description = 'Marketplace Product Variant'
-    _rec_mp_external_id = {}
 
     name = fields.Char(string="Product Variant Name", readonly=True)
     active = fields.Boolean(default=True)

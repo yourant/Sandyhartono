@@ -10,7 +10,6 @@ class MarketplaceProduct(models.Model):
     _name = 'mp.product'
     _inherit = 'mp.base'
     _description = 'Marketplace Product'
-    _rec_mp_external_id = {}
 
     name = fields.Char(string="Name", index=True, required=True)
     active = fields.Boolean(default=True)

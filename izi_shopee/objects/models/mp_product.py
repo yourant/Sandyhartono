@@ -12,13 +12,13 @@ class MarketplaceProduct(models.Model):
     sp_item_status = fields.Char(string="Shopee Product Status", readonly=True)
     sp_has_variant = fields.Boolean(string="Shopee is Variant", readonly=True)
 
-    @classmethod
-    def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-        if not mp_external_id_fields:
-            mp_external_id_fields = []
+    # @classmethod
+    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
+    #     if not mp_external_id_fields:
+    #         mp_external_id_fields = []
 
-        mp_external_id_fields.append(('shopee', 'sp_product_id'))
-        super(MarketplaceProduct, cls)._add_rec_mp_external_id(mp_external_id_fields)
+    #     mp_external_id_fields.append(('shopee', 'sp_product_id'))
+    #     super(MarketplaceProduct, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
@@ -34,6 +34,7 @@ class MarketplaceProduct(models.Model):
             'length': ('item_list/dimension/package_length', lambda env, r: float(r)),
             'width': ('item_list/dimension/package_width', lambda env, r: float(r)),
             'height': ('item_list/dimension/package_height', lambda env, r: float(r)),
+            'mp_external_id': ('item_list/item_id', None),
             'sp_product_id': ('item_list/item_id', None),
             'sp_item_status': ('item_list/item_status', None),
             'sp_has_variant': ('item_list/has_model', None),
@@ -50,6 +51,7 @@ class MarketplaceProduct(models.Model):
             for index, pic in enumerate(data['image_url_list']):
                 base_data_image = {
                     'mp_account_id': env.context['mp_account_id'],
+                    'mp_external_id': data['image_id_list'][index],
                     'sp_image_id': data['image_id_list'][index],
                     'sequence': index,
                     'name': pic,
