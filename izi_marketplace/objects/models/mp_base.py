@@ -520,11 +520,11 @@ class MarketplaceBase(models.AbstractModel):
                                  "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
                 except Exception as e:
                     self._logger(marketplace, 'Failed Create / Update %s. Cause %s' %
-                                 (self._name, str(e.name)))
+                                 (self._name, str(e.args[0])))
                     if not context.get('skip_error'):
-                        raise ValidationError(str(e.name))
+                        raise ValidationError(str(e.args[0]))
                     else:
-                        message_error = str(e.name)
+                        message_error = str(e.args[0])
 
                 # create log message to mp.log.error
                 notes = mp_data.get('mp_product_name', False)
@@ -568,7 +568,7 @@ class MarketplaceBase(models.AbstractModel):
             }))
             return record
         except Exception as e:
-            raise ValidationError(str(e.name))
+            raise ValidationError(str(e.args[0]))
 
     @api.model
     def _finish_create_records(self, records):
