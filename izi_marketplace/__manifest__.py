@@ -58,6 +58,7 @@
 
         # wizard
         'views/wizard/wiz_mp_order.xml',
+        'views/wizard/wiz_recompute_mpxid.xml',
         # report paperformat
         # 'data/report_paperformat.xml',
 

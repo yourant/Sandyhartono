@@ -52,7 +52,7 @@ class MarketplaceBase(models.AbstractModel):
     raw = fields.Text(string="Raw Data", readonly=True, required=True, default="{}")
     md5sign = fields.Char(string="MD5 Sign", readonly=True, required=False, default="",
                           help="MD5 hash of the marketplace data.")
-    mp_external_id = fields.Char(string="Marketplace External ID", compute="_compute_mp_external_id")
+    mp_external_id = fields.Char(string="Marketplace External ID", compute="_compute_mp_external_id", store=True)
 
     @classmethod
     def _build_model_attributes(cls, pool):

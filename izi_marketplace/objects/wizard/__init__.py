@@ -2,3 +2,4 @@
 # Copyright 2021 IZI PT Solusi Usaha Mudah
 
 from . import wiz_mp_order
+from . import wiz_recompute_mpxid

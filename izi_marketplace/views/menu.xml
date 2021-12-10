@@ -52,5 +52,10 @@
               parent="izi_marketplace.menu_separator_mp_account_config" 
               action="izi_marketplace.action_window_order_component_config" sequence="10"/>
 
+    <!-- Marketplace / Configuration / Recompute MP External ID -->
+    <menuitem id="izi_marketplace.menu_item_recompute_mpxid" name="Recompute MP External ID" 
+              parent="izi_marketplace.menu_separator_mp_account_config" 
+              action="izi_marketplace.action_window_wiz_recompute_mpxid" sequence="20"/>
+
   </data>
 </odoo>
