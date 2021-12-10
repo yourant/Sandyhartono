@@ -548,7 +548,7 @@ class SaleOrder(models.Model):
                 if order.mp_account_id.mp_webhook_state == 'no_register':
                     order.tokopedia_fetch_order()
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_accept_cancel(self):
         for order in self:

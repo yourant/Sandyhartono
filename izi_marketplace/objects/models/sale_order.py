@@ -241,7 +241,7 @@ class SaleOrder(models.Model):
             if hasattr(order, '%s_generate_adjusment_line' % order.marketplace):
                 getattr(order, '%s_generate_adjusment_line' % order.marketplace)()
 
-    @api.multi
+    # @api.multi
     def process_order_component_config(self, records):
         if records.exists():
             records = records.exists()
@@ -324,7 +324,7 @@ class SaleOrder(models.Model):
                 records.generate_adjusment_line()
         return records
 
-    @api.multi
+    # @api.multi
     def accept_order(self):
         for order in self:
             if hasattr(order, '%s_accept_order' % order.marketplace):
@@ -371,7 +371,7 @@ class SaleOrder(models.Model):
         else:
             raise ValidationError('Please select the same marketplace channel.')
 
-    @api.multi
+    # @api.multi
     def request_pickup(self):
         marketplace = self.mapped('marketplace')
         mp_account_ids = self.mapped('mp_account_id.id')
@@ -384,7 +384,7 @@ class SaleOrder(models.Model):
         else:
             raise ValidationError('Please select the same marketplace channel.')
 
-    @api.multi
+    # @api.multi
     def drop_off(self):
         marketplace = self.mapped('marketplace')
         mp_account_ids = self.mapped('mp_account_id.id')

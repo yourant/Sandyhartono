@@ -32,7 +32,8 @@ class MPWebhookOrder(models.Model):
     order_update_time = fields.Datetime(string='Order Update Time')
     mp_order_status = fields.Selection(string="MP Order Status", selection=MP_ORDER_STATUSES, required=False,
                                        store=True, compute="_compute_mp_order_status")
-    mp_order_status_notes = fields.Char(string="MP Order Status Notes", compute="_compute_mp_order_status")
+    mp_order_status_notes = fields.Char(string="MP Order Status Notes",
+                                        compute="_compute_mp_order_status", compute_sudo=True)
 
     @classmethod
     def _build_model_attributes(cls, pool):
@@ -46,11 +47,11 @@ class MPWebhookOrder(models.Model):
         if mp_order_status_notes:
             cls._rec_mp_order_status_notes = dict(cls._rec_mp_order_status_notes, **dict(mp_order_status_notes))
 
-    @api.multi
+    # @api.multi
     def _compute_mp_order_status(self):
         for order in self:
             if order.marketplace not in order._rec_mp_order_statuses.keys():
-                order.mp_order_status = False
+                order.mp_order_status = None
             else:
                 mp_order_status_field, mp_order_statuses = order._rec_mp_order_statuses[order.marketplace]
                 mp_order_status_value = 'new'
@@ -61,7 +62,7 @@ class MPWebhookOrder(models.Model):
                 order.mp_order_status = mp_order_status_value
 
             if order.marketplace not in order._rec_mp_order_status_notes.keys():
-                order.mp_order_status_notes = False
+                order.mp_order_status_notes = None
             else:
                 mp_order_status_notes = order._rec_mp_order_status_notes[order.marketplace]
                 if order.mp_order_status:
@@ -70,4 +71,4 @@ class MPWebhookOrder(models.Model):
                                         order.mp_order_status, order.marketplace.upper())
                     order.mp_order_status_notes = mp_order_status_notes.get(order.mp_order_status, default_notes)
                 else:
-                    order.mp_order_status_notes = False
+                    order.mp_order_status_notes = None

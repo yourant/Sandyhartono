@@ -45,7 +45,7 @@ class MPWebhookOrder(models.Model):
         mp_order_status_notes.append((marketplace, dict(cls.SP_ORDER_STATUSES)))
         super(MPWebhookOrder, cls)._add_rec_mp_order_status(mp_order_statuses, mp_order_status_notes)
 
-    @api.multi
+    # @api.multi
     @api.depends('sp_order_status')
     def _compute_mp_order_status(self):
         super(MPWebhookOrder, self)._compute_mp_order_status()

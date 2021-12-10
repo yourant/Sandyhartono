@@ -102,7 +102,7 @@ class MarketplaceAccount(models.Model):
         self.write({'state': 'authenticated',
                     'auth_message': auth_message})
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_register_webhooks(self):
         _logger = self.env['mp.base']._logger
@@ -146,7 +146,7 @@ class MarketplaceAccount(models.Model):
         else:
             raise UserError('Select at least 1 feature for register webhook')
 
-    @api.multi
+    # @api.multi
     @mp.shopee.capture_error
     def shopee_unregister_webhooks(self):
         _logger = self.env['mp.base']._logger

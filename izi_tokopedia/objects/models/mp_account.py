@@ -188,7 +188,7 @@ class MarketplaceAccount(models.Model):
         })
         _logger(self.marketplace, notif_msg, notify=True, notif_sticky=True)
 
-    @api.multi
+    # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_get_shop(self):
         mp_account_ctx = self.generate_context()

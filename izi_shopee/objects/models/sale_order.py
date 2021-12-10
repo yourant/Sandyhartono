@@ -466,7 +466,7 @@ class SaleOrder(models.Model):
             else:
                 raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
 
-    @api.multi
+    # @api.multi
     def shopee_request_pickup(self):
         mp_shopee_shop_address_obj = self.env['mp.shopee.shop.address']
         mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
