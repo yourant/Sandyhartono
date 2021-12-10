@@ -15,8 +15,6 @@ from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 
-from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict
-
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
@@ -37,6 +35,7 @@ class SaleOrder(models.Model):
         ('220', 'Payment verified, order ready to process.'),
         ('221', 'Waiting for partner approval.'),
         ('400', 'Seller accept order.'),
+        ('401', 'Buyer Request Cancel'),
         ('450', 'Waiting for pickup.'),
         ('500', 'Order shipment.'),
         ('501', 'Status changed to waiting resi have no input.'),
@@ -59,6 +58,9 @@ class SaleOrder(models.Model):
     tp_order_status = fields.Selection(string="Tokopedia Order Status", selection=TP_ORDER_STATUSES,
                                        required_if_marketplace="tokopedia")
     tp_invoice_url = fields.Char(string="Tokpedia Invoice URL", required=False)
+    tp_cancel_request_create_time = fields.Datetime(string="Buyer Cancel Request Time")
+    tp_cancel_request_reason = fields.Char(string="Buyer Cancel Request Reason")
+    tp_cancel_request_status = fields.Boolean(string="Buyer Cancel Request Status")
 
     # @api.multi
     @api.depends('tp_order_status')
@@ -132,11 +134,35 @@ class SaleOrder(models.Model):
             tp_logistic_service = tp_logistic_service_obj.search_mp_records('tokopedia', data)
             return tp_logistic_service.delivery_type
 
+        def _handle_cancel_req_info_time(env, data):
+            if data:
+                if data.get('create_time', False):
+                    isoformat = data.get('create_time')[:-1].split('.')[0]
+                    dt = env['mp.base'].datetime_convert_tz(datetime.fromisoformat(isoformat), 'Asia/Jakarta', 'UTC')
+                    return fields.Datetime.to_string(dt)
+            return None
+
+        def _handle_cancel_req_reason(env, data):
+            if data:
+                if data.get('reason', False):
+                    return data.get('reason')
+            return None
+
+        def _handle_cancel_req_status(env, data):
+            if data:
+                if data.get('status', False):
+                    status = data.get('status')
+                    if status == 1:
+                        return True
+                    elif status == 0:
+                        return False
+            return None
+
         mp_field_mapping.update({
             # MP Order Transaction & Payment
             'mp_payment_date': ('payment_info/payment_date', _handle_isoformat_to_dt_str),
             'mp_order_date': ('create_time', _handle_isoformat_to_dt_str),
-            'date_order': ('create_time', _handle_isoformat_to_dt_str),
+            'date_order': ('payment_date', _handle_isoformat_to_dt_str),
             'mp_order_last_update_date': ('update_time', _handle_isoformat_to_dt_str),
             'mp_accept_deadline': ('shipment_fulfillment/accept_deadline', _handle_isoformat_to_dt_str),
             'mp_order_notes': ('order_summary/products', _handle_order_notes),
@@ -144,6 +170,11 @@ class SaleOrder(models.Model):
             # MP Order Shipment
             'mp_delivery_type': ('order_info/shipping_info/sp_id', _handle_delivery_type),
             'mp_shipping_deadline': ('shipment_fulfillment/confirm_shipping_deadline', _handle_isoformat_to_dt_str),
+
+            # Cancel Request
+            'tp_cancel_request_create_time': ('cancel_request_info', _handle_cancel_req_info_time),
+            'tp_cancel_request_reason': ('cancel_request_info', _handle_cancel_req_reason),
+            'tp_cancel_request_status': ('cancel_request_info', _handle_cancel_req_status),
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
@@ -159,6 +190,7 @@ class SaleOrder(models.Model):
         marketplace, tp_order_status_field = 'tokopedia', 'tp_order_status'
         tp_order_statuses = {
             'waiting': ['11', '100', '103', '200'],
+            'to_cancel': ['401'],
             'cancel': ['0', '2', '3', '4', '5', '10', '15', '690', '691', '695', '698', '699'],
             'to_process': ['220', '221'],
             'in_process': [],
@@ -178,15 +210,19 @@ class SaleOrder(models.Model):
 
         order_line_obj = self.env['sale.order.line'].with_context(mp_account_ctx)
 
-        records = super(SaleOrder, self)._finish_create_records(records)
-
         if mp_account.marketplace == 'tokopedia':
             tp_order_detail_raws, tp_order_detail_sanitizeds = [], []
             for record in records:
+                # cek if order in cancel request
+                if record.tp_cancel_request_status and record.tp_order_status == '400':
+                    record.tp_order_status = '401'
+
                 tp_order_raw = json.loads(record.raw, strict=False)
                 tp_order_details = [
                     # Insert order_id into tp_order_detail_raw
-                    dict(tp_order_detail_raw, **dict([('order_id', record.id)]))
+                    dict(tp_order_detail_raw,
+                         **dict([('order_id', record.id)]),
+                         **dict([('mp_order_exid', record.mp_invoice_number)]))
                     for tp_order_detail_raw in json_digger(tp_order_raw, 'order_info/order_detail')
                 ]
                 tp_data_raw, tp_data_sanitized = order_line_obj._prepare_mapping_raw_data(raw_data=tp_order_details)
@@ -201,6 +237,29 @@ class SaleOrder(models.Model):
             }
             check_existing_records = order_line_obj.check_existing_records(**check_existing_records_params)
             order_line_obj.handle_result_check_existing_records(check_existing_records)
+            if self._context.get('skip_error'):
+                for record in records:
+                    tp_order_raw = json.loads(record.raw, strict=False)
+                    item_list = tp_order_raw.get('order_info').get('order_detail', [])
+                    record_line = record.mapped('order_line.product_type')
+                    if not record_line:
+                        record.unlink()
+                    elif 'product' not in record_line:
+                        record.unlink()
+                    elif len(item_list) != record_line.count('product'):
+                        record.unlink()
+
+        records = super(SaleOrder, self)._finish_create_records(records)
+        return records
+
+    @api.model
+    def _finish_update_records(self, records):
+        mp_account = self.get_mp_account_from_context()
+        if mp_account.marketplace == 'tokopedia':
+            for record in records:
+                if record.tp_cancel_request_status and record.tp_order_status == '400':
+                    record.tp_order_status = '401'
+        records = super(SaleOrder, self)._finish_update_records(records)
         return records
 
     @api.model
@@ -405,10 +464,12 @@ class SaleOrder(models.Model):
             tp_account = order.mp_account_id.tokopedia_get_account()
             tp_order = TokopediaOrder(tp_account)
 
+            time.sleep(0.5)
             action_status = tp_order.action_accept_order(order.mp_external_id)
             if action_status == "success":
                 order.action_confirm()
-                order.tokopedia_fetch_order()
+                if order.mp_account_id.mp_webhook_state == 'no_register':
+                    order.tokopedia_fetch_order()
 
     # @api.multi
     def tokopedia_reject_order(self):
@@ -452,7 +513,7 @@ class SaleOrder(models.Model):
             tp_order = TokopediaOrder(tp_account, sanitizers=sanitizers)
             tp_order_seller = TokopediaOrder(tp_account, api_version="url")
             tp_order_seller.endpoints.host = 'seller'
-
+            time.sleep(0.5)
             booking_code = tp_order.action_get_booking_code(order.mp_external_id)[1]
             label_url = tp_order_seller.action_print_shipping_label(order_ids=[order.mp_external_id], printed=0)
             order.write(dict(booking_code[0], **{'mp_awb_url': label_url}))
@@ -481,6 +542,25 @@ class SaleOrder(models.Model):
                 'order_id': order.mp_external_id,
                 'shop_id': order.mp_account_id.tp_shop_id.shop_id
             }
+            time.sleep(0.5)
             action_status = tp_order.action_request_pickup(**action_params)
             if action_status.get('result') == 'Anda telah sukses melakukan request pickup.':
-                order.tokopedia_fetch_order()
+                if order.mp_account_id.mp_webhook_state == 'no_register':
+                    order.tokopedia_fetch_order()
+
+    @api.multi
+    @mp.tokopedia.capture_error
+    def tokopedia_accept_cancel(self):
+        for order in self:
+            tp_account = order.mp_account_id.tokopedia_get_account()
+            tp_order = TokopediaOrder(tp_account)
+            action_params = {
+                'order_id': order.mp_external_id,
+                'reason_code': 8,
+                'reason': order.tp_cancel_request_reason
+            }
+            action_status = tp_order.action_reject_order(**action_params)
+            if action_status == "success":
+                order.action_cancel()
+                if order.mp_account_id.mp_webhook_state == 'no_register':
+                    order.tokopedia_fetch_order()

@@ -35,6 +35,7 @@ class SaleOrder(models.Model):
     sp_order_status = fields.Selection(string="Shopee Order Status", selection=SP_ORDER_STATUSES, required=False)
     sp_order_id = fields.Char(string="Shopee Order ID", readonly=True)
     sp_package_number = fields.Char(string="Shopee Package Number", readonly=True)
+    sp_pickup_date = fields.Char(string='Shopee Pickup Date', readonly=True)
     sp_pickup_ids = fields.One2many(
         comodel_name='mp.shopee.order.pickup.info',
         inverse_name='order_id',
@@ -160,14 +161,13 @@ class SaleOrder(models.Model):
 
         order_line_obj = self.env['sale.order.line'].with_context(mp_account_ctx)
 
-        records = super(SaleOrder, self)._finish_create_records(records)
-
         sp_order_detail_raws, sp_order_detail_sanitizeds = [], []
 
         if mp_account.marketplace == 'shopee':
             for record in records:
                 sp_order_raw = json.loads(record.raw, strict=False)
-                list_item_field = ['item_id', 'item_name', 'item_sku', 'model_id', 'model_name', 'model_sku']
+                list_item_field = ['item_id', 'item_name', 'item_sku', 'model_id',
+                                   'model_name', 'model_sku', 'model_original_price', 'model_discounted_price']
 
                 item_list = sp_order_raw['item_list']
                 for item in item_list:
@@ -175,7 +175,9 @@ class SaleOrder(models.Model):
 
                 sp_order_details = [
                     # Insert order_id into tp_order_detail_raw
-                    dict(sp_order_detail_raw, **dict([('order_id', record.id)]))
+                    dict(sp_order_detail_raw,
+                         **dict([('order_id', record.id)]),
+                         **dict([('mp_order_exid', record.mp_invoice_number)]))
                     for sp_order_detail_raw in json_digger(sp_order_raw, 'item_list')
                 ]
                 sp_data_raw, sp_data_sanitized = order_line_obj.with_context(
@@ -197,7 +199,19 @@ class SaleOrder(models.Model):
                 mp_account_ctx).check_existing_records(**check_existing_records_params)
             order_line_obj.with_context(
                 mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+            if self._context.get('skip_error'):
+                for record in records:
+                    sp_order_raw = json.loads(record.raw, strict=False)
+                    item_list = sp_order_raw.get('item_list', [])
+                    record_line = record.mapped('order_line.product_type')
+                    if not record_line:
+                        record.unlink()
+                    elif 'product' not in record_line:
+                        record.unlink()
+                    elif len(item_list) != record_line.count('product'):
+                        record.unlink()
 
+        records = super(SaleOrder, self)._finish_create_records(records)
         return records
 
     # @api.multi
@@ -339,10 +353,10 @@ class SaleOrder(models.Model):
         order_list = []
         for order in self:
             if order.mp_awb_datas:
-                order_list.append(order.name)
+                order_list.append(str(order.id))
             elif order.mp_awb_url:
                 order.mp_awb_datas = base64.b64encode(requests.get(order.mp_awb_url).content)
-                order_list.append(order.name)
+                order_list.append(str(order.id))
             elif order.mp_awb_number:
                 if order.mp_account_id.mp_token_id.state == 'valid':
                     params = {'access_token': order.mp_account_id.mp_token_id.name}
@@ -355,7 +369,7 @@ class SaleOrder(models.Model):
                     awb_data = sp_order_v1.get_airways_bill(order_sn=order.mp_invoice_number)
                     order.mp_awb_url = awb_data.get(order.mp_invoice_number, False)
                     order.mp_awb_datas = base64.b64encode(requests.get(order.mp_awb_url).content)
-                    order_list.append(order.name)
+                    order_list.append(str(order.id))
             else:
                 pass
 
@@ -370,17 +384,24 @@ class SaleOrder(models.Model):
     # @api.multi
     @mp.shopee.capture_error
     def shopee_drop_off(self):
+        sp_order_v2 = False
         sale_order_obj = self.env['sale.order']
-        sp_account = False
-        for order in self:
-            if order.mp_account_id.mp_token_id.state == 'valid':
-                params = {'access_token': order.mp_account_id.mp_token_id.name}
-                sp_account = order.mp_account_id.shopee_get_account(**params)
-            else:
-                raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+        allowed_status = ['in_process']
+        order_statuses = self.mapped('mp_order_status')
+        if not all(order_status in allowed_status for order_status in order_statuses):
+            raise ValidationError(
+                "The status of your selected orders for shopee should be in {}".format(allowed_status))
 
-            if sp_account:
-                sp_order_v2 = ShopeeOrder(sp_account, sanitizers=sale_order_obj.get_sanitizers(self.marketplace))
+        if self[0].mp_account_id.mp_token_id.state == 'valid':
+            params = {'access_token': self[0].mp_account_id.mp_token_id.name}
+            sp_account = self[0].mp_account_id.shopee_get_account(**params)
+            sp_order_v2 = ShopeeOrder(
+                sp_account, sanitizers=sale_order_obj.get_sanitizers(self[0].mp_account_id.marketplace))
+        else:
+            raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
+
+        if sp_order_v2:
+            for order in self:
                 action_params = {
                     'order_sn': order.mp_external_id,
                     # 'package_number': order.sp_package_number,
@@ -393,7 +414,7 @@ class SaleOrder(models.Model):
                 action_status = sp_order_v2.action_ship_order(**action_params)
                 if action_status == "success":
                     order.action_confirm()
-                    time.sleep(3)
+                    time.sleep(1)
                     order.shopee_fetch_order()
 
     # @api.multi
@@ -445,10 +466,17 @@ class SaleOrder(models.Model):
             else:
                 raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
 
-    # @api.multi
-    def shopee_pickup(self):
+    @api.multi
+    def shopee_request_pickup(self):
         mp_shopee_shop_address_obj = self.env['mp.shopee.shop.address']
         mp_shopee_order_pickup_info_obj = self.env['mp.shopee.order.pickup.info']
+
+        allowed_status = ['in_process']
+        order_statuses = self.mapped('mp_order_status')
+        if not all(order_status in allowed_status for order_status in order_statuses):
+            raise ValidationError(
+                "The status of your selected orders for shopee should be in {}".format(allowed_status))
+
         for order in self:
             mp_account_ctx = order.mp_account_id.generate_context()
             sp_order_raw = json.loads(order.raw, strict=False)

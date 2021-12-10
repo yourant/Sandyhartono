@@ -17,8 +17,8 @@ class SaleOrderLine(models.Model):
         marketplace = 'shopee'
         mp_field_mapping = {
             'order_id': ('order_id', None),
-            'name': ('item_name', None),
-            'price_unit': ('model_original_price', None),
+            'mp_exid': ('mp_order_exid', None),
+            'mp_product_name': ('item_name', None),
             'sp_weight': ('weight', None),
             'product_uom_qty': ('model_quantity_purchased', None),
             'sp_discounted_price': ('model_discounted_price', None),
@@ -52,9 +52,21 @@ class SaleOrderLine(models.Model):
                 sku = data['model_sku']
             return sku
 
+        def _handle_price_unit(env, data):
+            order_component_configs = env['order.component.config'].sudo().search(
+                [('active', '=', True), ('mp_account_ids', 'in', env.context.get('mp_account_id'))])
+            for component_config in order_component_configs:
+                # Process to Remove Product First
+                for line in component_config.line_ids:
+                    if line.component_type == 'remove_product':
+                        if line.remove_discount:
+                            return data['model_discounted_price']
+            return data['model_original_price']
+
         mp_field_mapping.update({
             'product_id': ('item_info', _handle_product_id),
             'sp_sku': ('item_info', _handle_product_sku),
+            'price_unit': ('item_info', _handle_price_unit)
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))

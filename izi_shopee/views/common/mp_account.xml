@@ -13,10 +13,28 @@
           <group attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
             <field name="sp_partner_id" attrs="{'required': [('marketplace', '=', 'shopee')]}"/>
             <field name="sp_partner_key" password="True" attrs="{'required': [('marketplace', '=', 'shopee')]}"/>
+            <field name="sp_shop_id" attrs="{'invisible': [('sp_shop_id', '=', False)]}"/>
           </group>
         </xpath>
         <xpath expr="//group[@name='product_configuration']" position="inside">
-            <field name="sp_coins_product_id" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+          <field name="sp_coins_product_id" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+        </xpath>
+        <xpath expr="//group[@name='mp_webhook']" position="inside">
+          <group name='sp_webhook' attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+            <field name="sp_is_webhook_order"/>
+          </group>
+        </xpath>
+        <xpath expr="//page[@name='debug']" position="inside">
+          <group attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+            <field name="sp_log_token_ids">
+              <tree options="{'no_create': True}">
+                <field name="log_create_datetime" readonly="1"/>
+                <field name="json_request" readonly="1"/>
+                <field name="log_text" readonly="1"/>
+                <field name="status" readonly="1"/>
+              </tree>
+            </field>
+          </group>
         </xpath>
       </field>
     </record>

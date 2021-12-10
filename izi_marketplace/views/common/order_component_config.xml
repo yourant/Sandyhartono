@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Tree view for the menuitem -->
+        <record id="izi_marketplace.order_component_config_tree" model="ir.ui.view">
+            <field name="name">Order Component Config Tree View</field>
+            <field name="model">order.component.config</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form view for the menuitem -->
+        <record id="izi_marketplace.order_component_config_form" model="ir.ui.view">
+            <field name="name">Order Component Config Form View</field>
+            <field name="model">order.component.config</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="active"/>
+                            </group>
+                            <group>
+                                <field name="mp_account_ids" widget="many2many_tags"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Component Details">
+                                <field name="line_ids">
+                                    <tree>
+                                        <field name="name"/>
+                                        <field name="component_type"/>
+                                        <field name="percentage_value"/>
+                                        <field name="fixed_value"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="izi_marketplace.order_component_config_line_form" model="ir.ui.view">
+            <field name="name">Order Component Config Line Form View</field>
+            <field name="model">order.component.config.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="component_type"/>
+
+                            <!-- remove_product -->
+                            <field name="remove_product_ids" widget="many2many_tags" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_insurance" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_delivery" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_discount" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+                            <field name="remove_adjustment" attrs="{'invisible': [('component_type', '!=', 'remove_product')]}"/>
+
+                            <!-- add_product -->
+                            <field name="additional_product_id" attrs="{'invisible': [('component_type', '!=', 'add_product')]}"/>
+
+                            <!-- tax_line -->
+                            <field name="account_tax_id" attrs="{'invisible': [('component_type', '!=', 'tax_line')]}"/>
+
+                            <!--  -->
+                            <field name="percentage_value" attrs="{'invisible': [('component_type', 'in', ('remove_product') )]}"/>
+                            <field name="fixed_value" attrs="{'invisible': [('component_type', 'in', ('remove_product') )]}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

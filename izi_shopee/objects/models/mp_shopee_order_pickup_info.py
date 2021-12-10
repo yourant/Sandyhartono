@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
-from datetime import datetime
+from datetime import datetime, timedelta
 from odoo import api, fields, models
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
 
@@ -44,6 +44,7 @@ class MPShopeeOrderPickupInfo(models.Model):
             if start_datetime and end_datetime:
                 time = start_datetime + '-' + end_datetime
             elif start_datetime and not end_datetime:
+                start_datetime = rec.start_datetime + timedelta(hours=7).strftime('%d-%m-%y, %H:%M')
                 time = start_datetime
 
             date_time = day+', '+time
@@ -92,22 +93,23 @@ class MPShopeeOrderPickupInfo(models.Model):
             time_text = data['time_text']
             date = datetime.strptime(data['date_from_timestamp'], DEFAULT_SERVER_DATETIME_FORMAT)
             end_datetime = None
-            end_time = time_text.split('-')[1]
-            if 'am' in end_time or 'pm' in end_time:
-                if 'am' in end_time:
-                    end_time = end_time.replace('am', ' AM')
-                elif 'pm' in end_time:
-                    end_time = end_time.replace('pm', ' PM')
-                end_time_obj = datetime.strptime(end_time, '%I:%M %p')
-                end_hour = end_time_obj.hour
-                end_minute = end_time_obj.minute
-                end_second = end_time_obj.second
-            else:
-                end_hour = int(end_time.split(':')[0])
-                end_minute = int(end_time.split(':')[1])
-                end_second = int(end_time.split(':')[2]) if len(end_time.split(':')) > 2 else 0
+            if time_text != 'Now':
+                end_time = time_text.split('-')[1]
+                if 'am' in end_time or 'pm' in end_time:
+                    if 'am' in end_time:
+                        end_time = end_time.replace('am', ' AM')
+                    elif 'pm' in end_time:
+                        end_time = end_time.replace('pm', ' PM')
+                    end_time_obj = datetime.strptime(end_time, '%I:%M %p')
+                    end_hour = end_time_obj.hour
+                    end_minute = end_time_obj.minute
+                    end_second = end_time_obj.second
+                else:
+                    end_hour = int(end_time.split(':')[0])
+                    end_minute = int(end_time.split(':')[1])
+                    end_second = int(end_time.split(':')[2]) if len(end_time.split(':')) > 2 else 0
 
-            end_datetime = date.replace(hour=end_hour, minute=end_minute, second=end_second)
+                end_datetime = date.replace(hour=end_hour, minute=end_minute, second=end_second)
 
             return end_datetime
 

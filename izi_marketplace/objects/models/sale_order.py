@@ -42,13 +42,13 @@ class SaleOrder(models.Model):
 
     # MP Order Transaction & Payment
     mp_invoice_number = fields.Char(string="MP Invoice Number", required=False)
-    mp_payment_method_info = fields.Char(string="Payment Method", required=False, readonly=True)
-    mp_payment_date = fields.Datetime(string="Order Payment Date", readonly=True)
-    mp_order_date = fields.Datetime(string="Marketplace Order Date", readonly=True)
-    mp_order_last_update_date = fields.Datetime(string="Order Last Update Date", readonly=True)
+    mp_payment_method_info = fields.Char(string="MP Payment Method", required=False, readonly=True)
+    mp_payment_date = fields.Datetime(string="MP Order Payment Date", readonly=True)
+    mp_order_date = fields.Datetime(string="MP Order Date", readonly=True)
+    mp_order_last_update_date = fields.Datetime(string="MP Order Last Update Date", readonly=True)
     mp_accept_deadline = fields.Datetime(string="Maximum Confirmation Date", readonly=True)
-    mp_cancel_reason = fields.Char(string='Order Cancel Reason', readonly=True)
-    mp_order_notes = fields.Text(string='Order Notes', readonly=True)
+    mp_cancel_reason = fields.Char(string='MP Order Cancel Reason', readonly=True)
+    mp_order_notes = fields.Text(string='MP Order Notes', readonly=True)
 
     # MP Order Shipment
     mp_awb_number = fields.Char(string="AWB Number", required=False)
@@ -123,19 +123,13 @@ class SaleOrder(models.Model):
     @api.model
     def _finish_create_records(self, records):
         records = super(SaleOrder, self)._finish_create_records(records)
-        records.generate_delivery_line()
-        records.generate_insurance_line()
-        records.generate_global_discount_line()
-        records.generate_adjusment_line()
+        records = self.process_order_component_config(records)
         return records
 
     @api.model
     def _finish_update_records(self, records):
-        records = super(SaleOrder, self)._finish_update_records(records)
-        records.generate_delivery_line()
-        records.generate_insurance_line()
-        records.generate_global_discount_line()
-        records.generate_adjusment_line()
+        records = super(SaleOrder, self)._finish_create_records(records)
+        records = self.process_order_component_config(records)
         return records
 
     # @api.multi
@@ -247,7 +241,90 @@ class SaleOrder(models.Model):
             if hasattr(order, '%s_generate_adjusment_line' % order.marketplace):
                 getattr(order, '%s_generate_adjusment_line' % order.marketplace)()
 
-    # @api.multi
+    @api.multi
+    def process_order_component_config(self, records):
+        if records.exists():
+            records = records.exists()
+            order_component_configs = self.env['order.component.config'].sudo().search(
+                [('active', '=', True), ('mp_account_ids', 'in', self._context.get('mp_account_id'))])
+            generate_delivery = True
+            generate_discount = True
+            generate_insurance = True
+            generate_adjusment = True
+            for component_config in order_component_configs:
+                # Process to Remove Product First
+                for line in component_config.line_ids:
+                    if line.component_type == 'remove_product':
+                        if line.remove_delivery:
+                            generate_delivery = False
+                        if line.remove_discount:
+                            generate_discount = False
+                        if line.remove_insurance:
+                            generate_insurance = False
+                        if line.remove_adjustment:
+                            generate_adjusment = False
+                        if line.remove_product_ids.ids:
+                            for record in records:
+                                for order_line in record.order_line:
+                                    if order_line.product_id.id in line.remove_product_ids.ids:
+                                        order_line.unlink()
+                # Then Add Tax
+                for line in component_config.line_ids:
+                    if line.component_type == 'tax_line':
+                        for record in records:
+                            for order_line in record.order_line:
+                                if order_line.get('is_discount', False) or order_line.get('is_delivery', False) or order_line.get('is_insurance', False):
+                                    continue
+                                if line.account_tax_id and line.account_tax_id.amount_type == 'percent':
+                                    percentage = line.account_tax_id.amount
+                                    if percentage > 0:
+                                        price_unit = order_line.get('price_unit')
+                                        new_price = (price_unit * 100) / (100 + percentage)
+                                        record.write({
+                                            'order_line': [(0, 0, {
+                                                'price_unit': new_price,
+                                                'tax_id': [(6, 0, [line.account_tax_id.id])],
+                                            })]
+                                        })
+                # Then Add Product
+                for line in component_config.line_ids:
+                    if line.component_type == 'add_product':
+                        # Calculate Total Price
+                        amount_total = 0
+                        for record in records:
+                            for order_line in record.order_line:
+                                amount_total += order_line.get('price_total')
+
+                        if line.additional_product_id:
+                            price_unit = 0
+                            if line.fixed_value:
+                                price_unit = line.fixed_value
+                            elif line.percentage_value:
+                                price_unit = round(line.percentage_value * amount_total / 100)
+                            record.write({
+                                'order_line': [(0, 0, {
+                                    'name': line.name,
+                                    'product_id': line.additional_product_id.id,
+                                    'product_uom_qty': 1.0,
+                                    'price_subtotal': price_unit,
+                                    'price_total': price_unit,
+                                    'price_unit': price_unit,
+                                    'discount': 0.0,
+                                    'is_discount': True,
+                                })]
+                            })
+
+            if generate_delivery:
+                records.generate_delivery_line()
+            if generate_discount:
+                records.generate_global_discount_line()
+            if generate_insurance:
+                records.generate_insurance_line()
+            if generate_adjusment:
+                records.generate_adjusment_line()
+        return records
+
+    @api.multi
     def accept_order(self):
         for order in self:
             if hasattr(order, '%s_accept_order' % order.marketplace):
@@ -289,6 +366,34 @@ class SaleOrder(models.Model):
                     return getattr(self, '%s_get_booking_code' % marketplace[0])()
                 elif hasattr(self, '%s_get_awb_num' % marketplace[0]):
                     return getattr(self, '%s_get_awb_num' % marketplace[0])()
+            else:
+                raise ValidationError('Please select the same marketplace account.')
+        else:
+            raise ValidationError('Please select the same marketplace channel.')
+
+    @api.multi
+    def request_pickup(self):
+        marketplace = self.mapped('marketplace')
+        mp_account_ids = self.mapped('mp_account_id.id')
+        if marketplace.count(marketplace[0]) == len(marketplace):
+            if mp_account_ids.count(mp_account_ids[0]) == len(mp_account_ids):
+                if hasattr(self, '%s_request_pickup' % marketplace[0]):
+                    return getattr(self, '%s_request_pickup' % marketplace[0])()
+            else:
+                raise ValidationError('Please select the same marketplace account.')
+        else:
+            raise ValidationError('Please select the same marketplace channel.')
+
+    @api.multi
+    def drop_off(self):
+        marketplace = self.mapped('marketplace')
+        mp_account_ids = self.mapped('mp_account_id.id')
+        if marketplace.count(marketplace[0]) == len(marketplace):
+            if mp_account_ids.count(mp_account_ids[0]) == len(mp_account_ids):
+                if hasattr(self, '%s_drop_off' % marketplace[0]):
+                    return getattr(self, '%s_drop_off' % marketplace[0])()
+                else:
+                    return ValidationError('The feature is not available now for %s' % marketplace[0])
             else:
                 raise ValidationError('Please select the same marketplace account.')
         else:

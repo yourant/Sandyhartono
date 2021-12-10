@@ -3,10 +3,12 @@
 import hashlib
 import json
 import logging
+import requests
 
 import pytz
 from odoo import api, fields, models, sql_db
 from odoo.exceptions import ValidationError
+from odoo.tools import config
 
 from odoo.addons.izi_marketplace.objects.utils.tools import json_digger, StringIteratorIO, clean_csv_value
 
@@ -508,9 +510,9 @@ class MarketplaceBase(models.AbstractModel):
 
     @api.model
     def create_records(self, raw_data, mp_data, multi=False):
+        mp_log_error_obj = self.env['mp.log.error'].sudo()
         mp_account_obj = self.env['mp.account']
         record_obj = self.env[self._name]
-
         context = self._context
         if not context.get('mp_account_id'):
             raise ValidationError("Please define mp_account_id in context!")
@@ -528,22 +530,71 @@ class MarketplaceBase(models.AbstractModel):
                          "Creating %d record(s) of %s started... Please wait!" % (len(mp_datas), record_obj._name),
                          notify=True, notif_sticky=True)
 
+            # Prepare Server Log
+            mp_logs = mp_log_error_obj.search([('model_name', '=', self._name),
+                                               ('mp_log_status', '=', 'failed'),
+                                               ('mp_account_id', '=', mp_account.id)])
+            mp_logs_by_exid = {}
+            for mp_log in mp_logs:
+                mp_logs_by_exid[mp_log.mp_external_id] = mp_log
             for index, mp_data in enumerate(mp_datas):
-                records |= self.create_records(raw_datas[index], mp_data)
-                self._logger(marketplace,
-                             "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
+                message_error = False
+                mp_exid = mp_data.get('mp_exid', False)
+                try:
+                    records |= self.create_records(raw_datas[index], mp_data)
+                    self._logger(marketplace,
+                                 "%s: Created %d of %d" % (record_obj._name, len(records), len(mp_datas)))
+                except Exception as e:
+                    self._logger(marketplace, 'Failed Create / Update %s. Cause %s' %
+                                 (self._name, str(e.name)))
+                    if not context.get('skip_error'):
+                        raise ValidationError(str(e.name))
+                    else:
+                        message_error = str(e.name)
+
+                # create log message to mp.log.error
+                notes = mp_data.get('mp_product_name', False)
+                notes = mp_data.get('name', False) if not notes else notes
+                if message_error:
+                    log_values = {
+                        'name': message_error,
+                        'model_name': self._name,
+                        'mp_log_status': 'failed',
+                        'notes': notes,
+                        'mp_external_id': mp_exid,
+                        'mp_account_id': mp_account.id,
+                        'last_retry_time': fields.Datetime.now(),
+                    }
+                    if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
+                        if isinstance(notes, str):
+                            if mp_logs_by_exid[mp_exid].notes == notes:
+                                mp_logs_by_exid[mp_exid].write(log_values)
+                    else:
+                        mp_log_error_obj.create(log_values)
+                else:
+                    if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
+                        if isinstance(notes, str):
+                            if mp_logs_by_exid[mp_exid].notes == notes:
+                                mp_logs_by_exid[mp_exid].write({
+                                    'mp_log_status': 'success',
+                                    'last_retry_time': fields.Datetime.now(),
+                                })
 
             return self.with_context(context)._finish_create_records(records)
 
-        sanitized_data, values = self.mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
-        record = record_obj.create(values)
-        self._cr.commit()
-        self._logger(marketplace, log_message.format(**{
-            'model': record_obj._name,
-            'rec_id': record.id,
-            'rec_name': record.display_name
-        }))
-        return record
+        try:
+            sanitized_data, values = self.with_context(
+                **{'final': True}).mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
+            record = record_obj.create(values)
+            self._cr.commit()
+            self._logger(marketplace, log_message.format(**{
+                'model': record_obj._name,
+                'rec_id': record.id,
+                'rec_name': record.display_name
+            }))
+            return record
+        except Exception as e:
+            raise ValidationError(str(e.name))
 
     @api.model
     def _finish_create_records(self, records):

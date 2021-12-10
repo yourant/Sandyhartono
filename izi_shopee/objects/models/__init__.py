@@ -12,3 +12,5 @@ from . import mp_product_variant
 from . import sale_order
 from . import sale_order_line
 from . import mp_shopee_order_pickup_info
+from . import mp_shopee_log_token
+from . import mp_webhook_order

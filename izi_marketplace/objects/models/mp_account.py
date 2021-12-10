@@ -33,6 +33,11 @@ class MarketplaceAccount(models.Model):
         ('authenticated', 'Authenticated'),
     ]
 
+    MP_WEBHOOK_STATES = [
+        ('registered', 'Registered'),
+        ('no_register', 'No Register')
+    ]
+
     READONLY_STATES = {
         'authenticated': [('readonly', True)],
         'authenticating': [('readonly', True)],
@@ -82,13 +87,16 @@ class MarketplaceAccount(models.Model):
 
     debug_force_update = fields.Boolean(string="Force Update", default=False,
                                         help="Force update even there is no changes from marketplace")
-    debug_force_update_raw = fields.Boolean(string="Force Update Raw", default=False, help="Force update raw field.")
-    debug_store_product_img = fields.Boolean(string="Image Binary Convert",
+    debug_force_update_raw = fields.Boolean(string="Force Update Raw Only", default=False,
+                                            help="Force update raw field only")
+    debug_store_product_img = fields.Boolean(string="Store Product Image",
                                              default=False, help="Store product image as binary into the database")
     debug_product_limit = fields.Integer(string="Product Import Limit", required=True, default=0,
                                          help="Maximum number to import product, set 0 for unlimited!")
     debug_order_limit = fields.Integer(string="Order Import Limit", required=True, default=0,
                                        help="Maximum number to import order, set 0 for unlimited!")
+    debug_skip_error = fields.Boolean(string="Skip Error", default=False,
+                                      help="Skip error when processing records from marketplace")
 
     cron_id = fields.Many2one(comodel_name='ir.cron', string='Order Scheduler')
     cron_user_id = fields.Many2one('res.users', string='Scheduler User', related='cron_id.user_id')
@@ -101,7 +109,11 @@ class MarketplaceAccount(models.Model):
                                            ('weeks', 'Weeks'),
                                            ('months', 'Months')], string='Interval Unit',
                                           default='minutes', related='cron_id.interval_type')
-    cron_active = fields.Boolean(string='Active Scheduler', related='cron_id.active', readonly=False)
+    cron_active = fields.Boolean(string='Active Scheduler', related='cron_id.active')
+    mp_log_error_ids = fields.One2many(comodel_name='mp.log.error',
+                                       inverse_name='mp_account_id', string='Marketplace Log Error')
+    mp_webhook_state = fields.Selection(string="Webhook Status", selection=MP_WEBHOOK_STATES,
+                                        default="no_register", readonly=True)
 
     @api.model
     def create(self, vals):
@@ -171,6 +183,7 @@ class MarketplaceAccount(models.Model):
             'store_product_img': self.debug_store_product_img,
             'product_limit': self.debug_product_limit,
             'order_limit': self.debug_order_limit,
+            'skip_error': self.debug_skip_error,
         })
         return context
 
@@ -197,7 +210,19 @@ class MarketplaceAccount(models.Model):
         if hasattr(self, '%s_get_products' % self.marketplace):
             return getattr(self, '%s_get_products' % self.marketplace)()
 
-    # @api.multi
+    @api.multi
+    def register_webhooks(self):
+        self.ensure_one()
+        if hasattr(self, '%s_register_webhooks' % self.marketplace):
+            return getattr(self, '%s_register_webhooks' % self.marketplace)()
+
+    @api.multi
+    def unregister_webhooks(self):
+        self.ensure_one()
+        if hasattr(self, '%s_unregister_webhooks' % self.marketplace):
+            return getattr(self, '%s_unregister_webhooks' % self.marketplace)()
+
+    @api.multi
     def action_map_product(self):
         product_map_obj = self.env['mp.map.product']
 

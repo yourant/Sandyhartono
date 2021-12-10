@@ -32,4 +32,5 @@ class WizardTokopediaOrderConfirmShipping(models.TransientModel):
 
             action_status = tp_order.action_confirm_shipping(**kwargs)
             if action_status == "Success":
-                order.tokopedia_fetch_order()
+                if order.mp_account_id.mp_webhook_state == 'no_register':
+                    order.tokopedia_fetch_order()

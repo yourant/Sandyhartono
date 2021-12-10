@@ -18,6 +18,12 @@
             <field name="tp_shop_id" attrs="{'invisible': [('tp_shop_id', '=', False)]}"/>
           </group>
         </xpath>
+        <xpath expr="//group[@name='mp_webhook']" position="inside">
+          <group name='tp_webhook' attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
+            <field name="tp_webhook_secret" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_is_webhook_order"/>
+          </group>
+        </xpath>
         <xpath expr="//page[@name='mp_credential']" position="after">
           <page string="Encryption" name="tp_encryption" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
             <field name="tp_public_key"/>

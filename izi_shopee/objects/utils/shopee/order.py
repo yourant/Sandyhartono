@@ -233,6 +233,36 @@ class ShopeeOrder(ShopeeAPI):
         else:
             return 'success'
 
+    def action_batch_ship_order(self, **kwargs):
+        return getattr(self, '%s_batch_ship_order' % self.api_version)(**kwargs)
+
+    def v2_batch_ship_order(self, **kwargs):
+        payload = {
+            'order_list ': [],
+        }
+        for order in kwargs.get('order_list'):
+            payload['order_list'].append({
+                'order_sn': order
+            })
+        if kwargs.get('dropoff', False):
+            payload.update({'dropoff': kwargs.get('dropoff')})
+        elif kwargs.get('pickup', False):
+            payload.update({'pickup': kwargs.get('pickup')})
+        prepared_request = self.build_request('batch_ship_order',
+                                              self.sp_account.partner_id,
+                                              self.sp_account.partner_key,
+                                              self.sp_account.shop_id,
+                                              self.sp_account.access_token,
+                                              ** {
+                                                  'json': payload
+                                              })
+        response = self.process_response('batch_ship_order', self.request(**prepared_request), no_sanitize=True)
+        raw_data = response.json()
+        if raw_data['error']:
+            return 'failed'
+        else:
+            return 'success'
+
     def action_reject_order(self, **kwargs):
         return getattr(self, '%s_reject_order' % self.api_version)(**kwargs)
 
