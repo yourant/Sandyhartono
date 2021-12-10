@@ -50,13 +50,5 @@
       <field name="res_model">order.component.config</field>
       <field name="view_mode">tree,form</field>
     </record>
-
-    <record id="izi_marketplace.action_window_wiz_recompute_mpxid" model="ir.actions.act_window">
-      <field name="name">Recompute Marketplace External ID</field>
-      <field name="type">ir.actions.act_window</field>
-      <field name="res_model">wiz.recompute_mpxid</field>
-      <field name="view_mode">form</field>
-      <field name="target">new</field>
-    </record>
   </data>
 </odoo>

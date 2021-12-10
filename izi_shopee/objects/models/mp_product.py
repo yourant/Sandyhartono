@@ -12,13 +12,6 @@ class MarketplaceProduct(models.Model):
     sp_item_status = fields.Char(string="Shopee Product Status", readonly=True)
     sp_has_variant = fields.Boolean(string="Shopee is Variant", readonly=True)
 
-    # @classmethod
-    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-    #     if not mp_external_id_fields:
-    #         mp_external_id_fields = []
-
-    #     mp_external_id_fields.append(('shopee', 'sp_product_id'))
-    #     super(MarketplaceProduct, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):

@@ -125,4 +125,3 @@ class MPTokopediaShopLogistic(models.Model):
     def onchange_shop_id(self):
         logistic_ids = self.shop_id.shop_logistic_ids.mapped('logistic_id').ids
         return {'domain': {'logistic_id': [('id', 'not in', logistic_ids)]}}
-

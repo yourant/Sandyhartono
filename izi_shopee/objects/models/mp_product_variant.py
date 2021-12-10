@@ -12,13 +12,6 @@ class MPProductVariant(models.Model):
     sp_variant_id = fields.Char(string='Product Variant External ID')
     sp_variant_image_id = fields.Char(string='Product Variant Image ID')
 
-    # @classmethod
-    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-    #     if not mp_external_id_fields:
-    #         mp_external_id_fields = []
-
-    #     mp_external_id_fields.append(('shopee', 'sp_variant_id'))
-    #     super(MPProductVariant, cls)._add_rec_mp_external_id(mp_external_id_fields)
 
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):

@@ -10,14 +10,6 @@ class MarketplaceProduct(models.Model):
     tp_product_id = fields.Char(string="Tokopedia Product ID", readonly=True)
     tp_has_variant = fields.Boolean(string="Tokopedia Product has Variant", readonly=True)
 
-    # @classmethod
-    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-    #     if not mp_external_id_fields:
-    #         mp_external_id_fields = []
-
-    #     mp_external_id_fields.append(('tokopedia', 'tp_product_id'))
-    #     super(MarketplaceProduct, cls)._add_rec_mp_external_id(mp_external_id_fields)
-
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
         if not mp_field_mappings:

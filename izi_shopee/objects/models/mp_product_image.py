@@ -9,13 +9,6 @@ class MPProductImage(models.Model):
 
     sp_image_id = fields.Char(string='Shopee Product Image External ID')
 
-    # @classmethod
-    # def _build_model_attributes(cls, pool):
-    #     cls._rec_mp_external_id = dict(cls._rec_mp_external_id, **{
-    #         'shopee': 'sp_image_id'
-    #     })
-
-    #     super(MPProductImage, cls)._build_model_attributes(pool)
 
     @api.model
     def shopee_get_sanitizers(self, mp_field_mapping):

@@ -67,14 +67,6 @@ class SaleOrder(models.Model):
     def _compute_mp_order_status(self):
         super(SaleOrder, self)._compute_mp_order_status()
 
-    # @classmethod
-    # def _add_rec_mp_external_id(cls, mp_external_id_fields=None):
-    #     if not mp_external_id_fields:
-    #         mp_external_id_fields = []
-
-    #     mp_external_id_fields.append(('tokopedia', 'tp_order_id'))
-    #     super(SaleOrder, cls)._add_rec_mp_external_id(mp_external_id_fields)
-
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
         if not mp_field_mappings:
