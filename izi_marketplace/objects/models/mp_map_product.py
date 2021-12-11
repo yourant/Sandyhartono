@@ -76,7 +76,7 @@ class MarketplaceMapProduct(models.Model):
         if self.mp_account_id and not self.name:
             self.name = 'Product Mapping - %s' % self.mp_account_id.name
 
-    # @api.multi
+     # @api.multi
     def get_product(self, record):
         product_obj = self.env['product.product']
 
@@ -92,15 +92,16 @@ class MarketplaceMapProduct(models.Model):
 
         for field_mapping in field_mappings:
             domain = []
-            if self.debug_force_mapping_without_company:
-                domain.append(('company_id', '=?', self.company_id.id))
-            else:
+            if not self.debug_force_mapping_without_company:
                 domain.append(('company_id', '=', self.company_id.id))
             key = field_mapping.product_field_id.name
             value = getattr(record, getattr(field_mapping, lookup_field).name)
             if not value:
                 domain.append(('id', '=', 0))
-            domain.append((key, '=', value))
+            if field_mapping.product_field_id.ttype == 'char':
+                domain.append((key, '=ilike', value))
+            else:
+                domain.append((key, '=', value))
             _logger.info("Looking for product using domain: %s" % domain)
             product = product_obj.search(domain)
             if product.exists() and len(product) == 1:
