@@ -127,6 +127,9 @@
                 <field name="mp_amount_total"/>
                 <field name="mp_expected_income"/>
               </group>
+              <group string="Additional Information">
+                <field name="mp_order_notes" readonly="1" string="Notes"/>
+              </group>
             </group>
           </page>
         </xpath>
