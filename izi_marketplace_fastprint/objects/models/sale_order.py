@@ -27,7 +27,12 @@ class SaleOrder(models.Model):
             values.update({
                 'pricelist_id': mp_account.pricelist_id.id,
             })
-
+        delivery_carrier = self.env['delivery.carrier'].sudo().search(
+            [('name', '=ilike', values.get('mp_delivery_carrier_name'))], limit=1)
+        if delivery_carrier:
+            values.update({
+                'carrier_id': delivery_carrier.id,
+            })
         return sanitized_data, values
 
     @api.model
