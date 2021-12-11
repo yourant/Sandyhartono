@@ -19,7 +19,7 @@ class SaleOrderLine(models.Model):
             'order_id': ('order_id', None),
             'mp_exid': ('mp_order_exid', None),
             'mp_product_name': ('item_name', None),
-            'sp_weight': ('weight', None),
+            'mp_product_weight': ('weight', None),
             'product_uom_qty': ('model_quantity_purchased', None),
             'sp_discounted_price': ('model_discounted_price', None),
             'sp_original_price': ('model_original_price', None),

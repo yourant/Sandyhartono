@@ -23,7 +23,7 @@ class SaleOrderLine(models.Model):
             'mp_product_name': ('product_name', None),
             'price_unit': ('product_price', None),
             'tp_subtotal_price': ('subtotal_price', None),
-            'tp_weight': ('weight', None),
+            'mp_product_weight': ('weight', None),
             'tp_total_weight': ('total_weight', None),
             'product_uom_qty': ('quantity', None),
             'tp_quantity_deliver': ('quantity_deliver', None),

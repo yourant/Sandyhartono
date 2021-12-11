@@ -29,6 +29,7 @@
         # third party addons
 
         # developed addons
+        'izi_marketplace',
     ],
     "data": [
         # group
@@ -40,6 +41,8 @@
         # 'views/action/action.xml',
 
         # view
+        'views/common/mp_account.xml',
+        'views/common/sale_order.xml',
 
         # wizard
 

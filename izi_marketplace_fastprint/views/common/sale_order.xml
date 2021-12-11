@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record model="ir.ui.view" id="izi_marketplace_fastprint.view_order_form">
+            <field name="name">sale.order.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="izi_marketplace.form_sale_order"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='delivery_info']" position="inside">
+                    <field name="mp_order_weight" readonly="1"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
