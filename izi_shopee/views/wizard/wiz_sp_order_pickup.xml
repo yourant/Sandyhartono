@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="izi_shopee.form_wiz_sp_order_pickup" model="ir.ui.view">
+            <field name="name">Wizard Shopee Order Pickup Form View</field>
+            <field name="model">wiz.sp_order_pickup</field>
+            <field name="arch" type="xml">
+                <form string="Wizard SP Order Reject">
+                    <sheet>
+                        <group>
+                            <field name="order_ids" widget="many2many_tags" readonly="1" force_save="1"/>
+                            <field name="address_id"/>
+                            <field name="pickup_id" domain="[('order_id', 'in', order_ids), ('address_id', '=', address_id)]" options="{'no_open': True, 'no_create': True}"/>
+                        </group>
+                        <footer>
+                            <button name="confirm" type="object" string="Confirm" class="btn-primary" confirm="Are you sure to pickup these orders?"/>
+                            <button string="Cancel" class="btn-secondary" special="cancel"/>
+                        </footer>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

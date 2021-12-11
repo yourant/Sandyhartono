@@ -1,0 +1,7 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"izi_blibli.access_mp_blibli_logistic_r_mp_user","MP BLI Logistic Access for MP User: R","izi_blibli.model_mp_blibli_logistic","izi_marketplace.group_mp_user",1,0,0,0
+"izi_blibli.access_mp_blibli_shop_r_mp_user","MP BLI Shop Access for MP User: R","izi_blibli.model_mp_blibli_shop","izi_marketplace.group_mp_user",1,0,0,0
+"izi_blibli.access_mp_blibli_shop_logistic_r_mp_user","MP BLI Shop Logistic Access for MP User: R","izi_blibli.model_mp_blibli_shop_logistic","izi_marketplace.group_mp_user",1,0,0,0
+"izi_blibli.access_mp_blibli_shop_crud_mp_manager","MP BLI Shop Access for MP Manager: CRUD","izi_blibli.model_mp_blibli_shop","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_blibli.access_mp_blibli_logistic_crud_mp_manager","MP BLI Logistic Access for MP Manager: CRUD","izi_blibli.model_mp_blibli_logistic","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_blibli.access_mp_blibli_shop_logistic_crud_mp_manager","MP BLI Shop Logistic Access for MP Manager: CRUD","izi_blibli.model_mp_blibli_shop_logistic","izi_marketplace.group_mp_manager",1,1,1,1

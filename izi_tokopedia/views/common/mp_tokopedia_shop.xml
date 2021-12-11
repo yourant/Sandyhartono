@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_mp_tokopedia_shop" model="ir.ui.view">
+      <field name="name">Marketplace Tokopedia Shop Form View</field>
+      <field name="model">mp.tokopedia.shop</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Tokopedia Shop">
+          <header>
+            <button name="get_active_logistics" string="Get Active Logistics" type="object"
+                    context="{'mp_account_id': mp_account_id}"/>
+          </header>
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+              <img alt="Tokopedia" class="mp-account-img" src="/izi_tokopedia/static/src/img/tp.png"/>
+            </div>
+            <field name="logo" widget="image_url" class="oe_avatar" readonly="1"/>
+            <div class="oe_title">
+              <label for="shop_name" class="oe_edit_only"/>
+              <h1>
+                <field name="shop_name"/>
+              </h1>
+            </div>
+            <group>
+              <group>
+                <field name="shop_id"/>
+                <field name="mp_account_id"/>
+                <field name="shop_url" widget="url"/>
+              </group>
+              <group>
+                <field name="user_id"/>
+                <field name="status"/>
+                <field name="date_shop_created"/>
+              </group>
+            </group>
+            <notebook>
+              <page string="Active Logistics">
+                <field name="shop_logistic_ids" mode="kanban"
+                       context="{'default_shop_id': active_id, 'default_mp_account_id': mp_account_id}">
+                  <kanban create="0">
+                    <field name="shop_id"/>
+                    <field name="mp_account_id"/>
+                    <field name="logistic_id"/>
+                    <field name="service_ids"/>
+                    <field name="name"/>
+                    <field name="logo"/>
+                    <templates>
+                      <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                          <!--                          <a t-if="!read_only_mode" type="delete" class="fa fa-times pull-right"/>-->
+                          <div class="o_kanban_image">
+                            <img t-if="record.logo.raw_value" t-att-src="record.logo.raw_value"
+                                 class="oe_kanban_avatar" style="max-height: 50px;"/>
+                          </div>
+                          <div class="oe_kanban_details">
+                            <field name="name"/>
+                          </div>
+                        </div>
+                      </t>
+                    </templates>
+                  </kanban>
+                  <form string="Marketplace Tokopedia Shop Logistic">
+                    <sheet>
+                      <!--suppress OdooXml -->
+                      <field name="id" invisible="1"/>
+                      <field name="shop_id" invisible="1"/>
+                      <field name="mp_account_id" invisible="1"/>
+                      <group>
+                        <!--suppress PyUnresolvedReferences -->
+                        <field name="logistic_id" attrs="{'readonly': [('id', '!=', False)]}" force_save="1"
+                               options="{'no_create': True}"/>
+                      </group>
+                      <separator string="Active Service(s)" attrs="{'invisible': [('logistic_id', '=', False)]}"/>
+                      <field name="service_ids" readonly="1" options="{'no_create': True}"
+                             context="{'logistic_id': logistic_id}"
+                             nolabel="1" attrs="{'invisible': [('logistic_id', '=', False)]}"/>
+                    </sheet>
+                  </form>
+                </field>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="md5sign"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

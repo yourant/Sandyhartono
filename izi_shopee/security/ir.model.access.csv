@@ -1,0 +1,14 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"izi_shopee.access_mp_shopee_shop_r_mp_user","MP SP Shop Access for MP User: R","izi_shopee.model_mp_shopee_shop","izi_marketplace.group_mp_user",1,0,0,0
+"izi_shopee.access_mp_shopee_shop_logistic_r_mp_user","MP SP Shop Logistic Access for MP User: R","izi_shopee.model_mp_shopee_shop_logistic","izi_marketplace.group_mp_user",1,0,0,0
+"izi_shopee.access_mp_shopee_logistic_r_mp_user","MP SP Logistic Access for MP User: R","izi_shopee.model_mp_shopee_logistic","izi_marketplace.group_mp_user",1,0,0,0
+"izi_shopee.access_mp_shopee_order_pickup_info_crud_mp_user","MP SP Order Pickup Info Access for MP User: CRUD","izi_shopee.model_mp_shopee_order_pickup_info","izi_marketplace.group_mp_user",1,1,1,1
+"izi_shopee.access_mp_shopee_shop_address_crud_mp_user","MP SP Shop Address Access for MP User: CRUD","izi_shopee.model_mp_shopee_shop_address","izi_marketplace.group_mp_user",1,1,1,1
+"izi_shopee.access_mp_shopee_log_token_crud_mp_user","MP SP Log Token for MP User: CRUD","izi_shopee.model_mp_shopee_log_token","izi_marketplace.group_mp_user",1,1,1,1
+
+"izi_shopee.access_mp_shopee_shop_crud_mp_manager","MP SP Shop Access for MP Manager: CRUD","izi_shopee.model_mp_shopee_shop","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_shopee.access_mp_shopee_shop_logistic_crud_mp_manager","MP SP Shop Logistic Access for MP Manager: CRUD","izi_shopee.model_mp_shopee_shop_logistic","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_shopee.access_mp_shopee_logistic_crud_mp_manager","MP SP Logistic Access for MP Manager: CRUD","izi_shopee.model_mp_shopee_logistic","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_shopee.access_mp_shopee_order_pickup_info_crud_mp_manager","MP SP Order Pickup Info Access for MP Manager: CRUD","izi_shopee.model_mp_shopee_order_pickup_info","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_shopee.access_mp_shopee_shop_address_crud_mp_manager","MP SP Shop Address Access for MP Manager: CRUD","izi_shopee.model_mp_shopee_shop_address","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_shopee.access_mp_shopee_log_token_crud_mp_manager","MP SP Log Token Access for MP Manager: CRUD","izi_shopee.model_mp_shopee_log_token","izi_marketplace.group_mp_manager",1,1,1,1

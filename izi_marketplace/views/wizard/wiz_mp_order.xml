@@ -1,0 +1,33 @@
+<odoo>
+  <record id="izi_marketplace.form_wiz_mp_order" model="ir.ui.view">
+    <field name="name">Wizard Marketplace Order Form View</field>
+    <field name="model">wiz.mp.order</field>
+    <field name="arch" type="xml">
+      <form string="Wizard Marketplace Order">
+        <field name="mp_account_id" invisible="1"/>
+        <group>
+          <field name="params"/>
+          <field name="use_interval" attrs="{'invisible': [('params', '!=', 'by_date_range')]}"/>
+          <field name="mp_invoice_number"
+                 attrs="{'invisible': [('params', '!=', 'by_mp_invoice_number')],
+                        'required': [('params', '=', 'by_mp_invoice_number')]}"/>
+        </group>
+        <group attrs="{'invisible': [('params', '!=', 'by_date_range')]}">
+          <group>
+            <field name="interval" attrs="{'invisible': [('use_interval', '=', False)]}"/>
+            <field name="from_date" attrs="{'required': [('params', '=', 'by_date_range')]}"/>
+          </group>
+          <group>
+            <field name="interval_type" attrs="{'invisible': [('use_interval', '=', False)]}"/>
+            <field name="to_date" attrs="{'required': [('params', '=', 'by_date_range')]}"/>
+          </group>
+        </group>
+        <footer>
+          <button name="get_order" string="Get Order" type="object" class="btn-primary"
+                  context="{'close_notifications_and_wizard': True}"/>
+          <button string="Cancel" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+</odoo>

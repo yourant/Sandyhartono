@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data noupdate="0">
+    <function model="mp.base" name="enable_currencies">
+      <value eval="['base.IDR']"/>
+    </function>
+    <function model="mp.base" name="enable_group_technical_features">
+      <value eval="['sale.group_delivery_invoice_address']"/>
+    </function>
+  </data>
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="izi_shopee.form_mp_product" model="ir.ui.view">
+            <field name="name">Marketplace Product Form View</field>
+            <field name="model">mp.product</field>
+            <field name="inherit_id" ref="izi_marketplace.form_mp_product"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='mp_product_fields']" position="inside">
+                    <group string="Shopee Data" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+                        <field name="sp_item_status"/>
+                        <field name="sp_has_variant"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

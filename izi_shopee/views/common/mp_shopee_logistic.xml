@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+
+    <record id="izi_shopee.form_mp_shopee_logistic" model="ir.ui.view">
+      <field name="name">Marketplace Shopee Logistic Form View</field>
+      <field name="model">mp.shopee.logistic</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Shopee Logistic">
+          <sheet>
+            <div class="oe_title">
+              <label for="logistics_channel_name" class="oe_edit_only"/>
+              <h1>
+                <field name="logistics_channel_name"/>
+              </h1>
+            </div>
+            <group>
+              <field name="product_id" domain="[('type', '=', 'service')]"/>
+            </group>
+            <notebook>
+              <page string="Logistic Info">
+                <group>
+                  <field name="logistics_channel_id"/>
+                  <field name="logistics_description"/>
+                </group>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="md5sign"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="izi_shopee.tree_mp_shopee_logistic_service" model="ir.ui.view">
+      <field name="name">Marketplace Shopee Logistic Tree View</field>
+      <field name="model">mp.shopee.logistic</field>
+      <field name="arch" type="xml">
+        <tree string="Marketplace Shopee Logistic">
+          <field name="logistics_channel_name"/>
+          <field name="logistics_description"/>
+          <field name="is_category"/>
+        </tree>
+      </field>
+    </record>
+  </data>
+</odoo>

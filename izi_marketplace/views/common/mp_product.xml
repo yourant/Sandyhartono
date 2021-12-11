@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.kanban_mp_product" model="ir.ui.view">
+      <field name="name">Marketplace Product Kanban View</field>
+      <field name="model">mp.product</field>
+      <field name="arch" type="xml">
+        <kanban>
+          <!--suppress OdooXml -->
+          <field name="id"/>
+          <field name="debug_store_product_img"/>
+          <field name="image_small"/>
+          <field name="mp_product_main_image_url"/>
+          <field name="list_price"/>
+          <field name="currency_id"/>
+          <field name="mp_product_variant_count"/>
+          <templates>
+            <t t-name="kanban-box">
+              <div class="oe_kanban_global_click">
+                <div class="o_kanban_image">
+                  <img t-att-alt="record.name" t-att-src="kanban_image('mp.product', 'image_small', record.id.raw_value)" t-if="record.debug_store_product_img.raw_value"/>
+                  <img t-att-alt="record.name" t-att-src="record.mp_product_main_image_url.raw_value" t-if="!record.debug_store_product_img.raw_value"/>
+                </div>
+                <div class="oe_kanban_details">
+                  <strong class="o_kanban_record_title">
+                    <field name="name"/>
+                    <small t-if="record.default_code.value">[<field name="default_code"/>]</small>
+                  </strong>
+                  <div t-if="record.mp_product_variant_count.value &gt; 1">
+                    <strong>
+                      <t t-esc="record.mp_product_variant_count.value"/> Variants
+                    </strong>
+                  </div>
+                  <ul>
+                    <li>
+                        Price: 
+                      <field name="list_price" options="{'currency_field': 'currency_id', 'field_digits': True}" widget="monetary"/>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </t>
+          </templates>
+        </kanban>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.form_mp_product" model="ir.ui.view">
+      <field name="name">Marketplace Product Form View</field>
+      <field name="model">mp.product</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Product">
+          <sheet>
+            <field name="currency_id" invisible="1"/>
+            <!--suppress OdooXml -->
+            <field name="id" invisible="1"/>
+            <field name="debug_store_product_img" invisible="1"/>
+            <div class="oe_button_box" name="button_box">
+              <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                <field name="active" options="{&quot;terminology&quot;: &quot;archive&quot;}" widget="boolean_button"/>
+              </button>
+              <button attrs="{'invisible': [('mp_product_variant_count', '&lt;=', 1)]}" class="oe_stat_button" icon="fa-sitemap" name="action_view_mp_product_variant" type="object">
+                <field name="mp_product_variant_count" string="Variants" widget="statinfo"/>
+              </button>
+            </div>
+            <field attrs="{'invisible': [('debug_store_product_img', '=', False)]}" class="oe_avatar" name="image_medium" readonly="1" widget="image"/>
+            <field attrs="{'invisible': [('debug_store_product_img', '=', True)]}" class="oe_avatar" name="mp_product_main_image_url" readonly="1" widget="image_url"/>
+            <div class="oe_title">
+              <label class="oe_edit_only" for="name" string="Product Name"/>
+              <h1>
+                <field name="name" placeholder="Product Name"/>
+              </h1>
+            </div>
+            <notebook>
+              <page string="General Information" name="general_information">
+                <group>
+                  <group>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="marketplace" attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="mp_account_id" domain="[('marketplace', '=', marketplace)]"
+                           attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <field name="default_code"/>
+                  </group>
+                  <group name="group_standard_price">
+                    <field name="list_price" widget='monetary'
+                           options="{'currency_field': 'currency_id', 'field_digits': True}"/>
+                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                  </group>
+                </group>
+                <group name="mp_product_fields"></group>
+              </page>
+              <page string="Inventory" name="inventory">
+                <group>
+                  <group string="Logistics" name="weight_and_volume">
+                    <label for="weight"/>
+                    <div class="o_row" name="weight">
+                      <field name="weight"/>
+                      <span>kg</span>
+                    </div>
+                    <label for="volume"/>
+                    <div class="o_row" name="volume">
+                      <field name="volume" string="Volume"/>
+                      <span>m³</span>
+                    </div>
+                  </group>
+                  <group string="Dimention" name="dimention">
+                    <label for="length"/>
+                    <div class="o_row" name="length">
+                      <field name="length"/>
+                      <span>cm</span>
+                    </div>
+                    <label for="width"/>
+                    <div class="o_row" name="width">
+                      <field name="width"/>
+                      <span>cm</span>
+                    </div>
+                    <label for="height"/>
+                    <div class="o_row" name="height">
+                      <field name="height"/>
+                      <span>cm</span>
+                    </div>
+                  </group>
+                </group>
+              </page>
+              <page string="Notes" name="notes">
+                <group name="description">
+                  <group string="Description for Customers">
+                    <field name="description_sale" nolabel="1" placeholder="This note will show up on sales orders."/>
+                  </group>
+                </group>
+              </page>
+              <page string="Images" name="images">
+                <group string="Product Images">
+                  <field name="mp_product_image_ids" nolabel="1" class="o_website_sale_image_list" view_mode='tree,form'
+                         context="{'default_mp_account_id': mp_account_id}">
+                    <tree string="Upload or remove image">
+                      <field name="sequence" widget="handle"/>
+                      <field name="image" widget="image" class="oe_avatar"/>
+                      <field name="name" readonly="1"/>
+                    </tree>
+                    <form string="Upload or remove image">
+                      <group>
+                        <group>
+                          <field name="mp_account_id" invisible="1"/>
+                          <field name="name" readonly="1"/>
+                          <field name="image" widget="image"/>
+                        </group>
+                      </group>
+                    </form>
+                  </field>
+                </group>
+              </page>
+              <page string="Variants" name="variants">
+                <group string="Product Variant">
+                  <field name="mp_product_variant_ids" nolabel="1" view_mode='tree'>
+                    <tree>
+                      <field name="name" readonly="1"/>
+                      <field name="default_code" readonly="1"/>
+                      <field name="list_price" readonly="1"/>
+                    </tree>
+                  </field>
+                </group>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="md5sign"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="izi_marketplace.list_mp_product_variant">
+      <field name="name">Marketplace Product Variant</field>
+      <field name="model">mp.product.variant</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name"/>
+          <field name="default_code"/>
+          <field name="list_price"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.form_mp_product_variant" model="ir.ui.view">
+      <field name="name">Marketplace Product Variant Form View</field>
+      <field name="model">mp.product.variant</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Product Variant">
+          <sheet>
+            <field name="currency_id" invisible="1"/>
+            <!--suppress OdooXml -->
+            <field name="id" invisible="1"/>
+            <div class="oe_button_box" name="button_box">
+              <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+              </button>
+            </div>
+            <field name="image" widget="image" class="oe_avatar" readonly="1"/>
+            <div class="oe_title">
+              <label class="oe_edit_only" for="name" string="Product Name"/>
+              <h1>
+                <field name="name" placeholder="Product Name"/>
+              </h1>
+            </div>
+            <notebook>
+              <page string="General Information" name="general_information">
+                <group>
+                  <group>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="marketplace" attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <!--suppress PyUnresolvedReferences -->
+                    <field name="mp_account_id" domain="[('marketplace', '=', marketplace)]" attrs="{'readonly': [('id', '!=', False)]}"/>
+                    <field name="default_code"/>
+                  </group>
+                  <group name="group_standard_price">
+                    <field name="list_price" widget='monetary' options="{'currency_field': 'currency_id', 'field_digits': True}"/>
+                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                  </group>
+                </group>
+                <group name="mp_product_fields"></group>
+              </page>
+              <page string="Inventory" name="inventory">
+                <group>
+                  <group string="Logistics" name="weight_and_volume">
+                    <label for="weight"/>
+                    <div class="o_row" name="weight">
+                      <field name="weight"/>
+                      <span>kg</span>
+                    </div>
+                    <label for="volume"/>
+                    <div class="o_row" name="volume">
+                      <field name="volume" string="Volume"/>
+                      <span>m³</span>
+                    </div>
+                  </group>
+                </group>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="md5sign"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

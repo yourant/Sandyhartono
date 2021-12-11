@@ -1,0 +1,8 @@
+<odoo>
+    <data>
+        <record model="res.partner" id="res_partner_tokopedia">
+            <field name="name">Partner Tokopedia</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

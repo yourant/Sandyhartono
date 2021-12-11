@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.tree_mp_token" model="ir.ui.view">
+      <field name="name">Marketplace Token Tree View</field>
+      <field name="model">mp.token</field>
+      <field name="arch" type="xml">
+        <tree string="Marketplace Token">
+          <field name="marketplace"/>
+          <field name="mp_account_id"/>
+          <field name="expired_date"/>
+          <field name="state"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.form_mp_token" model="ir.ui.view">
+      <field name="name">Marketplace Token Form View</field>
+      <field name="model">mp.token</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Token">
+          <header>
+            <field name="state" widget="statusbar" statusbar_visible="valid,expired"/>
+          </header>
+          <sheet>
+            <group name="summary" string="Summary">
+              <field name="name"/>
+              <field name="expired_date"/>
+              <field name="marketplace"/>
+              <field name="mp_account_id"/>
+            </group>
+            <group name="raw" string="Raw Data">
+              <field name="raw" nolabel="1"/>
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

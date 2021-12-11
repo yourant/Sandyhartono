@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="izi_blibli.search_sale_order" model="ir.ui.view">
+            <field name="name">Marketplace Order Search View</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='filter_per_mp']" position="inside">
+                    <filter string="Blibli" name="filter_to_blibli" domain="[('marketplace','=', 'blibli')]"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

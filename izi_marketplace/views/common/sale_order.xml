@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+
+    <record id="izi_marketplace.search_sale_order" model="ir.ui.view">
+      <field name="name">Marketplace Order Search View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+      <field name="arch" type="xml">
+        <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+          <field name="mp_invoice_number" string="MP Invoice Number"
+                 filter_domain="[('mp_invoice_number','ilike',self)]"/>
+          <separator/>
+          <group name="filter_per_mp"/>
+          <separator/>
+          <filter string="New" name="new" domain="[('mp_order_status','=', 'new')]"/>
+          <filter string="Waiting Payment" name="waiting" domain="[('mp_order_status','=', 'waiting')]"/>
+          <filter string="To Cancel" name="to_cancel" domain="[('mp_order_status','=', 'to_cancel')]"/>
+          <filter string="Cancelled" name="cancel" domain="[('mp_order_status','=', 'cancel')]"/>
+          <filter string="To Process" name="to_process" domain="[('mp_order_status','=', 'to_process')]"/>
+          <filter string="In Process" name="in_process" domain="[('mp_order_status','=', 'in_process')]"/>
+          <filter string="To Ship" name="to_ship" domain="[('mp_order_status','=', 'to_ship')]"/>
+          <filter string="In Shipping" name="in_ship" domain="[('mp_order_status','=', 'in_ship')]"/>
+          <filter string="Done" name="done" domain="[('mp_order_status','=', 'done')]"/>
+          <filter string="Returned" name="return" domain="[('mp_order_status','=', 'return')]"/>
+          <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
+          <filter name="group_by_marketplace_account" string="Marketplace Account"
+                  context="{'group_by': 'mp_account_id'}"/>
+        </xpath>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.tree_sale_order_quotation" model="ir.ui.view">
+      <field name="name">Sale Order Tree View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_quotation_tree"/>
+      <field name="arch" type="xml">
+        <field name="create_date" position="after">
+          <field name="mp_accept_deadline" string="Confirmation Deadline"/>
+          <field name="mp_shipping_deadline" string="Delivery Deadline"/>
+        </field>
+        <field name="partner_id" position="after">
+          <field name="marketplace" string="Marketplace"/>
+        </field>
+        <field name="state" position="after">
+          <field name="mp_order_status" string="Marketplace Status"/>
+        </field>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.tree_sale_order_order" model="ir.ui.view">
+      <field name="name">Sale Order Tree View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_order_tree"/>
+      <field name="arch" type="xml">
+        <field name="date_order" position="after">
+          <field name="mp_accept_deadline" string="Confirmation Deadline"/>
+          <field name="mp_shipping_deadline" string="Delivery Deadline"/>
+        </field>
+        <field name="partner_id" position="after">
+          <field name="marketplace" string="Marketplace"/>
+        </field>
+        <field name="state" position="after">
+          <field name="mp_order_status" string="Marketplace Status"/>
+        </field>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.form_sale_order" model="ir.ui.view">
+      <field name="name">Sale Order Form View</field>
+      <field name="model">sale.order</field>
+      <field name="inherit_id" ref="sale.view_order_form"/>
+      <field name="arch" type="xml">
+        <field name="note" position="after">
+          <field name="mp_order_notes" readonly="1"/>
+        </field>
+        <xpath expr="//field[@name='order_line']/.." position="after">
+          <page string="Marketplace" name="izi_info">
+            <field name="marketplace" string="Marketplace" invisible="1"/>
+            <div attrs="{'invisible': ['|', ('mp_amount_total_info', '=', False), ('mp_amount_total_info', '=', '')]}">
+              <div class="alert alert-warning text-center o_form_header" role="alert">
+                <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
+                <div>
+                  <strong>
+                    <field name="mp_amount_total_info"/>
+                  </strong>
+                </div>
+              </div>
+            </div>
+            <div name="mp_actions">
+              <!-- For Action Button -->
+            </div>
+            <group name="marketplace_info">
+              <group string="Account Information">
+                <field name="mp_invoice_number" readonly="1"/>
+                <field name="mp_account_id" readonly="1"/>
+                <field name="mp_buyer_username" readonly="1"/>
+                <field name="mp_buyer_name" readonly="1"/>
+                <field name="mp_buyer_email" readonly="1"/>
+                <field name="mp_buyer_phone" readonly="1"/>
+              </group>
+              <group string="Order Status" name="order_status">
+                <field name="mp_order_status" readonly="1"/>
+                <field name="mp_cancel_reason" readonly="1"/>
+                <field name="mp_payment_method_info" readonly="1"/>
+              </group>
+              <group string="Recipient Address">
+                <field name="mp_recipient_address_city" readonly="1"/>
+                <field name="mp_recipient_address_name" readonly="1"/>
+                <field name="mp_recipient_address_district" readonly="1"/>
+                <field name="mp_recipient_address_country" readonly="1"/>
+                <field name="mp_recipient_address_zip" readonly="1"/>
+                <field name="mp_recipient_address_phone" readonly="1"/>
+                <field name="mp_recipient_address_state" readonly="1"/>
+                <field name="mp_recipient_address_full" readonly="1"/>
+              </group>
+              <group name='delivery_info' string="Delivery Information">
+                <field name="mp_delivery_carrier_name" readonly="1"/>
+                <field name="mp_delivery_carrier_type" readonly="1" string="Delivery Carrier Type"/>
+                <field name="mp_awb_number" readonly="1"/>
+                <field name="mp_awb_url" widget="url" readonly="1"/>
+                <field name="mp_delivery_type" string="Delivery Type" readonly="1"/>
+                <field name="mp_accept_deadline" readonly="1"/>
+                <field name="mp_shipping_deadline" readonly="1"/>
+              </group>
+              <group string="Amounts Information" name="amounts_info">
+                <field name="mp_amount_total"/>
+                <field name="mp_expected_income"/>
+              </group>
+            </group>
+          </page>
+        </xpath>
+        <xpath expr="//notebook" position="inside">
+          <page string="Debug" groups="base.group_no_one">
+            <group>
+              <field name="mp_external_id"/>
+              <field name="md5sign"/>
+              <field name="raw"/>
+            </group>
+          </page>
+        </xpath>
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_accept_order">
+      <field name="name">Accept Order</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_process']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.accept_order()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_reject_order">
+      <field name="name">Reject Order</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_process','in_process','to_ship']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.reject_order()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_print_label">
+      <field name="name">Get Label Order</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_ship','in_ship']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.get_label()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_get_awb_num">
+      <field name="name">Get AWB Number/Booking Code</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_ship']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    action = records.get_awb_num()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_request_pickup">
+      <field name="name">Request Pickup</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_ship','in_process']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    allowed_delivery_type = ['pickup', 'both']
+    order_mp_delivery_type = records.mapped('mp_delivery_type')
+    if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_delivery_type))
+    action = records.request_pickup()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+
+    <record model="ir.actions.server" id="izi_marketplace.multi_action_dropoff">
+      <field name="name">Drop Off/Confirm Shipping</field>
+      <field name="model_id" ref="sale.model_sale_order"/>
+      <field name="binding_model_id" ref="sale.model_sale_order"/>
+      <field name="type">ir.actions.server</field>
+      <field name="state">code</field>
+      <field name="code">
+if records:
+    order_statuses = records.mapped('mp_order_status')
+    allowed_statuses = ['to_ship','in_process']
+    if not all(order_status in allowed_statuses for order_status in order_statuses):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_statuses))
+    allowed_delivery_type = ['drop off', 'both']
+    order_mp_delivery_type = records.mapped('mp_delivery_type')
+    if not all(delivery_type in allowed_delivery_type for delivery_type in order_mp_delivery_type):
+        raise Warning("The status of your selected orders should be in {}".format(allowed_delivery_type))
+    action = records.drop_off()
+else:
+    raise Warning("Please select sale order first!")
+      </field>
+    </record>
+  </data>
+</odoo>

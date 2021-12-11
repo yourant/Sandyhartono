@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+
+    <record id="izi_blibli.tree_mp_blibli_logistic" model="ir.ui.view">
+      <field name="name">Marketplace Blibli Logistic Tree View</field>
+      <field name="model">mp.blibli.logistic</field>
+      <field name="arch" type="xml">
+        <tree string="Marketplace Blibli Logistic">
+          <field name="logistics_name"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="izi_blibli.form_mp_blibli_logistic" model="ir.ui.view">
+      <field name="name">Marketplace Blibli Logistic Form View</field>
+      <field name="model">mp.blibli.logistic</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Blibli Logistic">
+          <sheet>
+            <div class="oe_title">
+              <label for="logistics_name" class="oe_edit_only"/>
+              <h1>
+                <field name="logistics_name"/>
+              </h1>
+            </div>
+            <notebook>
+              <page string="Service">
+                <!-- <field name="service_ids">
+                  <tree>
+                    <field name="service_name"/>
+                    <field name="service_desc"/>
+                  </tree>
+                </field> -->
+                <group>
+                  <field name="logistics_name"/>
+                  <field name="logistics_code"/>
+                  <field name="geolocation"/>
+                  <field name="marketplace"/>
+                  <field name="mp_account_id"/>
+                  <field name="md5sign"/>
+                  <field name="raw"/>
+                  <field name="info_additional"/>
+                  <field name="info_highlight"/>
+                </group>
+              </page>
+              <!-- <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="signature"/>
+                  <field name="raw"/>
+                </group>
+              </page> -->
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

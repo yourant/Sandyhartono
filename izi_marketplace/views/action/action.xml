@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.action_window_mp_product_view_per_marketplace" model="ir.actions.act_window">
+      <field name="name">Marketplace Product(s)</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.product</field>
+      <field name="view_mode">kanban,tree,form</field>
+    </record>
+    
+    <record id="izi_marketplace.action_window_mp_product_variant_view_per_mp_product" model="ir.actions.act_window">
+      <field name="name">Marketplace Product Variant(s)</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.product.variant</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="izi_marketplace.action_window_mp_map_product_line" model="ir.actions.act_window">
+      <field name="name">Marketplace Map Product Line</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.map.product.line</field>
+      <field name="view_mode">tree</field>
+      <field name="context">{
+        'create': False
+      }</field>
+    </record>
+
+    <record id="izi_marketplace.action_window_wiz_mp_order" model="ir.actions.act_window">
+      <field name="name">Get Order Wizard</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">wiz.mp.order</field>
+      <field name="view_mode">form</field>
+      <field name="target">new</field>
+    </record>
+  </data>
+</odoo>
