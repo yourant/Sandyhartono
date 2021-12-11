@@ -173,13 +173,17 @@ class SaleOrder(models.Model):
         if not default_customer:
             default_customer = partner_obj
         partner_shipping = partner_obj
+        state = self.env['res.country.state'].search(
+            [('name', '=ilike', order_values.get('mp_recipient_address_state'))], limit=1)
         partner_shipping_values = {
             'name': order_values.get('mp_recipient_address_name'),
             'phone': order_values.get('mp_recipient_address_phone'),
             'street': order_values.get('mp_recipient_address_full'),
+            'city': order_values.get('mp_recipient_address_city'),
+            'state_id': state.id if state else None,
+            'country_id': state.country_id.id if state else None,
             'zip': order_values.get('mp_recipient_address_zip')
         }
-
         if default_customer.exists():  # Then look for child partner (delivery address) of default customer
             if order_values.get('mp_recipient_address_phone'):
                 partner_shipping = partner_obj.search([
