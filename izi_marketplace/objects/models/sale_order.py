@@ -167,7 +167,7 @@ class SaleOrder(models.Model):
                                              "marketplace order! "
 
     @api.model
-    def lookup_partner_shipping(self, order_values, default_customer=None):
+    def lookup_partner_shipping(self, order_values, mp_account, default_customer=None):
         partner_obj = self.env['res.partner']
 
         if not default_customer:
@@ -182,7 +182,7 @@ class SaleOrder(models.Model):
             'city': order_values.get('mp_recipient_address_city'),
             'state_id': state.id if state else None,
             'country_id': state.country_id.id if state else None,
-            'zip': order_values.get('mp_recipient_address_zip')
+            'zip': order_values.get('mp_recipient_address_zip'),
         }
         if default_customer.exists():  # Then look for child partner (delivery address) of default customer
             if order_values.get('mp_recipient_address_phone'):
@@ -208,16 +208,58 @@ class SaleOrder(models.Model):
                     ], limit=1)
                     if not partner.exists():  # Then create partner
                         partner_values = partner_shipping_values.copy()
-                        partner_values.update({'type': 'contact'})
+                        partner_values.update({
+                            'type': 'contact',
+                            # custom field x studio
+                            'x_studio_first_time_source': mp_account.marketplace.capitalize(),
+                            'x_studio_customer_type': 'User',
+                        })
                         partner = partner_obj.create(partner_values)
+                    else:
+                        order_channel = self.env['x_order_channel'].sudo().search(
+                            [('x_name', '=ilike', mp_account.marketplace)], limit=1)
+                        if order_channel.id not in partner.x_studio_field_FOuKQ.ids:
+                            partner.write({
+                                'x_studio_field_FOuKQ': [(4, order_channel.id)],
+                            })
                     # Then pass it to this method recursively
-                    return self.lookup_partner_shipping(order_values, default_customer=partner)
+                    return self.lookup_partner_shipping(order_values, mp_account, default_customer=partner)
+                else:
+                    partner = partner_obj.search([
+                        ('parent_id', '=', False),
+                        ('type', '=', 'contact'),
+                        ('phone', '=', order_values.get('mp_recipient_address_phone'))
+                    ], limit=1)
+                    if not partner.exists():  # Then create partner
+                        partner_values = partner_shipping_values.copy()
+                        partner_values.update({
+                            'type': 'contact',
+                            # custom field x studio
+                            'x_studio_first_time_source': mp_account.marketplace.capitalize(),
+                            'x_studio_customer_type': 'User',
+                        })
+                        partner = partner_obj.create(partner_values)
+                    else:
+                        partner_shipping = partner_obj.search([
+                            ('parent_id', '=', partner.id),
+                            ('type', '=', 'delivery'),
+                            ('street', '=ilike', order_values.get('mp_recipient_address_full'))
+                        ])
+                        if not partner_shipping.exists():
+                            partner_shipping_values.update({'parent_id': partner.id, 'type': 'delivery'})
+                            partner_shipping = partner_obj.create(partner_shipping_values)
+                        order_channel = self.env['x_order_channel'].sudo().search(
+                            [('x_name', '=ilike', mp_account.marketplace)], limit=1)
+                        if order_channel.id not in partner.x_studio_field_F0uKQ.ids:
+                            partner.write({
+                                'x_studio_field_F0uKQ': [(4, order_channel.id)],
+                            })
         # Finally return the partner shipping
         return partner_shipping
 
     @api.model
     def get_mp_order_customer(self, mp_account, values):
-        partner_shipping = self.lookup_partner_shipping(values, default_customer=mp_account.partner_id)
+        partner_shipping = self.lookup_partner_shipping(values, mp_account, default_customer=mp_account.partner_id)
         # Finally return the partner shipping and its parent as customer
         return partner_shipping, partner_shipping.parent_id
 
