@@ -268,12 +268,64 @@ class SaleOrder(models.Model):
                                 for order_line in record.order_line:
                                     if order_line.product_id.id in line.remove_product_ids.ids:
                                         order_line.unlink()
+
+                # Then Discount
+                for line in component_config.line_ids:
+                    if line.component_type == 'discount_line':
+                        for record in records:
+                            for order_line in record.order_line:
+                                if order_line.is_global_discount or order_line.is_delivery or order_line.is_insurance or order_line.is_adjustment:
+                                    continue
+                                if line.discount_line_method == 'input':
+                                    if line.discount_line_product_type == 'all' or (order_line.get('product_id', False) and order_line.get('product_id') in line.discount_line_product_ids.ids):
+                                        price_unit = order_line.price_unit
+                                        if 100 - line.percentage_value > 0:
+                                            new_price_unit = round(100 * price_unit / (100 - line.percentage_value))
+                                        order_line.write({
+                                            'price_unit': new_price_unit,
+                                            'discount': line.percentage_value,
+                                        })
+                                elif line.discount_line_method == 'calculated':
+                                    if line.discount_line_product_type == 'all' or (order_line.get('product_id', False) and order_line.get('product_id') in line.discount_line_product_ids.ids):
+                                        price_unit = order_line.price_unit
+                                        product = order_line.product_id
+                                        if product:
+                                            normal_price = 0
+                                            if product.map_line_ids:
+                                                for mp_product in product.map_line_ids:
+                                                    if mp_product.mp_account_id == order_line.mp_account_id:
+                                                        if mp_product.name == order_line.mp_product_name:
+                                                            if mp_product.mp_product_variant_id:
+                                                                normal_price = mp_product.mp_product_variant_id.list_price
+                                                                break
+                                                            elif mp_product.mp_product_id:
+                                                                normal_price = mp_product.mp_product_id.list_price
+                                                                break
+                                            if normal_price == 0:
+                                                normal_price = product.product_tmpl_id.list_price
+                                                for tax in product.product_tmpl_id.taxes_id:
+                                                    if tax.price_include:
+                                                        continue
+                                                    elif tax.amount_type == 'percent' and tax.amount > 0:
+                                                        normal_price = int(
+                                                            round(normal_price * (100 + tax.amount) / 100))
+                                            # Calculate Discount %
+                                            discount_percentage = 0
+                                            if normal_price > 0 and price_unit > 0:
+                                                discount_percentage = int(
+                                                    round((normal_price - price_unit) * 100 / normal_price))
+                                                if discount_percentage > 0:
+                                                    order_line.write({
+                                                        'price_unit': normal_price,
+                                                        'discount': discount_percentage,
+                                                    })
+
                 # Then Add Tax
                 for line in component_config.line_ids:
                     if line.component_type == 'tax_line':
                         for record in records:
                             for order_line in record.order_line:
-                                if order_line.get('is_discount', False) or order_line.get('is_delivery', False) or order_line.get('is_insurance', False):
+                                if order_line.is_global_discount or order_line.is_delivery or order_line.is_insurance or order_line.is_adjustment:
                                     continue
                                 if line.account_tax_id and line.account_tax_id.amount_type == 'percent':
                                     percentage = line.account_tax_id.amount
