@@ -3,7 +3,7 @@
   <data noupdate="0">
 
     <!-- Marketplace -->
-    <menuitem id="izi_marketplace.menu_root_marketplace" name="Marketplace" sequence="50"/>
+    <menuitem id="izi_marketplace.menu_root_marketplace" name="Marketplace" web_icon="izi_marketplace,static/description/izi_menu_icon.png" sequence="50"/>
 
     <!-- Marketplace / Accounts -->
     <menuitem id="izi_marketplace.menu_separator_mp_account" name="Accounts"
