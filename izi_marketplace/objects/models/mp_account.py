@@ -10,22 +10,28 @@ class MarketplaceAccount(models.Model):
     _description = 'Marketplace Account'
 
     # @api.multi
+    @api.constrains()
     def _check_required_if_marketplace(self):
         """ If the field has 'required_if_marketplace="<marketplace>"' attribute, then it
         required if record.marketplace is <marketplace>. """
         empty_field = []
-        for mp_account in self:
-            for k, f in mp_account._fields.items():
-                if getattr(f, 'required_if_marketplace', None) == mp_account.marketplace and not mp_account[k]:
-                    empty_field.append(self.env['ir.model.fields'].search(
-                        [('name', '=', k), ('model', '=', mp_account._name)]).field_description)
+        for record in self:
+            for k, f in record._fields.items():
+                if getattr(f, 'required_if_marketplace', None) == record.marketplace and not record[k]:
+                    empty_field.append('Field %(field)s at ID %(id)s is empty.' % {
+                        'field': self.env['ir.model.fields'].search([
+                            ('name', '=', k),
+                            ('model', '=', record._name)
+                        ]).field_description,
+                        'id': record.id,
+                    })
         if empty_field:
             raise ValidationError(', '.join(empty_field))
         return True
 
-    _constraints = [
-        (_check_required_if_marketplace, 'Required fields not filled', []),
-    ]
+    # _constraints = [
+    #     (_check_required_if_marketplace, 'Required fields not filled', []),
+    # ]
 
     MP_ACCOUNT_STATES = [
         ('new', 'New'),
