@@ -76,7 +76,7 @@ class MarketplaceMapProduct(models.Model):
         if self.mp_account_id and not self.name:
             self.name = 'Product Mapping - %s' % self.mp_account_id.name
 
-     # @api.multi
+    # @api.multi
     def get_product(self, record):
         product_obj = self.env['product.product']
 
