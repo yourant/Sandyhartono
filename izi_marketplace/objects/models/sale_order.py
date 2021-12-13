@@ -10,6 +10,10 @@ class SaleOrder(models.Model):
     _inherit = ['sale.order', 'mp.base']
     _rec_mp_order_statuses = {}
     _rec_mp_order_status_notes = {}
+    _sql_constraints = [
+        ('unique_mp_invoice_number', 'UNIQUE(mp_invoice_number)',
+         'This Invoice Number is exists, please try another Marketplace Invoice Number')
+    ]
 
     MP_ORDER_STATUSES = [
         ('new', 'New'),
