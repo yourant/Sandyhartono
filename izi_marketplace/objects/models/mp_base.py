@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
+from datetime import datetime
 import hashlib
 import json
 import logging
@@ -536,7 +537,7 @@ class MarketplaceBase(models.AbstractModel):
                         'notes': notes,
                         'mp_external_id': mp_exid,
                         'mp_account_id': mp_account.id,
-                        'last_retry_time': fields.Datetime.now(),
+                        'last_retry_time': datetime.now(),
                     }
                     if isinstance(mp_exid, str) and mp_exid in mp_logs_by_exid:
                         if isinstance(notes, str):
@@ -550,7 +551,7 @@ class MarketplaceBase(models.AbstractModel):
                             if mp_logs_by_exid[mp_exid].notes == notes:
                                 mp_logs_by_exid[mp_exid].write({
                                     'mp_log_status': 'success',
-                                    'last_retry_time': fields.Datetime.now(),
+                                    'last_retry_time': datetime.now(),
                                 })
 
             return self.with_context(context)._finish_create_records(records)
@@ -559,7 +560,6 @@ class MarketplaceBase(models.AbstractModel):
             sanitized_data, values = self.with_context(
                 **{'final': True}).mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
             record = record_obj.create(values)
-            self._cr.commit()
             self._logger(marketplace, log_message.format(**{
                 'model': record_obj._name,
                 'rec_id': record.id,
