@@ -84,6 +84,7 @@ class MarketplaceAccount(models.Model):
                 except Exception as e:
                     request_params.update({'partner_id': self.sp_partner_id})
                     mp_shopee_log_token.create_log_token(self, e.args[0], request_params, status='fail')
+                    raise UserError(str(e.args[0]))
 
     # @api.multi
     def shopee_get_token(self, **kwargs):
