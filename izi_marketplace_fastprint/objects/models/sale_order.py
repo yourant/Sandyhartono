@@ -39,18 +39,20 @@ class SaleOrder(models.Model):
     def _finish_create_records(self, records):
         mp_account = self.get_mp_account_from_context()
         records = super(SaleOrder, self)._finish_create_records(records)
-        for record in records:
-            notes = []
-            notes.append('- PAID VIA %s %s' % (mp_account.marketplace.upper(),
-                                               mp_account.company_id.name.upper()))
-            notes.append('- %s' % (record.mp_invoice_number))
-            for delivery in record.order_line:
-                if delivery.is_delivery:
-                    price = "Rp{:,.0f}".format(delivery.price_unit)
-                    delivery_text = '- Ongkos Kirim (%s kg) %s' % (str(record.mp_order_weight), price)
-                    notes.append(delivery_text)
+        if records.exists():
+            records = records.exists()
+            for record in records:
+                notes = []
+                notes.append('- PAID VIA %s %s' % (mp_account.marketplace.upper(),
+                                                   mp_account.company_id.name.upper()))
+                notes.append('- %s' % (record.mp_invoice_number))
+                for delivery in record.order_line:
+                    if delivery.is_delivery:
+                        price = "Rp{:,.0f}".format(delivery.price_unit)
+                        delivery_text = '- Ongkos Kirim (%s kg) %s' % (str(record.mp_order_weight), price)
+                        notes.append(delivery_text)
 
-            note = '\n'.join(notes)
-            record.write({'note': note})
+                note = '\n'.join(notes)
+                record.write({'note': note})
 
         return records
