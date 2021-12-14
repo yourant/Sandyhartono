@@ -234,7 +234,7 @@ class SaleOrder(models.Model):
                 for record in records:
                     tp_order_raw = json.loads(record.raw, strict=False)
                     item_list = tp_order_raw.get('order_info').get('order_detail', [])
-                    record_line = record.mapped('order_line.product_type')
+                    record_line = self.browse(record.id).order_line.mapped('product_type')
                     if not record_line:
                         record.unlink()
                     elif 'product' not in record_line:
