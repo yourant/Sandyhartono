@@ -559,7 +559,6 @@ class MarketplaceBase(models.AbstractModel):
             sanitized_data, values = self.with_context(
                 **{'final': True}).mapping_raw_data(raw_data=raw_data, sanitized_data=mp_data)
             record = record_obj.create(values)
-            self._cr.commit()
             self._logger(marketplace, log_message.format(**{
                 'model': record_obj._name,
                 'rec_id': record.id,
