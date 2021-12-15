@@ -54,6 +54,7 @@
         'views/common/product_template.xml',
         'views/common/sale_order.xml',
         'views/common/order_component_config.xml',
+        'views/common/mp_webhook_order.xml',
 
         # wizard
         'views/wizard/wiz_mp_order.xml',
