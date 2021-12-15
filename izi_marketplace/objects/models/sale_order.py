@@ -222,9 +222,9 @@ class SaleOrder(models.Model):
                     else:
                         order_channel = self.env['x_order_channel'].sudo().search(
                             [('x_name', '=ilike', mp_account.marketplace)], limit=1)
-                        if order_channel.id not in partner.x_studio_field_FOuKQ.ids:
+                        if order_channel.id not in partner.x_studio_field_F0uKQ.ids:
                             partner.write({
-                                'x_studio_field_FOuKQ': [(4, order_channel.id)],
+                                'x_studio_field_F0uKQ': [(4, order_channel.id)],
                             })
                     # Then pass it to this method recursively
                     return self.lookup_partner_shipping(order_values, mp_account, default_customer=partner)
