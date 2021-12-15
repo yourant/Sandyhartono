@@ -376,8 +376,8 @@ class MarketplaceMapProductLine(models.Model):
     ]
 
     map_id = fields.Many2one(comodel_name="mp.map.product", string="Product Mapping", required=True)
-    name = fields.Char(string="Name", compute="_compute_line", store=False)
-    default_code = fields.Char(string="Internal Reference", compute="_compute_line", store=False)
+    name = fields.Char(string="Name", compute="_compute_line", store=True)
+    default_code = fields.Char(string="Internal Reference", compute="_compute_line", store=True)
     mp_account_id = fields.Many2one(comodel_name="mp.account", string="Marketplace Account", required=True)
     marketplace = fields.Selection(string="Marketplace", required=True,
                                    selection=lambda env: env['mp.account']._fields.get('marketplace').selection,
