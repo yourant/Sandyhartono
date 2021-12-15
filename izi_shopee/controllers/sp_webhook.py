@@ -5,6 +5,8 @@ from odoo import http
 from odoo.http import *
 import hmac
 import logging
+import json
+
 from datetime import datetime
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
 _logger = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ class IZIShopeeWebhook(http.Controller):
     def sp_order(self, **kw):
         if request._request_type == 'json':
             json_body = request.jsonrequest
+            _logger.info('WEBHOOK_ORDER > Read JSON, %s' % (json_body))
             # authorization = request.httprequest.headers.environ.get('HTTP_AUTHORIZATION')
             # url = request.httprequest.url
             # http_body = request.httprequest.data.decode()
@@ -35,27 +38,27 @@ class IZIShopeeWebhook(http.Controller):
                 if json_body.get('code') == 3:
                     _logger.info('Notification Shopee Order: %s with status %s' %
                                  (json_body.get('data').get('ordersn'), json_body.get('data').get('status')))
-                    if json_body.get('data').get('status') != 'UNPAID':
-                        mp_webhook_order_obj = request.env['mp.webhook.order'].sudo()
-                        mp_webhook_order_obj.create({
-                            'mp_invoice_number': json_body.get('data').get('ordersn'),
-                            'sp_order_id': json_body.get('data').get('ordersn'),
-                            'mp_account_id': mp_account.id,
-                            'order_update_time': datetime.fromtimestamp(
-                                time.mktime(time.gmtime(json_body.get('data').get('update_time'))))
-                            .strftime(DEFAULT_SERVER_DATETIME_FORMAT),
-                            'sp_order_status': json_body.get('data').get('status')
-                        })
-                        _logger.info('Success Create Shopee Order: %s with status %s' %
-                                     (json_body.get('data').get('ordersn'), json_body.get('data').get('status')))
-                        if mp_account.mp_webhook_state == 'registered':
-                            marketplace = mp_account.marketplace
-                            kwargs = {'params': 'by_mp_invoice_number',
-                                      'mp_invoice_number': json_body.get('data').get('ordersn'),
-                                      'force_update': mp_account._context.get('force_update', False),
-                                      'order_status': json_body.get('data').get('status')}
-                            if hasattr(mp_account, '%s_get_orders' % marketplace):
-                                getattr(mp_account, '%s_get_orders' % marketplace)(**kwargs)
+                    mp_webhook_order_obj = request.env['mp.webhook.order'].sudo()
+                    mp_webhook_order_obj.create({
+                        'mp_invoice_number': json_body.get('data').get('ordersn'),
+                        'sp_order_id': json_body.get('data').get('ordersn'),
+                        'mp_account_id': mp_account.id,
+                        'order_update_time': datetime.fromtimestamp(
+                            time.mktime(time.gmtime(json_body.get('data').get('update_time'))))
+                        .strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                        'sp_order_status': json_body.get('data').get('status'),
+                        'raw': json.dumps(json_body, indent=4)
+                    })
+                    _logger.info('Success Create Shopee Order: %s with status %s' %
+                                 (json_body.get('data').get('ordersn'), json_body.get('data').get('status')))
+                    if mp_account.mp_webhook_state == 'registered':
+                        marketplace = mp_account.marketplace
+                        kwargs = {'params': 'by_mp_invoice_number',
+                                  'mp_invoice_number': json_body.get('data').get('ordersn'),
+                                  'force_update': mp_account._context.get('force_update', False),
+                                  'order_status': json_body.get('data').get('status')}
+                        if hasattr(mp_account, '%s_get_orders' % marketplace):
+                            getattr(mp_account, '%s_get_orders' % marketplace)(**kwargs)
 
         res = Response('Success', status=200)
         return res

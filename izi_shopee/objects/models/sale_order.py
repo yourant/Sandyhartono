@@ -207,7 +207,7 @@ class SaleOrder(models.Model):
                         record_ids_to_unlink.append(record.id)
 
                 records.filtered(lambda r: r.id in record_ids_to_unlink).unlink()
-
+                
         records = super(SaleOrder, self)._finish_create_records(records)
         return records
 

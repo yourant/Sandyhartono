@@ -50,5 +50,17 @@
       <field name="res_model">order.component.config</field>
       <field name="view_mode">tree,form</field>
     </record>
+
+    <record model="ir.actions.act_window" id="izi_marketplace.mp_webhook_order_action">
+      <field name="name">Webhook Order</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">mp.webhook.order</field>
+      <field name="view_mode">tree,form</field>
+      <field name="context">{
+        "search_default_group_by_marketplace": 1,
+        "search_default_group_by_mp_account": 1,
+        "search_default_group_by_mp_invoice_number": 1
+      }</field>
+    </record>
   </data>
 </odoo>

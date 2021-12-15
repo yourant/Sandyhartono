@@ -51,6 +51,10 @@
     <menuitem id="izi_marketplace.order_component_config" name="Order Component" 
               parent="izi_marketplace.menu_separator_mp_account_config" 
               action="izi_marketplace.action_window_order_component_config" sequence="10"/>
+    
+    <menuitem id="izi_marketplace.mp_webhook_order" name="Webhook Order" 
+              parent="izi_marketplace.menu_separator_mp_data" 
+              action="izi_marketplace.mp_webhook_order_action" sequence="50"/>
 
   </data>
 </odoo>
