@@ -6,6 +6,8 @@ from odoo.http import *
 import base64
 import requests
 import logging
+import json
+
 from datetime import datetime
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
 
@@ -32,7 +34,8 @@ class IZITokopedia(http.Controller):
                         'order_update_time': datetime.fromtimestamp(
                             time.mktime(time.gmtime(json_body.get('create_time'))))
                         .strftime(DEFAULT_SERVER_DATETIME_FORMAT),
-                        'tp_order_status': order_status
+                        'tp_order_status': order_status,
+                        'raw': json.dumps(json_body, indent=4)
                     })
                     _logger.info('Success Create Tokopedia Order: %s with status %s' %
                                  (json_body.get('invoice_num'), order_status))
