@@ -438,12 +438,12 @@ class MarketplaceMapProductLine(models.Model):
             'map_type': map_line.map_type,
             'generated_by_mapping': map_line.generated_by_mapping
         }
-        if map_line.product_id.mp_product_id:
+        if map_line.mp_product_id:
             current_map_line_data.update({
                 'name': map_line.mp_product_id.display_name,
                 'default_code': map_line.mp_product_id.default_code,
             })
-        elif map_line.product_id.mp_product_variant_id:
+        elif map_line.mp_product_variant_id:
             current_map_line_data.update({
                 'name': map_line.mp_product_variant_id.display_name,
                 'default_code': map_line.mp_product_variant_id.default_code,
