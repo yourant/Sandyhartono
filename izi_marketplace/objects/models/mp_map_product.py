@@ -438,6 +438,17 @@ class MarketplaceMapProductLine(models.Model):
             'map_type': map_line.map_type,
             'generated_by_mapping': map_line.generated_by_mapping
         }
+        if map_line.product_id.mp_product_id:
+            current_map_line_data.update({
+                'name': map_line.mp_product_id.display_name,
+                'default_code': map_line.mp_product_id.default_code,
+            })
+        elif map_line.product_id.mp_product_variant_id:
+            current_map_line_data.update({
+                'name': map_line.mp_product_variant_id.display_name,
+                'default_code': map_line.mp_product_variant_id.default_code,
+            })
+
         return current_map_line_data != map_line_data
 
     # @api.multi
@@ -466,7 +477,8 @@ class MarketplaceMapProductLine(models.Model):
         # Prepare SQL Query
         tmp_tbl_name = 'tmp_map_line_%s' % uuid.uuid4().hex[:8]
         tmp_map_line_columns = [
-            "id int4", "map_id int4", "mp_account_id int4", "marketplace varchar", "state varchar", "product_id int4",
+            "id int4", "map_id int4", "name varchar", "default_code varchar", "mp_account_id int4",
+            "marketplace varchar", "state varchar", "product_id int4",
             "mp_product_id int4", "mp_product_variant_id int4", "generated_by_mapping bool", "map_type varchar"
         ]
         map_line_update_columns = [
