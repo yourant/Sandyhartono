@@ -32,8 +32,10 @@ class MarketplaceAccount(models.Model):
     }
 
     # marketplace = fields.Selection(selection_add=[('tokopedia', 'Tokopedia')], ondelete={'tokopedia': 'cascade'})
-    tp_client_id = fields.Char(string="Tokopedia Client ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
-    tp_client_secret = fields.Char(string="Tokopedia Client Secret", required_if_marketplace="tokopedia", states=READONLY_STATES)
+    tp_client_id = fields.Char(string="Tokopedia Client ID",
+                               required_if_marketplace="tokopedia", states=READONLY_STATES)
+    tp_client_secret = fields.Char(string="Tokopedia Client Secret",
+                                   required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_fs_id = fields.Char(string="Fulfillment Service ID", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_url = fields.Char(string="Shop URL", required_if_marketplace="tokopedia", states=READONLY_STATES)
     tp_shop_id = fields.Many2one(comodel_name="mp.tokopedia.shop", string="Tokopedia Current Shop",
@@ -296,15 +298,22 @@ class MarketplaceAccount(models.Model):
                                               sanitizers=mp_product_variant_obj.get_sanitizers(self.marketplace))
 
         mp_products = mp_product_obj.search([('tp_has_variant', '=', True)])
+        tp_order_raws, tp_order_sanitizeds = [], []
         tp_variant_ids = []
         for mp_product in mp_products:
             mp_product_raw = json.loads(mp_product.raw, strict=False)
             tp_variant_ids.extend(json_digger(mp_product_raw, 'variant/childrenID'))
-        tp_data_raw, tp_data_sanitized = tp_product_variant.get_product_info(product_id=tp_variant_ids)
+
+        tp_variant_ids_splited = mp_product_variant_obj.create_chunks(tp_variant_ids, 500)
+        for tp_variant_ids in tp_variant_ids_splited:
+            tp_data_raw, tp_data_sanitized = tp_product_variant.get_product_info(product_id=tp_variant_ids)
+            tp_order_raws.extend(tp_data_raw)
+            tp_order_sanitizeds.extend(tp_data_sanitized)
+
         check_existing_records_params = {
             'identifier_field': 'tp_variant_id',
-            'raw_data': tp_data_raw,
-            'mp_data': tp_data_sanitized,
+            'raw_data': tp_order_raws,
+            'mp_data': tp_order_sanitizeds,
             'multi': isinstance(tp_data_sanitized, list)
         }
         check_existing_records = mp_product_variant_obj.with_context(mp_account_ctx).check_existing_records(

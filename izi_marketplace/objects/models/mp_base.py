@@ -275,6 +275,11 @@ class MarketplaceBase(models.AbstractModel):
         return sanitized_data, values
 
     @api.model
+    def create_chunks(self, list_value, n):
+        n = max(1, n)
+        return [list_value[i:i+n] for i in range(0, len(list_value), n)]
+
+    @api.model
     def format_raw_data(self, raw, indent=4):
         return json.dumps(raw, indent=indent)
 
