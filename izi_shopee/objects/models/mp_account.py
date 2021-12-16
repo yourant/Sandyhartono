@@ -303,7 +303,7 @@ class MarketplaceAccount(models.Model):
             params = {'access_token': self.mp_token_id.name}
         sp_account = self.shopee_get_account(**params)
         sp_product_variant = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
-        mp_products = mp_product_obj.search([('sp_has_variant', '=', True)])
+        mp_products = mp_product_obj.search([('sp_has_variant', '=', True), ('mp_account_id', '=', self.id)])
         for mp_product in mp_products:
             mp_product_raw = json.loads(mp_product.raw, strict=False)
             mp_product_variant_raw = mp_product_variant_obj.generate_variant_data(mp_product_raw)
