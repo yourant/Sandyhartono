@@ -11,7 +11,6 @@ class MarketplaceProductVariant(models.Model):
 
     tp_variant_id = fields.Char(string="Tokopedia Product Variant ID", readonly=True)
 
-
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
         if not mp_field_mappings:

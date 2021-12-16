@@ -297,8 +297,8 @@ class MarketplaceAccount(models.Model):
         tp_product_variant = TokopediaProduct(tp_account,
                                               sanitizers=mp_product_variant_obj.get_sanitizers(self.marketplace))
 
-        mp_products = mp_product_obj.search([('tp_has_variant', '=', True)])
-        tp_order_raws, tp_order_sanitizeds = [], []
+        mp_products = mp_product_obj.search([('tp_has_variant', '=', True), ('mp_account_id', '=', self.id)])
+        tp_data_raws, tp_data_sanitizeds = [], []
         tp_variant_ids = []
         for mp_product in mp_products:
             mp_product_raw = json.loads(mp_product.raw, strict=False)
@@ -307,14 +307,14 @@ class MarketplaceAccount(models.Model):
         tp_variant_ids_splited = mp_product_variant_obj.create_chunks(tp_variant_ids, 500)
         for tp_variant_ids in tp_variant_ids_splited:
             tp_data_raw, tp_data_sanitized = tp_product_variant.get_product_info(product_id=tp_variant_ids)
-            tp_order_raws.extend(tp_data_raw)
-            tp_order_sanitizeds.extend(tp_data_sanitized)
+            tp_data_raws.extend(tp_data_raw)
+            tp_data_sanitizeds.extend(tp_data_sanitized)
 
         check_existing_records_params = {
             'identifier_field': 'tp_variant_id',
-            'raw_data': tp_order_raws,
-            'mp_data': tp_order_sanitizeds,
-            'multi': isinstance(tp_data_sanitized, list)
+            'raw_data': tp_data_raws,
+            'mp_data': tp_data_sanitizeds,
+            'multi': isinstance(tp_data_sanitizeds, list)
         }
         check_existing_records = mp_product_variant_obj.with_context(mp_account_ctx).check_existing_records(
             **check_existing_records_params)
