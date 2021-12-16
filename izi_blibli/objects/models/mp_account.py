@@ -170,7 +170,7 @@ class MarketplaceAccount(models.Model):
         bli_product_variant = BlibliProduct(bli_account,
                                             sanitizers=mp_product_variant_obj.get_sanitizers(self.marketplace))
 
-        mp_products = mp_product_obj.search([('bli_has_variant', '=', True)])
+        mp_products = mp_product_obj.search([('bli_has_variant', '=', True), ('mp_account_id', '=', self.id)])
         for mp_product in mp_products:
             if mp_product['mp_account_id']['bli_shop_code'] != bli_account.shop_code:
                 continue
