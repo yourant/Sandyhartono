@@ -432,23 +432,14 @@ class MarketplaceMapProductLine(models.Model):
             'mp_account_id': map_line.map_id.mp_account_id.id or None,
             'marketplace': map_line.map_id.mp_account_id.marketplace,
             'state': map_line.state,
+            'name': map_line.display_name,
+            'default_code': map_line.default_code,
             'product_id': map_line.product_id.id or None,
             'mp_product_id': map_line.mp_product_id.id or None,
             'mp_product_variant_id': map_line.mp_product_variant_id.id or None,
             'map_type': map_line.map_type,
             'generated_by_mapping': map_line.generated_by_mapping
         }
-        if map_line.mp_product_id:
-            current_map_line_data.update({
-                'name': map_line.mp_product_id.display_name,
-                'default_code': map_line.mp_product_id.default_code,
-            })
-        elif map_line.mp_product_variant_id:
-            current_map_line_data.update({
-                'name': map_line.mp_product_variant_id.display_name,
-                'default_code': map_line.mp_product_variant_id.default_code,
-            })
-
         return current_map_line_data != map_line_data
 
     # @api.multi
