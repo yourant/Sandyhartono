@@ -63,6 +63,7 @@ class WizardShopeeOrderPickup(models.TransientModel):
 
                     date_time = day+', ' + str_time
                     order.sp_pickup_date = date_time
-                    order.action_confirm()
+                    if order.state == 'draft':
+                        order.action_confirm()
                     time.sleep(1)
                     order.shopee_fetch_order()

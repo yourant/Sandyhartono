@@ -389,6 +389,12 @@ class SaleOrder(models.Model):
             raise ValidationError(
                 "The status of your selected orders for shopee should be in {}".format(allowed_status))
 
+        allowed_invoice_status = ['invoiced']
+        invoice_statuses = self.mapped('invoice_status')
+        if not all(invoice_status in allowed_invoice_status for invoice_status in invoice_statuses):
+            raise ValidationError(
+                "The sales order of your selected invoice status should be in {}".format(allowed_invoice_status))
+
         if self[0].mp_account_id.mp_token_id.state == 'valid':
             params = {'access_token': self[0].mp_account_id.mp_token_id.name}
             sp_account = self[0].mp_account_id.shopee_get_account(**params)
@@ -410,7 +416,8 @@ class SaleOrder(models.Model):
                 }
                 action_status = sp_order_v2.action_ship_order(**action_params)
                 if action_status == "success":
-                    order.action_confirm()
+                    if order.state == 'draft':
+                        order.action_confirm()
                     time.sleep(1)
                     order.shopee_fetch_order()
 
@@ -458,7 +465,8 @@ class SaleOrder(models.Model):
                 }
                 action_status = sp_order_v2.action_handle_buyer_cancel(**action_params)
                 if action_status == "success":
-                    order.action_confirm()
+                    if order.state == 'draft':
+                        order.action_confirm()
                     order.shopee_fetch_order()
             else:
                 raise UserError('Access Token is invalid, Please Reauthenticated Shopee Account')
@@ -473,6 +481,12 @@ class SaleOrder(models.Model):
         if not all(order_status in allowed_status for order_status in order_statuses):
             raise ValidationError(
                 "The status of your selected orders for shopee should be in {}".format(allowed_status))
+
+        allowed_invoice_status = ['invoiced']
+        invoice_statuses = self.mapped('invoice_status')
+        if not all(invoice_status in allowed_invoice_status for invoice_status in invoice_statuses):
+            raise ValidationError(
+                "The sales order of your selected invoice status should be in {}".format(allowed_invoice_status))
 
         for order in self:
             mp_account_ctx = order.mp_account_id.generate_context()
