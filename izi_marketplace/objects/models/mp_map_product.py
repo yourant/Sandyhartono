@@ -291,7 +291,7 @@ class MarketplaceMapProduct(models.Model):
             self.invalidate_cache()
 
             # Process mp_products_with_variant: Create product.product
-            product_fields_list = ['mp_product_id', 'default_code', 'weight', 'volume']
+            product_fields_list = ['mp_product_id', 'name', 'default_code', 'weight', 'volume']
             product_datas = self.env['mp.base'].pg_select('mp_product_variant', product_fields_list,
                                                           where="mp_product_id IN (%s)" % ','.join(
                                                               [str(mp_product_id)
@@ -304,6 +304,8 @@ class MarketplaceMapProduct(models.Model):
                     'generated_by_mapping': True,
                     'product_tmpl_id': product_tmpl.id
                 })
+                product_data['variant_name'] = product_data.pop('name')
+
             self.env['mp.base'].pg_copy_from('product_product', product_datas)
             product_obj.search([('product_tmpl_id', 'in', product_tmpls.ids)]).recompute()
             self.invalidate_cache()
