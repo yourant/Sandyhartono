@@ -463,7 +463,8 @@ class SaleOrder(models.Model):
             time.sleep(0.5)
             action_status = tp_order.action_accept_order(order.mp_external_id)
             if action_status == "success":
-                order.action_confirm()
+                if order.state == 'draft':
+                    order.action_confirm()
                 if order.mp_account_id.mp_webhook_state == 'no_register':
                     order.tokopedia_fetch_order()
 
@@ -516,6 +517,12 @@ class SaleOrder(models.Model):
 
     # @api.multi
     def tokopedia_confirm_shipping(self):
+        allowed_invoice_status = ['invoiced']
+        invoice_statuses = self.mapped('invoice_status')
+        if not all(invoice_status in allowed_invoice_status for invoice_status in invoice_statuses):
+            raise ValidationError(
+                "The sales order of your selected invoice status should be in {}".format(allowed_invoice_status))
+
         return {
             'name': 'Confirm Shipping Order(s)',
             'view_mode': 'form',
@@ -531,6 +538,12 @@ class SaleOrder(models.Model):
     # @api.multi
     @mp.tokopedia.capture_error
     def tokopedia_request_pickup(self):
+        allowed_invoice_status = ['invoiced']
+        invoice_statuses = self.mapped('invoice_status')
+        if not all(invoice_status in allowed_invoice_status for invoice_status in invoice_statuses):
+            raise ValidationError(
+                "The sales order of your selected invoice status should be in {}".format(allowed_invoice_status))
+
         for order in self:
             tp_account = order.mp_account_id.tokopedia_get_account()
             tp_order = TokopediaOrder(tp_account)
