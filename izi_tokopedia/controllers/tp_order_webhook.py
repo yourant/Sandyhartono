@@ -20,7 +20,7 @@ class IZITokopedia(http.Controller):
         if request._request_type == 'json':
             json_body = request.jsonrequest
             fs_id = json_body.get('fs_id', False)
-            _logger.info('New Order From Tokopedia: %s' % (json_body.get('order_id,', '')))
+            _logger.info('New Order From Tokopedia: %s' % (json_body.get('invoice_ref_num,', '')))
             if fs_id:
                 mp_account = request.env['mp.account'].sudo().search([('tp_fs_id', '=', fs_id)])
                 if mp_account.mp_webhook_state == 'registered':
@@ -28,7 +28,7 @@ class IZITokopedia(http.Controller):
                     order_status = str(json_body.get('order_status'))
                     mp_webhook_order_obj = request.env['mp.webhook.order'].sudo()
                     mp_webhook_order_obj.create({
-                        'mp_invoice_number': json_body.get('invoice_num,', ''),
+                        'mp_invoice_number': json_body.get('invoice_ref_num,', ''),
                         'tp_order_id': str(json_body.get('order_id,', False)),
                         'mp_account_id': mp_account.id,
                         'order_update_time': datetime.fromtimestamp(
