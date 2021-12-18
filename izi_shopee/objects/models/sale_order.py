@@ -99,7 +99,8 @@ class SaleOrder(models.Model):
             'mp_amount_total': ('total_amount', None),
             'mp_awb_url': ('awb_url', None),
             'mp_expected_income': ('order_income/escrow_amount', None),
-            'mp_delivery_carrier_type': ('checkout_shipping_carrier', None)
+            'mp_delivery_carrier_type': ('checkout_shipping_carrier', None),
+            'mp_delivery_fee': ('estimated_shipping_fee', None)
         }
 
         def _convert_timestamp_to_datetime(env, data):
@@ -141,8 +142,6 @@ class SaleOrder(models.Model):
             'mp_shipping_deadline': ('ship_by_date', _convert_timestamp_to_datetime),
             'sp_package_number': ('package_list', _get_package_number),
             'mp_awb_number': ('shipping_document_info', _get_tracking_number),
-            'mp_delivery_type': ('shipping_paramater/info_needed', _set_mp_delivery_type)
-
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
@@ -207,7 +206,7 @@ class SaleOrder(models.Model):
                         record_ids_to_unlink.append(record.id)
 
                 records.filtered(lambda r: r.id in record_ids_to_unlink).unlink()
-                
+
         records = super(SaleOrder, self)._finish_create_records(records)
         return records
 

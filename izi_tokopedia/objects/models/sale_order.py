@@ -90,6 +90,7 @@ class SaleOrder(models.Model):
             'mp_delivery_carrier_name': ('order_info/shipping_info/logistic_name', None),
             'mp_delivery_carrier_type': ('order_info/shipping_info/logistic_service', None),
             'shipping_id': ('order_info/shipping_info/shipping_id', lambda env, r: str(r)),
+            'mp_delivery_fee': ('order_info/shipping_info/shipping_price', None),
 
             # MP Buyer Info
             'mp_buyer_id': ('buyer_info/buyer_id', lambda env, r: str(r)),
