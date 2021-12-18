@@ -106,6 +106,9 @@ class SaleOrder(models.Model):
             if so.mp_account_id.create_invoice:
                 if so.invoice_status == 'to invoice':
                     so._create_invoices(final=True)
+            for move in so.invoice_ids:
+                if move.state == 'draft':
+                    move.action_post()
         return res
 
     def action_cancel(self):
