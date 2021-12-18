@@ -29,16 +29,17 @@
       <field name="arch" type="xml">
         <tree string="Marketplace Map Product Line" decoration-success="state == 'mapped'" decoration-warning="state == 'unmapped'">
           <field name="map_id" invisible="1"/>
-          <field name="name"/>
-          <field name="default_code"/>
+          <field name="name" string="Marketplace Product"/>
+          <field name="default_code" string="Marketplace SKU"/>
           <field name="marketplace" readonly="1"/>
           <field name="mp_account_id" readonly="1"/>
-          <field name="product_id"/>
+          <field name="product_id" string="Odoo Product"/>
           <field name="mp_product_id" invisible="1"/>
           <field name="mp_product_variant_id" invisible="1"/>
           <field name="map_type" readonly="1"/>
           <field name="state" force_save="1"/>
           <field name="generated_by_mapping" readonly="1" force_save="1"/>
+          <field name="notes" force_save="1"/>
         </tree>
       </field>
     </record>
