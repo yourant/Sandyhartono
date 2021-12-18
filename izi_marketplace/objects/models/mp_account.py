@@ -85,9 +85,10 @@ class MarketplaceAccount(models.Model):
     adjustment_product_id = fields.Many2one(comodel_name="product.product",
                                             string="Default Adjustment Product",
                                             default=lambda self: self._get_default_adjustment_product_id())
-
+    create_invoice = fields.Boolean(string="Auto Create Invoice", default=False,
+                                    help="Auto createing invoices after confirm sale order")
     get_unpaid_orders = fields.Boolean(string="Get Unpaid Order", default=False,
-                                       help="Get order with status UNPAID from Shopee")
+                                       help="Get order with status UNPAID from Marketplace")
     get_cancelled_orders = fields.Boolean(string="Get Cancelled Order", default=False,
                                           help="Get order CANCELLED from marketplace if the order is not exists before")
 
@@ -144,6 +145,12 @@ class MarketplaceAccount(models.Model):
         self.partner_id = getattr(
             self.env.ref('izi_{mp}.res_partner_{mp}'.format(**{'mp': self.marketplace}), raise_if_not_found=False),
             'id', False)
+
+    @api.onchange('create_invoice')
+    def onchange_create_invoice(self):
+        if self.create_invoice:
+            return {'warning': {'title': 'Warning Message',
+                                'message': 'If you enable this feauture will be set product in order lines to ordered quantity'}}
 
     # @api.multi
     def _compute_mp_token(self):

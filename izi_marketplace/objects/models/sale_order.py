@@ -64,6 +64,7 @@ class SaleOrder(models.Model):
     mp_shipping_deadline = fields.Datetime(string="Maximum Shpping Date", readonly=True)
     mp_delivery_weight = fields.Float(string="Weight (KG)", readonly=True)
     mp_awb_datas = fields.Binary(string='AWB URL Datas', attachment=True)
+    mp_delivery_fee = fields.Float(string="MP Delivery Fee", readonly=True)
 
     # MP Buyer Info
     mp_buyer_id = fields.Integer(string="Buyer ID", readonly=True)
@@ -99,6 +100,25 @@ class SaleOrder(models.Model):
         if mp_order_status_notes:
             cls._rec_mp_order_status_notes = dict(cls._rec_mp_order_status_notes, **dict(mp_order_status_notes))
 
+    def action_confirm(self):
+        res = super(SaleOrder, self).action_confirm()
+        for so in self:
+            if so.mp_account_id.create_invoice:
+                if so.invoice_status == 'to invoice':
+                    so._create_invoices(final=True)
+        return res
+
+    def action_cancel(self):
+        for so in self:
+            for move in so.invoice_ids:
+                if move.state == 'posted':
+                    move.button_draft()
+                    move.button_cancel()
+                elif move.state == 'draft':
+                    move.button_cancel()
+        res = super(SaleOrder, self).action_cancel()
+        return res
+
     @api.model
     def _finish_mapping_raw_data(self, sanitized_data, values):
         sanitized_data, values = super(SaleOrder, self)._finish_mapping_raw_data(sanitized_data, values)
@@ -132,8 +152,12 @@ class SaleOrder(models.Model):
 
     @api.model
     def _finish_update_records(self, records):
-        records = super(SaleOrder, self)._finish_create_records(records)
+        records = super(SaleOrder, self)._finish_update_records(records)
         records = self.process_order_component_config(records)
+        for rec in records:
+            if rec.mp_order_status == 'cancel':
+                if rec.state != 'cancel' and rec.state != 'done':
+                    rec.action_cancel()
         return records
 
     # @api.multi

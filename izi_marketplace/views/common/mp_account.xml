@@ -111,8 +111,9 @@
                     <field name="team_id"/>
                   </group>
                   <group name="order_state_config">
-                    <field name="get_unpaid_orders" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
-                    <field name="get_cancelled_orders"/>
+                    <field name="create_invoice" widget="boolean_toggle"/>
+                    <field name="get_unpaid_orders" widget="boolean_toggle" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+                    <field name="get_cancelled_orders" widget="boolean_toggle"/>
                   </group>
                 </group>
               </page>
