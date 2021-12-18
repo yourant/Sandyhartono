@@ -43,15 +43,10 @@ class SaleOrder(models.Model):
             records = records.exists()
             for record in records:
                 notes = []
-                notes.append('- PAID VIA %s %s' % (mp_account.marketplace.upper(),
-                                                   mp_account.company_id.name.upper()))
                 notes.append('- %s' % (record.mp_invoice_number))
-                for delivery in record.order_line:
-                    if delivery.is_delivery:
-                        price = "Rp{:,.0f}".format(delivery.price_unit)
-                        delivery_text = '- Ongkos Kirim (%s kg) %s' % (str(record.mp_order_weight), price)
-                        notes.append(delivery_text)
-
+                price = "Rp{:,.0f}".format(record.mp_delivery_fee)
+                delivery_text = '- Ongkos Kirim (%s kg) %s' % (str(round(record.mp_order_weight, 3)), price)
+                notes.append(delivery_text)
                 note = '\n'.join(notes)
                 record.write({'note': note})
 
