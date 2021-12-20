@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2021 IZI PT Solusi Usaha Mudah
-
+import time
 from .api import ShopeeAPI
 
 
@@ -77,6 +77,7 @@ class ShopeeProduct(ShopeeAPI):
                                                       })
                 sp_data_list = self.process_response('product_list', self.request(**prepared_request))
                 if sp_data_list:
+                    time.sleep(1)
                     raw_data, sp_data = self.get_product_info(sp_data_list['item'])
                     self.product_data.extend(sp_data)
                     self.product_data_raw.extend(raw_data)
