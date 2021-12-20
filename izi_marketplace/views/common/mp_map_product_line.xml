@@ -8,6 +8,7 @@
         <search string="Marketplace Map Product Line">
           <field name="name" string="Product" filter_domain="[('name','ilike',self)]"/>
           <field name="default_code" string="Internal Reference" filter_domain="[('default_code','ilike',self)]"/>
+          <field name="notes" string="Product Notes" filter_domain="[('notes','ilike',self)]"/>
           <separator/>
           <filter string="Products" name="products" domain="[('map_type','=', 'product')]"/>
           <filter string="Variants" name="variants" domain="[('map_type', '=', 'variant')]"/>
