@@ -16,7 +16,7 @@
           <filter string="Mapped By System" name="filter_to_mapped_by_system" domain="[('state','=', 'mapped_by_system')]"/>
           <filter string="Mapped By User" name="filter_to_mapped_by_user" domain="[('state','=', 'mapped_by_user')]"/>
           <filter string="Unmapped By System" name="filter_to_unmapped_by_system" domain="[('state', '=', 'unmapped_by_system')]"/>
-          <filter string="Unmapped By System" name="filter_to_unmapped_by_user" domain="[('state', '=', 'unmapped_by_user')]"/>
+          <filter string="Unmapped By User" name="filter_to_unmapped_by_user" domain="[('state', '=', 'unmapped_by_user')]"/>
           <separator/>
           <group name="filter_per_mp"/>
           <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
