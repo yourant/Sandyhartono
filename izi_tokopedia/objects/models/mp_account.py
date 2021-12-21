@@ -301,8 +301,16 @@ class MarketplaceAccount(models.Model):
         tp_data_raws, tp_data_sanitizeds = [], []
         tp_variant_ids = []
         for mp_product in mp_products:
+            variant_need_to_remove = []
             mp_product_raw = json.loads(mp_product.raw, strict=False)
             tp_variant_ids.extend(json_digger(mp_product_raw, 'variant/childrenID'))
+            mp_variant_exid_list = json_digger(mp_product_raw, 'variant/childrenID')
+
+            for variant_obj in mp_product.mp_product_variant_ids:
+                if int(variant_obj.tp_variant_id) not in mp_variant_exid_list:
+                    variant_need_to_remove.append(variant_obj.tp_variant_id)
+
+            mp_product.mp_product_variant_ids.filtered(lambda r: r.tp_variant_id in variant_need_to_remove).unlink()
 
         tp_variant_ids_splited = mp_product_variant_obj.create_chunks(tp_variant_ids, 500)
         for tp_variant_ids in tp_variant_ids_splited:
