@@ -85,30 +85,31 @@ class MarketplaceMapProduct(models.Model):
         field_mappings = self.field_mapping_ids
         lookup_field = None
 
-        if record._name == 'mp.product':
-            lookup_field = 'mp_product_field_id'
-        elif record._name == 'mp.product.variant':
-            lookup_field = 'mp_product_variant_field_id'
+        if record and record.exists():
+            if record._name == 'mp.product':
+                lookup_field = 'mp_product_field_id'
+            elif record._name == 'mp.product.variant':
+                lookup_field = 'mp_product_variant_field_id'
 
-        for field_mapping in field_mappings:
-            domain = []
-            if not self.debug_force_mapping_without_company:
-                domain.append(('company_id', '=', self.company_id.id))
-            key = field_mapping.product_field_id.name
-            value = getattr(record, getattr(field_mapping, lookup_field).name)
-            if not value:
-                domain.append(('id', '=', 0))
-            if field_mapping.product_field_id.ttype == 'char':
-                domain.append((key, '=ilike', value))
-            else:
-                domain.append((key, '=', value))
-            _logger.info("Looking for product using domain: %s" % domain)
-            product = product_obj.search(domain)
-            if product.exists() and len(product) == 1:
-                _logger.info("Product found: %s" % product.display_name)
-                return product
-            _logger.info("Product not found, continue to the next lookup...")
-            continue
+            for field_mapping in field_mappings:
+                domain = []
+                if not self.debug_force_mapping_without_company:
+                    domain.append(('company_id', '=', self.company_id.id))
+                key = field_mapping.product_field_id.name
+                value = getattr(record, getattr(field_mapping, lookup_field).name)
+                if not value:
+                    domain.append(('id', '=', 0))
+                if field_mapping.product_field_id.ttype == 'char':
+                    domain.append((key, '=ilike', value))
+                else:
+                    domain.append((key, '=', value))
+                _logger.info("Looking for product using domain: %s" % domain)
+                product = product_obj.search(domain)
+                if product.exists() and len(product) == 1:
+                    _logger.info("Product found: %s" % product.display_name)
+                    return product
+                _logger.info("Product not found, continue to the next lookup...")
+                continue
 
         return product_obj
 
@@ -117,33 +118,35 @@ class MarketplaceMapProduct(models.Model):
         self.ensure_one()
         _logger.info('Record: %s' % record)
         product = self.get_product(record)
-        map_line_data = {
-            'map_id': self.id,
-            'name': record.display_name,
-            'default_code': record.default_code,
-            'mp_account_id': self.mp_account_id.id,
-            'marketplace': self.mp_account_id.marketplace,
-            'state': 'mapped' if product.exists() else 'unmapped',
-            'product_id': product.id or None,
-            'mp_product_id': None,
-            'mp_product_variant_id': None,
-            'generated_by_mapping': True if product.exists() else False
-        }
-        if record._name == 'mp.product':
-            map_line_data.update({
-                'mp_product_id': record.id,
-                'mp_product_variant_id': None,
-                'map_type': 'product'
-            })
-        elif record._name == 'mp.product.variant':
-            map_line_data.update({
+        map_line_data = None
+        if record and record.exists():
+            map_line_data = {
+                'map_id': self.id,
+                'name': record.display_name,
+                'default_code': record.default_code,
+                'mp_account_id': self.mp_account_id.id,
+                'marketplace': self.mp_account_id.marketplace,
+                'state': 'mapped_by_system' if product.exists() else 'unmapped_by_system',
+                'product_id': product.id or None,
                 'mp_product_id': None,
-                'mp_product_variant_id': record.id,
-                'map_type': 'variant'
-            })
-        context = self._context
-        _log_counter = '[%s (%s/%s)]' % (record._name, context.get('index', 0) + 1, context.get('count', 0))
-        _logger.info("%s Map line data generated." % _log_counter)
+                'mp_product_variant_id': None,
+                # 'generated_by_mapping': True if product.exists() else False
+            }
+            if record._name == 'mp.product':
+                map_line_data.update({
+                    'mp_product_id': record.id,
+                    'mp_product_variant_id': None,
+                    'map_type': 'product'
+                })
+            elif record._name == 'mp.product.variant':
+                map_line_data.update({
+                    'mp_product_id': None,
+                    'mp_product_variant_id': record.id,
+                    'map_type': 'variant'
+                })
+            context = self._context
+            _log_counter = '[%s (%s/%s)]' % (record._name, context.get('index', 0) + 1, context.get('count', 0))
+            _logger.info("%s Map line data generated." % _log_counter)
         return map_line_data
 
     # @api.multi
@@ -209,14 +212,25 @@ class MarketplaceMapProduct(models.Model):
             _notify('info', "Created %s mapping lines." % len(map_line_datas), notif_sticky=False)
 
         # After creating new map lines, then let's process existing map line that we retrieved previously
-        unmapped_map_lines = existing_map_lines.filtered(lambda ml: ml.state == 'unmapped')
+        unmapped_map_lines = self.map_line_ids.filtered(
+            lambda ml: ml.state == 'unmapped_by_system' or ml.state == 'unmapped_by_user')
+        mapped_map_lines = self.map_line_ids.filtered(
+            lambda ml: ml.state == 'mapped_by_system')
         _logger.info("Processing %s unmapped map lines..." % len(unmapped_map_lines))
         _notify('info', "Processing %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=False)
-        processed, skipped = unmapped_map_lines.do_mapping()
-        _logger.info("Processed %s map lines..." % processed)
-        _notify('info', "Processed %s map lines..." % processed, notif_sticky=False)
-        _logger.info("Skipped %s map lines..." % skipped)
-        _notify('info', "Skipped %s map lines..." % skipped, notif_sticky=False)
+        unmap_processed, unmap_skipped = unmapped_map_lines.do_mapping()
+        _logger.info("Processed %s map lines..." % unmap_processed)
+        _notify('info', "Processed %s map lines..." % unmap_processed, notif_sticky=False)
+        _logger.info("Skipped %s map lines..." % unmap_skipped)
+        _notify('info', "Skipped %s map lines..." % unmap_skipped, notif_sticky=False)
+
+        _logger.info("Processing %s mapped map lines..." % len(mapped_map_lines))
+        _notify('info', "Processing %s mapped map lines..." % len(mapped_map_lines), notif_sticky=False)
+        map_processed, map_skipped = mapped_map_lines.do_mapping()
+        _logger.info("Processed %s map lines..." % map_processed)
+        _notify('info', "Processed %s map lines..." % map_processed, notif_sticky=False)
+        _logger.info("Skipped %s map lines..." % map_skipped)
+        _notify('info', "Skipped %s map lines..." % map_skipped, notif_sticky=False)
 
     # @api.multi
     def action_generate_product(self):
@@ -230,7 +244,8 @@ class MarketplaceMapProduct(models.Model):
         self.action_generate()
 
         # Get Unmapped map_lines and its mp_products
-        unmapped_map_lines = self.map_line_ids.filtered(lambda ml: ml.state == 'unmapped')
+        unmapped_map_lines = self.map_line_ids.filtered(
+            lambda ml: ml.state == 'unmapped_by_system' or ml.state == 'unmapped_by_user')
         mp_products = unmapped_map_lines.mapped('mp_product_id') | unmapped_map_lines.mapped(
             'mp_product_variant_id').mapped('mp_product_id')
         # Get mp_products without variant
@@ -248,7 +263,7 @@ class MarketplaceMapProduct(models.Model):
         _notify('info', "Creating products for %s unmapped map lines..." % len(unmapped_map_lines), notif_sticky=False)
 
         set_values = {
-            'generated_by_mapping': True,
+            # 'generated_by_mapping': True,
             'product_map_ref': '%s,%s' % (self._name, self.id),
         }
         if mp_products_without_variant:
@@ -301,7 +316,7 @@ class MarketplaceMapProduct(models.Model):
                 product_tmpl = product_tmpls.filtered(lambda pt: mp_product_id in pt.mp_product_ids_ref.split(','))
                 product_data.update({
                     'active': True,
-                    'generated_by_mapping': True,
+                    # 'generated_by_mapping': True,
                     'product_tmpl_id': product_tmpl.id
                 })
                 product_data['variant_name'] = product_data.pop('name')
@@ -332,7 +347,8 @@ class MarketplaceMapProduct(models.Model):
         self.ensure_one()
 
         action = self.env.ref('izi_marketplace.action_window_mp_map_product_line').read()[0]
-        action['domain'] = [('map_id', '=', self.id), ('state', '=', 'unmapped')]
+        action['domain'] = [('map_id', '=', self.id), '|', ('state', '=', 'unmapped_by_system'),
+                            ('state', '=', 'unmapped_by_user')]
         return action
 
     # @api.multi
@@ -340,7 +356,8 @@ class MarketplaceMapProduct(models.Model):
         self.ensure_one()
 
         action = self.env.ref('izi_marketplace.action_window_mp_map_product_line').read()[0]
-        action['domain'] = [('map_id', '=', self.id), ('state', '=', 'mapped')]
+        action['domain'] = [('map_id', '=', self.id), '|', ('state', '=', 'mapped_by_system'),
+                            ('state', '=', 'mapped_by_user')]
         return action
 
 
@@ -375,8 +392,10 @@ class MarketplaceMapProductLine(models.Model):
     ]
 
     MAP_LINE_STATES = [
-        ('unmapped', 'Unmapped'),
-        ('mapped', 'Mapped'),
+        ('unmapped_by_system', 'Unmapped By System'),
+        ('mapped_by_system', 'Mapped By System'),
+        ('unmapped_by_user', 'Unmapped By User'),
+        ('mapped_by_user', 'Mapped By User'),
     ]
 
     map_id = fields.Many2one(comodel_name="mp.map.product", string="Product Mapping", required=True)
@@ -396,7 +415,7 @@ class MarketplaceMapProductLine(models.Model):
     mp_product_variant_id = fields.Many2one(comodel_name="mp.product.variant", string="MP Product Variant",
                                             required=False)
     map_type = fields.Selection(string="Type", selection=MAP_LINE_TYPES, required=True)
-    state = fields.Selection(string="Status", selection=MAP_LINE_STATES, required=True, default="unmapped",
+    state = fields.Selection(string="Status", selection=MAP_LINE_STATES, required=True, default="unmapped_by_system",
                              readonly=True)
     generated_by_mapping = fields.Boolean(string="Generated by Mapping?", default=False)
     notes = fields.Text(string="Product Notes")
@@ -414,10 +433,10 @@ class MarketplaceMapProductLine(models.Model):
     @api.onchange('product_id')
     def onchange_product_id(self):
         if self.product_id:
-            self.state = 'mapped'
+            self.state = 'mapped_by_user'
         else:
-            self.state = 'unmapped'
-        self.generated_by_mapping = False
+            self.state = 'unmapped_by_user'
+        # self.generated_by_mapping = False
 
     @api.model
     def get_product_or_variant(self, map_line):
@@ -440,7 +459,7 @@ class MarketplaceMapProductLine(models.Model):
             'mp_product_id': map_line.mp_product_id.id or None,
             'mp_product_variant_id': map_line.mp_product_variant_id.id or None,
             'map_type': map_line.map_type,
-            'generated_by_mapping': map_line.generated_by_mapping
+            # 'generated_by_mapping': map_line.generated_by_mapping
         }
         return current_map_line_data != map_line_data
 
@@ -465,26 +484,39 @@ class MarketplaceMapProductLine(models.Model):
             map_line, map_line_data = mapping
             return dict(dict([('id', map_line.id)]), **map_line_data)
 
-        map_line_datas = list(map(_prepare_map_line_data, need_update_mappings))
+        need_delete_mappings = []
+        tmp_need_update_mappings = []
+
+        for data in need_update_mappings:
+            if not data[1]:
+                need_delete_mappings.append(data)
+            else:
+                tmp_need_update_mappings.append(data)
+
+        map_line_datas = list(map(_prepare_map_line_data, tmp_need_update_mappings))
 
         # Prepare SQL Query
-        tmp_tbl_name = 'tmp_map_line_%s' % uuid.uuid4().hex[:8]
-        tmp_map_line_columns = [
-            "id int4", "map_id int4", "name varchar", "default_code varchar", "mp_account_id int4",
-            "marketplace varchar", "state varchar", "product_id int4",
-            "mp_product_id int4", "mp_product_variant_id int4", "generated_by_mapping bool", "map_type varchar"
-        ]
-        map_line_update_columns = [
-            "%(col)s = %(tmp_tbl)s.%(col)s" % {'col': col, 'tmp_tbl': tmp_tbl_name}
-            for col in map_line_datas[0].keys() if col != 'id'
-        ]
+        if map_line_datas:
+            tmp_tbl_name = 'tmp_map_line_%s' % uuid.uuid4().hex[:8]
+            tmp_map_line_columns = [
+                "id int4", "map_id int4", "name varchar", "default_code varchar", "mp_account_id int4",
+                "marketplace varchar", "state varchar", "product_id int4",
+                "mp_product_id int4", "mp_product_variant_id int4", "map_type varchar"
+            ]
+            map_line_update_columns = [
+                "%(col)s = %(tmp_tbl)s.%(col)s" % {'col': col, 'tmp_tbl': tmp_tbl_name}
+                for col in map_line_datas[0].keys() if col != 'id'
+            ]
 
-        # Execute SQL Query
-        self.env['mp.base'].pg_create_table(tmp_tbl_name, tmp_map_line_columns, temp=True)
-        self.env['mp.base'].pg_copy_from(tmp_tbl_name, map_line_datas)
-        self.env['mp.base'].pg_update("mp_map_product_line", map_line_update_columns, from_table=tmp_tbl_name,
-                                      where="mp_map_product_line.id = %s.id" % tmp_tbl_name)
-        self.env['mp.base'].pg_drop_table(tmp_tbl_name)
+            # Execute SQL Query
+            self.env['mp.base'].pg_create_table(tmp_tbl_name, tmp_map_line_columns, temp=True)
+            self.env['mp.base'].pg_copy_from(tmp_tbl_name, map_line_datas)
+            self.env['mp.base'].pg_update("mp_map_product_line", map_line_update_columns, from_table=tmp_tbl_name,
+                                          where="mp_map_product_line.id = %s.id" % tmp_tbl_name)
+            self.env['mp.base'].pg_drop_table(tmp_tbl_name)
+
+        for map_line_data in need_delete_mappings:
+            map_line_data[0].unlink()
 
         processed = len(map_line_datas)
         skipped = len(mappings) - processed
