@@ -103,22 +103,23 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         res = super(SaleOrder, self).action_confirm()
         for so in self:
-            if so.mp_account_id.create_invoice:
+            if so.mp_account_id and so.mp_account_id.create_invoice:
                 if so.invoice_status == 'to invoice':
                     so._create_invoices(final=True)
-            for move in so.invoice_ids:
-                if move.state == 'draft':
-                    move.action_post()
+                for move in so.invoice_ids:
+                    if move.state == 'draft':
+                        move.action_post()
         return res
 
     def action_cancel(self):
         for so in self:
-            for move in so.invoice_ids:
-                if move.state == 'posted':
-                    move.button_draft()
-                    move.button_cancel()
-                elif move.state == 'draft':
-                    move.button_cancel()
+            if so.mp_account_id and so.mp_account_id.create_invoice:
+                for move in so.invoice_ids:
+                    if move.state == 'posted':
+                        move.button_draft()
+                        move.button_cancel()
+                    elif move.state == 'draft':
+                        move.button_cancel()
         res = super(SaleOrder, self).action_cancel()
         return res
 
