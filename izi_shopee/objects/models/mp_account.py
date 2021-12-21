@@ -305,8 +305,10 @@ class MarketplaceAccount(models.Model):
         sp_product_variant = ShopeeProduct(sp_account, sanitizers=mp_product_obj.get_sanitizers(self.marketplace))
         mp_products = mp_product_obj.search([('sp_has_variant', '=', True), ('mp_account_id', '=', self.id)])
         for mp_product in mp_products:
+            variant_need_to_remove = []
             mp_product_raw = json.loads(mp_product.raw, strict=False)
             mp_product_variant_raw = mp_product_variant_obj.generate_variant_data(mp_product_raw)
+            mp_variant_exid_list = [variant_id['sp_variant_id'] for variant_id in mp_product_variant_raw]
             sp_data_raw, sp_data_sanitized = mp_product_variant_obj.with_context(
                 mp_account_ctx)._prepare_mapping_raw_data(raw_data=mp_product_variant_raw)
 
@@ -321,7 +323,14 @@ class MarketplaceAccount(models.Model):
             mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
                 check_existing_records)
 
+            for variant_obj in mp_product.mp_product_variant_ids:
+                if int(variant_obj.sp_variant_id) not in mp_variant_exid_list:
+                    variant_need_to_remove.append(variant_obj.sp_variant_id)
+
+            mp_product.mp_product_variant_ids.filtered(lambda r: r.sp_variant_id in variant_need_to_remove).unlink()
+
     # @api.multi
+
     def shopee_get_products(self):
         self.ensure_one()
         self.shopee_get_mp_product()

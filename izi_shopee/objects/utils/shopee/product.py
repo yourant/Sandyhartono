@@ -77,10 +77,13 @@ class ShopeeProduct(ShopeeAPI):
                                                       })
                 sp_data_list = self.process_response('product_list', self.request(**prepared_request))
                 if sp_data_list:
-                    time.sleep(1)
-                    raw_data, sp_data = self.get_product_info(sp_data_list['item'])
-                    self.product_data.extend(sp_data)
-                    self.product_data_raw.extend(raw_data)
+                    n = max(1, 25)
+                    split_sp_product_list = [sp_data_list['item'][i:i+n]
+                                             for i in range(0, len(sp_data_list['item']), n)]
+                    for pd_item in split_sp_product_list:
+                        raw_data, sp_data = self.get_product_info(pd_item)
+                        self.product_data.extend(sp_data)
+                        self.product_data_raw.extend(raw_data)
                     self._logger.info("Product: Imported %d of unlimited." % len(self.product_data))
                     if not sp_data_list['has_next_page']:
                         unlimited = False
