@@ -24,6 +24,7 @@ class SaleOrder(models.Model):
         ('UNPAID', 'Unpaid'),
         ('READY_TO_SHIP', 'Ready to Ship'),
         ('PROCESSED', 'Processed'),
+        ('RETRY_SHIP', 'Retry Ship')
         ('SHIPPED', 'Shipped'),
         ('COMPLETED', 'Completed'),
         ('TO_CONFIRM_RECEIVE', 'In Confirm Receive'),
@@ -55,7 +56,7 @@ class SaleOrder(models.Model):
             'to_cancel': ['IN_CANCEL'],
             'cancel': ['CANCELLED'],
             'to_process': [],
-            'in_process': ['READY_TO_SHIP'],
+            'in_process': ['READY_TO_SHIP', 'RETRY_SHIP'],
             'to_ship': ['PROCESSED'],
             'in_ship': ['SHIPPED'],
             'done': ['TO_CONFIRM_RECEIVE', 'COMPLETED'],
