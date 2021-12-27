@@ -13,4 +13,4 @@ class MarketplaceProductImage(models.Model):
     name = fields.Char(string="Image URL", readonly=True)
     image = fields.Binary('Image', attachment=True)
     mp_product_id = fields.Many2one(comodel_name="mp.product", string="Marketplace Product", readonly=True,
-                                    ondelete="restrict")
+                                    ondelete="cascade")

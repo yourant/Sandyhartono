@@ -13,7 +13,7 @@ class MarketplaceProductVariant(models.Model):
     name = fields.Char(string="Product Variant Name", readonly=True)
     active = fields.Boolean(default=True)
     mp_product_id = fields.Many2one(comodel_name="mp.product", string="Marketplace Product", readonly=True,
-                                    ondelete="restrict")
+                                    ondelete="cascade")
     currency_id = fields.Many2one(related="mp_account_id.currency_id")
     company_id = fields.Many2one(related="mp_account_id.company_id")
     default_code = fields.Char(string="Internal Reference")

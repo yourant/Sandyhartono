@@ -157,7 +157,10 @@ class MarketplaceProduct(models.Model):
     def _compute_mp_product_main_image_url(self):
         for mp_product in self:
             mp_product_main_img = mp_product.get_main_image()
-            mp_product.mp_product_main_image_url = mp_product_main_img.name
+            if mp_product_main_img:
+                mp_product.mp_product_main_image_url = mp_product_main_img.name
+            else:
+                mp_product.mp_product_main_image_url = None
 
     @api.depends('mp_product_variant_ids.mp_product_id')
     def _compute_product_variant_count(self):
