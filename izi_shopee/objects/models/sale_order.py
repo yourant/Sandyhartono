@@ -24,7 +24,7 @@ class SaleOrder(models.Model):
         ('UNPAID', 'Unpaid'),
         ('READY_TO_SHIP', 'Ready to Ship'),
         ('PROCESSED', 'Processed'),
-        ('RETRY_SHIP', 'Retry Ship')
+        ('RETRY_SHIP', 'Retry Ship'),
         ('SHIPPED', 'Shipped'),
         ('COMPLETED', 'Completed'),
         ('TO_CONFIRM_RECEIVE', 'In Confirm Receive'),
