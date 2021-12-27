@@ -274,6 +274,14 @@ class MarketplaceAccount(models.Model):
                 notif_sticky=False)
         tp_data_raw, tp_data_sanitized = tp_product.get_product_info(shop_id=self.tp_shop_id.shop_id,
                                                                      limit=mp_account_ctx.get('product_limit'))
+
+        tp_product_exid = list(map(lambda x: str(x['basic']['productID']), tp_data_raw))
+        existing_mp_products = mp_product_obj.search([('mp_account_id', '=', self.id)])
+        mp_product_need_to_deleted = []
+        for mp_product in existing_mp_products:
+            if mp_product.mp_external_id not in tp_product_exid:
+                mp_product_need_to_deleted.append(mp_product.mp_external_id)
+
         check_existing_records_params = {
             'identifier_field': 'tp_product_id',
             'raw_data': tp_data_raw,
@@ -283,6 +291,9 @@ class MarketplaceAccount(models.Model):
         check_existing_records = mp_product_obj.with_context(mp_account_ctx).check_existing_records(
             **check_existing_records_params)
         mp_product_obj.with_context(mp_account_ctx).handle_result_check_existing_records(check_existing_records)
+
+        # deleted mp_product if doesnt exists in marketplace
+        existing_mp_products.filtered(lambda r: r.mp_external_id in mp_product_need_to_deleted).unlink()
 
     # @api.multi
     @mp.tokopedia.capture_error

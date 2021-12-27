@@ -12,7 +12,6 @@ class MPProductVariant(models.Model):
     sp_variant_id = fields.Char(string='Product Variant External ID')
     sp_variant_image_id = fields.Char(string='Product Variant Image ID')
 
-
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
         if not mp_field_mappings:
