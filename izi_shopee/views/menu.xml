@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <menuitem id="izi_shopee.menu_separator_mp_data_shopee" name="Shopee" parent="izi_marketplace.menu_separator_mp_data" sequence="10"/>
+
+    <!-- Marketplace / Marketplace Data / Shopee / Shop -->
+
+    <menuitem id="izi_shopee.menu_item_sp_shop" name="Shop" parent="izi_shopee.menu_separator_mp_data_shopee" action="izi_shopee.action_window_sp_shop" sequence="10"/>
+
+    <!-- Marketplace / Marketplace Data / Shopee / Logistic -->
+    <menuitem id="izi_shopee.menu_item_sp_logistic" name="Logistic" parent="izi_shopee.menu_separator_mp_data_shopee" action="izi_shopee.action_window_sp_logistic" sequence="20"/>
+
+  </data>
+</odoo>

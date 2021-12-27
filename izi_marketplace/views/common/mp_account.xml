@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.search_mp_account" model="ir.ui.view">
+      <field name="name">Marketplace Account Search View</field>
+      <field name="model">mp.account</field>
+      <field name="arch" type="xml">
+        <search string="Marketplace Account">
+          <field name="name"/>
+          <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
+        </search>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.tree_mp_account" model="ir.ui.view">
+      <field name="name">Marketplace Account Tree View</field>
+      <field name="model">mp.account</field>
+      <field name="arch" type="xml">
+        <tree string="Marketplace Account">
+          <field name="name"/>
+          <field name="marketplace"/>
+          <field name="company_id" groups="base.group_multi_company"/>
+          <field name="state"/>
+        </tree>
+      </field>
+    </record>
+
+    <record id="izi_marketplace.form_mp_account" model="ir.ui.view">
+      <field name="name">Marketplace Account Form View</field>
+      <field name="model">mp.account</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Account">
+          <header>
+            <button name="action_authenticate" string="Authenticate" class="oe_highlight" type="object" states="new,authenticating"/>
+            <button name="action_get_dependencies" string="1. Get Dependencies" class="oe_highlight" type="object" states="authenticated"/>
+            <button name="action_get_products" string="2. Get Products" class="oe_highlight" type="object" states="authenticated"/>
+            <button name="action_map_product" string="3. Map Products" class="oe_highlight" type="object" states="authenticated"/>
+            <button name="%(izi_marketplace.action_window_wiz_mp_order)d" string="4. Get Orders" class="oe_highlight" type="action" states="authenticated" context="{'default_mp_account_id': active_id}"/>
+            <button name="action_reauth" string="Re-Authenticate" type="object" states="authenticated"/>
+            <field name="state" widget="statusbar" statusbar_visible="new,authenticated"/>
+          </header>
+          <sheet>
+            <div attrs="{'invisible': ['|', ('auth_message', '=', False), ('auth_message', '=', '')]}">
+              <div class="alert alert-warning text-center o_form_header" role="alert" states="authenticating">
+                <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
+                <div>
+                  <strong>
+                    <field name="auth_message"/>
+                  </strong>
+                </div>
+              </div>
+              <div class="alert alert-success text-center o_form_header" role="alert" states="authenticated">
+                <a class="close" data-dismiss="alert" href="#" aria-hidden="true">x</a>
+                <div>
+                  <strong>
+                    <field name="auth_message"/>
+                  </strong>
+                </div>
+              </div>
+            </div>
+            <div class="oe_button_box" name="button_box">
+              <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                <field name="active" widget="boolean_button" options="{&quot;terminology&quot;: &quot;archive&quot;}"/>
+              </button>
+              <button name="action_view_mp_product" string="MP Products" class="oe_stat_button" icon="fa-bars" type="object" states="authenticating,authenticated"/>
+            </div>
+            <div class="oe_title">
+              <label for="name" class="oe_edit_only"/>
+              <h1>
+                <field name="name"/>
+              </h1>
+            </div>
+            <group>
+              <group>
+                <field name="marketplace"/>
+              </group>
+              <group>
+                <field name="cron_active" widget="boolean_toggle"/>
+                <field name="cron_id"/>
+                <field name="cron_nextcall"/>
+                <label for="cron_interval_number"/>
+                <div>
+                  <field name="cron_interval_number" class="oe_inline" />
+                  <field name="cron_interval_type" class="oe_inline" />
+                </div>
+              </group>
+              <group>
+                <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
+                <field name="currency_id" groups="base.group_multi_currency" options="{'no_create': True}"/>
+              </group>
+            </group>
+            <notebook>
+              <page name="mp_credential" string="Credential">
+                <group name="mp_credential" string="Marketplace Account" attrs="{'invisible': [('marketplace', '=', False)]}"></group>
+                <group name="mp_token" string="Marketplace Token" attrs="{'invisible': ['|', ('state', '!=', 'authenticated'), ('access_token', '=', False)]}">
+                  <field name="access_token"/>
+                  <field name="access_token_expired_date"/>
+                </group>
+              </page>
+              <page name="mp_order" string="Order">
+                <group name="mp_order" string="Marketplace Order" attrs="{'invisible': [('marketplace', '=', False)]}">
+                  <group name="product_configuration">
+                    <field name="insurance_product_id"/>
+                    <field name="global_discount_product_id"/>
+                    <field name="adjustment_product_id"/>
+                  </group>
+                  <group name="sales_configuration">
+                    <field name="partner_id"/>
+                    <field name="warehouse_id" domain="[('company_id', '=', company_id)]"/>
+                    <field name="user_id" domain="[('company_id', '=', company_id)]"/>
+                    <field name="team_id"/>
+                  </group>
+                  <group name="order_state_config">
+                    <field name="create_invoice" widget="boolean_toggle"/>
+                    <field name="get_unpaid_orders" widget="boolean_toggle" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}"/>
+                    <field name="get_cancelled_orders" widget="boolean_toggle"/>
+                  </group>
+                </group>
+              </page>
+              <page name="mp_webhook" string="Webhook">
+                <group name="mp_webhook" string="Marketplace Webhook" attrs="{'invisible': [('marketplace', '=', False)]}">
+                  <group>
+                    <field name="mp_webhook_state"/>
+                  </group>
+                </group>
+                <button name="register_webhooks" string="Register Webhooks" icon="fa-upload" type="object" style="margin: 10px;"/>
+                <button name="unregister_webhooks" string="Unregister Webhooks" icon="fa-upload" type="object" style="margin: 10px;"/>
+              </page>
+              <page name="mp_log_error" string="Marketplace Log Error" attrs="{'invisible': [('marketplace', '!=', False), ('debug_skip_error', '=', False)]}">
+                <field name="mp_log_error_ids">
+                  <tree options="{'no_create': True}">
+                    <button type="object" name="retry_get_record" icon="fa-refresh" />
+                    <field name="last_retry_time" readonly="1"/>
+                    <field name="model_name" readonly="1"/>
+                    <field name="mp_external_id" readonly="1"/>
+                    <field name="name" readonly="1"/>
+                    <field name="mp_log_status" readonly="1"/>
+                    <field name="notes" readonly="1"/>
+                  </tree>
+                </field>
+              </page>
+              <page name="debug" string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="debug_force_update" widget="boolean_toggle"/>
+                  <field name="debug_force_update_raw" widget="boolean_toggle"/>
+                  <field name="debug_store_product_img" widget="boolean_toggle"/>
+                  <field name="debug_skip_error" widget="boolean_toggle"/>
+                  <field name="debug_product_limit"/>
+                  <field name="debug_order_limit"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

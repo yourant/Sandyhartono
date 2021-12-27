@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_wiz_upload_public_key" model="ir.ui.view">
+      <field name="name">Wizard Upload Public Key</field>
+      <field name="model">wiz.upload_public_key</field>
+      <field name="arch" type="xml">
+        <form string="Upload Key Pair">
+          <group>
+            <field name="mp_account_id" invisible="1"/>
+            <field name="tp_private_key_file"/>
+            <field name="tp_public_key_file"/>
+          </group>
+          <footer>
+            <button name="do_upload_key_pair" type="object" string="Upload" class="btn-primary"/>
+            <button string="Cancel" class="btn-secondary" special="cancel"/>
+          </footer>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

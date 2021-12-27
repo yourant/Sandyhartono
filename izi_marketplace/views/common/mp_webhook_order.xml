@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="izi_marketplace.search_mp_webhook_order" model="ir.ui.view">
+            <field name="name">Webhook Order Search View</field>
+            <field name="model">mp.webhook.order</field>
+            <field name="arch" type="xml">
+                <search string="Webhook Order">
+                    <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>
+                    <filter name="group_by_mp_account" string="MP Account" context="{'group_by': 'mp_account_id'}"/>
+                    <filter name="group_by_mp_invoice_number" string="MP Invoice Number" context="{'group_by': 'mp_invoice_number'}"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="izi_marketplace.mp_webhook_order_tree" model="ir.ui.view">
+            <field name="name">mp.webhook.order.tree</field>
+            <field name="model">mp.webhook.order</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="mp_account_id"/>
+                    <field name="marketplace"/>
+                    <field name="order_update_time"/>
+                    <field name="mp_invoice_number"/>
+                </tree>
+            </field>
+        </record>
+
+    </data>
+</odoo>

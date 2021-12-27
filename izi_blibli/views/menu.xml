@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <menuitem id="izi_blibli.menu_separator_mp_data_blibli" name="Blibli" parent="izi_marketplace.menu_separator_mp_data" sequence="10"/>
+    
+    <!-- Marketplace / Marketplace Data / Blibli / Shop -->
+    <menuitem id="izi_blibli.menu_item_bli_shop" name="Shop" parent="izi_blibli.menu_separator_mp_data_blibli" action="izi_blibli.action_window_bli_shop" sequence="10"/>
+
+    <!-- Marketplace / Marketplace Data / Blibli / Logistic -->
+    <menuitem id="izi_blibli.menu_item_bli_logistic" name="Logistic" parent="izi_blibli.menu_separator_mp_data_blibli" action="izi_blibli.action_window_bli_logistic" sequence="20"/>
+  </data>
+</odoo>

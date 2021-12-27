@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="view_order_form">
+            <field name="name">sale.order.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="izi_marketplace.form_sale_order"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='order_status']" position="inside">
+                    <field name="sp_order_status" readonly="1" attrs="{'invisible':[('marketplace', '!=', 'shopee')]}"/>
+                </xpath>
+                <xpath expr="//group[@name='delivery_info']" position="inside">
+                    <field name="sp_pickup_date" readonly="1" attrs="{'invisible':['|',('marketplace', '!=', 'shopee'), ('mp_order_status', '!=', 'to_ship')]}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="izi_shopee.search_sale_order" model="ir.ui.view">
+            <field name="name">Marketplace Order Search View</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='filter_per_mp']" position="inside">
+                    <filter string="Shopee" name="filter_to_shopee" domain="[('marketplace','=', 'shopee')]"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="izi_shopee.form_sale_order" model="ir.ui.view">
+            <field name="name">Sale Order Form View</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="izi_marketplace.form_sale_order"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@name='mp_actions']" position="inside">
+                    <div style="margin: 10px" attrs="{'invisible': [('marketplace', '!=', 'shopee')]}">
+                        <button name="shopee_drop_off" string="Drop Off" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ('drop off', 'both'))]}" style="margin-right: 5px;"/>
+                        <button name="shopee_request_pickup" string="Request Pickup" class="btn-info" type="object" icon="fa-check-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'in_process'),('mp_delivery_type', 'not in', ('pickup', 'both'))]}" style="margin-right: 5px;"/>
+                        <button name="shopee_reject_order" string="Reject Order" class="btn-danger" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', 'not in', ('in_process', 'to_ship'))]}" style="margin-right: 5px;"/>
+                        <button name="shopee_accept_cancellation_order" string="Accept Cancellation Order" class="btn-danger" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_cancel')]}" style="margin-right: 5px;" confirm="Are you sure to Accept request cancel these orders?"/>
+                        <button name="shopee_reject_cancellation_order" string="Reject Cancellation Order" class="btn-info" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_cancel')]}" style="margin-right: 5px;" confirm="Are you sure to Reject request cancel these orders?"/>
+                        <button name="shopee_print_label" string="Get Airways Bill" class="btn-info" type="object" icon="fa-times-circle" attrs="{'invisible': [('mp_order_status', '!=', 'to_ship')]}" style="margin-right: 5px;"/>
+                        <button name="shopee_get_awb_num" string="Get AWB Number" class="btn-info" type="object" icon="fa-times-circle" attrs="{'invisible': ['|',('mp_order_status', '!=', 'to_ship'), ('mp_awb_number', 'not in', [False, ''])]}" style="margin-right: 5px;"/>
+                        <button name="shopee_fetch_order" string="Re-Fetch MP Order Data" type="object" icon="fa-refresh" context="{'force_update': True}"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="izi_blibli.form_mp_product" model="ir.ui.view">
+            <field name="name">Marketplace Product Form View</field>
+            <field name="model">mp.product</field>
+            <field name="inherit_id" ref="izi_marketplace.form_mp_product"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[@name='mp_product_fields']" position="inside">
+                    <group string="Blibli Data" attrs="{'invisible': [('marketplace', '!=', 'blibli')]}">
+                        <!-- <field name="bli_item_status"/> -->
+                        <field name="bli_has_variant"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

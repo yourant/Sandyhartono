@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_mp_tokopedia_logistic" model="ir.ui.view">
+      <field name="name">Marketplace Tokopedia Logistic Form View</field>
+      <field name="model">mp.tokopedia.logistic</field>
+      <field name="arch" type="xml">
+        <form string="Marketplace Tokopedia Logistic">
+          <sheet>
+            <field name="logo" widget="image_url" class="oe_avatar" readonly="1"/>
+            <div class="oe_title">
+              <label for="shipper_name" class="oe_edit_only"/>
+              <h1>
+                <field name="shipper_name"/>
+              </h1>
+            </div>
+            <group>
+              <field name="product_id" domain="[('type', '=', 'service')]"/>
+            </group>
+            <notebook>
+              <page string="Service(s)">
+                <field name="service_ids">
+                  <tree editable="top" create="0" delete="0">
+                    <field name="service_name"/>
+                    <field name="service_desc"/>
+                    <field name="delivery_type"/>
+                    <field name="product_id" domain="[('type', '=', 'service')]"/>
+                  </tree>
+                </field>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="md5sign"/>
+                  <field name="raw"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="izi_tokopedia.tree_mp_tokopedia_logistic_service" model="ir.ui.view">
+      <field name="name">Marketplace Tokopedia Logistic Service Tree View</field>
+      <field name="model">mp.tokopedia.logistic.service</field>
+      <field name="arch" type="xml">
+        <tree string="Marketplace Tokopedia Logistic Service">
+          <field name="service_name"/>
+          <field name="service_desc"/>
+        </tree>
+      </field>
+    </record>
+  </data>
+</odoo>

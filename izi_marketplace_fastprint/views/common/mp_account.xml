@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace_fastprint.form_mp_account" model="ir.ui.view">
+      <field name="name">Marketplace Account Form View</field>
+      <field name="model">mp.account</field>
+      <field name="inherit_id" ref="izi_marketplace.form_mp_account"/>
+      <field name="arch" type="xml">
+        <xpath expr="//group[@name='sales_configuration']" position="inside">
+          <field name="payment_term_id"/>
+          <field name="pricelist_id"/>
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>

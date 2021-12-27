@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_tokopedia.form_mp_account" model="ir.ui.view">
+      <field name="name">Marketplace Account Form View</field>
+      <field name="model">mp.account</field>
+      <field name="inherit_id" ref="izi_marketplace.form_mp_account"/>
+      <field name="arch" type="xml">
+        <xpath expr="//div[@name='button_box']" position="inside">
+          <img alt="Tokopedia" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}" class="mp-account-img" src="/izi_tokopedia/static/src/img/tp.png"/>
+        </xpath>
+        <xpath expr="//group[@name='mp_credential']" position="inside">
+          <group attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
+            <field name="tp_client_id" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_client_secret" password="True" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_fs_id" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_shop_url" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_shop_id" attrs="{'invisible': [('tp_shop_id', '=', False)]}"/>
+          </group>
+        </xpath>
+        <xpath expr="//group[@name='mp_webhook']" position="inside">
+          <group name='tp_webhook' attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
+            <field name="tp_webhook_secret" attrs="{'required': [('marketplace', '=', 'tokopedia')]}"/>
+            <field name="tp_is_webhook_order"/>
+          </group>
+        </xpath>
+        <xpath expr="//page[@name='mp_credential']" position="after">
+          <page string="Encryption" name="tp_encryption" attrs="{'invisible': [('marketplace', '!=', 'tokopedia')]}">
+            <field name="tp_public_key"/>
+            <button name="generate_rsa_key" string="Generate RSA Key" type="object" style="margin: 10px;"
+                    icon="fa-lock"/>
+            <button name="tokopedia_upload_public_key" string="Upload Existing Key from Local" type="object"
+                    style="margin: 10px;" icon="fa-lock" context="{'close_notifications_and_wizard': True}"/>
+            <button name="tokopedia_register_public_key" string="Register Public Key to Tokopedia" icon="fa-upload"
+                    type="object" style="margin: 10px;"/>
+          </page>
+
+        </xpath>
+      </field>
+    </record>
+  </data>
+</odoo>

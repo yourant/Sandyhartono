@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <!-- Marketplace / Marketplace Data / Tokopedia -->
+    <menuitem id="izi_tokopedia.menu_separator_mp_data_tokopedia" name="Tokopedia"
+              parent="izi_marketplace.menu_separator_mp_data" sequence="10"/>
+
+    <!-- Marketplace / Marketplace Data / Tokopedia / Shop -->
+    <menuitem id="izi_tokopedia.menu_item_tp_shop" name="Shop" parent="izi_tokopedia.menu_separator_mp_data_tokopedia"
+              action="izi_tokopedia.action_window_tp_shop" sequence="10"/>
+
+    <!-- Marketplace / Marketplace Data / Tokopedia / Logistic -->
+    <menuitem id="izi_tokopedia.menu_item_tp_logistic" name="Logistic"
+              parent="izi_tokopedia.menu_separator_mp_data_tokopedia" action="izi_tokopedia.action_window_tp_logistic"
+              sequence="20"/>
+  </data>
+</odoo>

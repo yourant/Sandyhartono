@@ -1,0 +1,20 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"izi_marketplace.access_mp_account_ru_mp_user","MP Account Access for MP User: RU","izi_marketplace.model_mp_account","izi_marketplace.group_mp_user",1,1,0,0
+"izi_marketplace.access_mp_token_r_mp_user","MP Token Access for MP User: R","izi_marketplace.model_mp_token","izi_marketplace.group_mp_user",1,0,0,0
+"izi_marketplace.access_mp_product_r_mp_user","MP Product Access for MP User: R","izi_marketplace.model_mp_product","izi_marketplace.group_mp_user",1,0,0,0
+"izi_marketplace.access_mp_product_variant_r_mp_user","MP Product Variant Access for MP User: R","izi_marketplace.model_mp_product_variant","izi_marketplace.group_mp_user",1,0,0,0
+"izi_marketplace.access_mp_product_image_r_mp_user","MP Product Image Access for MP User: R","izi_marketplace.model_mp_product_image","izi_marketplace.group_mp_user",1,0,0,0
+"izi_marketplace.access_mp_map_product_crud_mp_user","MP Map Product Access for MP User: CRUD","izi_marketplace.model_mp_map_product","izi_marketplace.group_mp_user",1,1,1,1
+"izi_marketplace.access_mp_map_product_field_crud_mp_user","MP Map Product Field Access for MP User: CRUD","izi_marketplace.model_mp_map_product_field","izi_marketplace.group_mp_user",1,1,1,1
+"izi_marketplace.access_mp_map_product_line_crud_mp_user","MP Map Product Line Access for MP User: CRUD","izi_marketplace.model_mp_map_product_line","izi_marketplace.group_mp_user",1,1,1,1
+"izi_marketplace.access_mp_log_error",MP Log Error Access for MP User: CRUD,izi_marketplace.model_mp_log_error,"izi_marketplace.group_mp_user",1,1,1,1
+"izi_marketplace.access_mp_account_crud_mp_manager","MP Account Access for MP Manager: CRUD","izi_marketplace.model_mp_account","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_mp_token_cr_mp_manager","MP Token Access for MP Manager: CR","izi_marketplace.model_mp_token","izi_marketplace.group_mp_manager",1,0,1,0
+"izi_marketplace.access_mp_product_crud_mp_manager","MP Product Access for MP Manager: CRUD","izi_marketplace.model_mp_product","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_mp_product_variant_crud_mp_manager","MP Product Variant Access for MP Manager: CRUD","izi_marketplace.model_mp_product_variant","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_mp_product_image_crud_mp_manager","MP Product Image Access for MP Manager: CRUD","izi_marketplace.model_mp_product_image","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_order_component_config",Order Component Config Access for MP Manager: CRUD,izi_marketplace.model_order_component_config,"izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_order_component_config_line",Order Component Config Line Access for MP Manager: CRUD,izi_marketplace.model_order_component_config_line,"izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_mp_log_error",MP Log Error Access for MP Manager: CRUD,izi_marketplace.model_mp_log_error,"izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_mp_webhook_order",MP Webhook Order for MP Manager: CRUD,izi_marketplace.model_mp_webhook_order,"izi_marketplace.group_mp_manager",1,1,1,1
+"base.access_ir_cron","Cron for MP Manager: CRUD","base.model_ir_cron","izi_marketplace.group_mp_manager",1,1,1,1

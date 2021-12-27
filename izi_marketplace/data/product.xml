@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="0">
+    <record id="izi_marketplace.product_tmpl_mp_delivery" model="product.template">
+      <field name="name">Marketplace Delivery</field>
+      <field name="type">service</field>
+      <field name="list_price">0</field>
+      <field name="sale_ok" eval="False"/>
+      <field name="purchase_ok" eval="False"/>
+      <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="izi_marketplace.product_tmpl_mp_insurance" model="product.template">
+      <field name="name">Marketplace Insurance</field>
+      <field name="type">service</field>
+      <field name="list_price">0</field>
+      <field name="sale_ok" eval="False"/>
+      <field name="purchase_ok" eval="False"/>
+      <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="izi_marketplace.product_tmpl_mp_global_discount" model="product.template">
+      <field name="name">Marketplace Global Discount</field>
+      <field name="type">service</field>
+      <field name="list_price">0</field>
+      <field name="sale_ok" eval="False"/>
+      <field name="purchase_ok" eval="False"/>
+      <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="izi_marketplace.product_tmpl_mp_adjustment" model="product.template">
+      <field name="name">Marketplace Adjustment</field>
+      <field name="type">service</field>
+      <field name="list_price">0</field>
+      <field name="sale_ok" eval="False"/>
+      <field name="purchase_ok" eval="False"/>
+      <field name="company_id" eval="False"/>
+    </record>
+  </data>
+</odoo>
