@@ -268,6 +268,14 @@ class MarketplaceAccount(models.Model):
         _notify('info', 'Importing product from {} is started... Please wait!'.format(self.marketplace.upper()),
                 notif_sticky=False)
         sp_data_raw, sp_data_sanitized = sp_product.get_product_list(limit=mp_account_ctx.get('product_limit'))
+
+        sp_product_exid = list(map(lambda x: str(x['item_id']), sp_data_raw))
+        existing_mp_products = mp_product_obj.search([('mp_account_id', '=', self.id)])
+        mp_product_need_to_deleted = []
+        for mp_product in existing_mp_products:
+            if mp_product.mp_external_id not in sp_product_exid:
+                mp_product_need_to_deleted.append(mp_product.mp_external_id)
+
         check_existing_records_params = {
             'identifier_field': 'sp_product_id',
             'raw_data': sp_data_raw,
@@ -288,6 +296,9 @@ class MarketplaceAccount(models.Model):
         if check_existing_records['need_skip_records']:
             mp_product_obj.with_context(mp_account_ctx).log_skip(
                 self.marketplace, check_existing_records['need_skip_records'])
+
+        # deleted mp_product if doesnt exists in marketplace
+        existing_mp_products.filtered(lambda r: r.mp_external_id in mp_product_need_to_deleted).unlink()
 
     # @api.multi
     @mp.shopee.capture_error
