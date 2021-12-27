@@ -142,6 +142,7 @@ class SaleOrder(models.Model):
             'mp_shipping_deadline': ('ship_by_date', _convert_timestamp_to_datetime),
             'sp_package_number': ('package_list', _get_package_number),
             'mp_awb_number': ('shipping_document_info', _get_tracking_number),
+            'mp_delivery_type': ('shipping_paramater/info_needed', _set_mp_delivery_type)
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
