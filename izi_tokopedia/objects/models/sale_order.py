@@ -15,6 +15,9 @@ from odoo.addons.izi_marketplace.objects.utils.tools import mp
 from odoo.addons.izi_marketplace.objects.utils.tools import merge_dict, json_digger
 from odoo.addons.izi_tokopedia.objects.utils.tokopedia.order import TokopediaOrder
 
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
+
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
