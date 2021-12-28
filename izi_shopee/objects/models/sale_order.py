@@ -196,10 +196,21 @@ class SaleOrder(models.Model):
                 mp_account_ctx).handle_result_check_existing_records(check_existing_records)
             if self._context.get('skip_error'):
                 record_ids_to_unlink = []
+                sp_logistic_obj = self.env['mp.shopee.logistic']
                 for record in records:
                     sp_order_raw = json.loads(record.raw, strict=False)
                     item_list = sp_order_raw.get('item_list', [])
                     record_line = record.order_line.mapped('product_type')
+                    sp_order_shipping = json_digger(sp_order_raw, 'package_list')[0]
+                    sp_logistic_name = str(sp_order_shipping.get('shipping_carrier'))
+                    sp_logistic = sp_logistic_obj.search([('logistics_channel_name', '=', sp_logistic_name)])
+                    delivery_product = sp_logistic.get_delivery_product()
+                    delivery_carrier = self.env['delivery.carrier'].sudo().search(
+                        [('name', '=ilike', delivery_product.name)], limit=1)
+                    if delivery_carrier:
+                        record.write({
+                            'carrier_id': delivery_carrier.id,
+                        })
                     if not record_line:
                         record_ids_to_unlink.append(record.id)
                     elif 'product' not in record_line:
