@@ -236,10 +236,23 @@ class SaleOrder(models.Model):
             order_line_obj.handle_result_check_existing_records(check_existing_records)
             if self._context.get('skip_error'):
                 record_ids_to_unlink = []
+                tp_logistic_service_obj = self.env['mp.tokopedia.logistic.service']
                 for record in records:
                     tp_order_raw = json.loads(record.raw, strict=False)
                     item_list = tp_order_raw.get('order_info').get('order_detail', [])
                     record_line = record.order_line.mapped('product_type')
+
+                    tp_order_shipping = json_digger(tp_order_raw, 'order_info/shipping_info')
+                    tp_logistic_service_id = str(tp_order_shipping.get('sp_id'))
+                    tp_logistic_service = tp_logistic_service_obj.search_mp_records('tokopedia', tp_logistic_service_id)
+                    delivery_product = tp_logistic_service.get_delivery_product()
+                    delivery_carrier = self.env['delivery.carrier'].sudo().search(
+                        [('name', '=ilike', delivery_product.name)], limit=1)
+                    if delivery_carrier:
+                        record.write({
+                            'carrier_id': delivery_carrier.id,
+                        })
+
                     if not record_line:
                         record_ids_to_unlink.append(record.id)
                     elif 'product' not in record_line:
