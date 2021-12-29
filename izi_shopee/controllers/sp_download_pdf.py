@@ -15,7 +15,7 @@ class ShopeeDownloadPDF(http.Controller):
     def download_pdf(self, ids, **kw):
         output_stream = io.BytesIO()
         output = PdfFileWriter()
-        time_now = str((datetime.now() + timedelta(hours=7)) .strftime("%Y%m%d_%H:%M:%S"))
+        time_now = str((datetime.now() + timedelta(hours=7)).strftime("%Y%m%d_%H:%M:%S"))
         output_filename = 'shopee_label_%s' % (time_now)
         for so in ids.split('&'):
             so_awb_datas = request.env['sale.order'].sudo().search([('id', '=', int(so))]).mp_awb_datas
