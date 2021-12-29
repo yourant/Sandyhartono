@@ -43,8 +43,8 @@ class MPShopeeOrderPickupInfo(models.Model):
             if start_datetime and end_datetime:
                 time = start_datetime + '-' + end_datetime
             elif start_datetime and not end_datetime:
-                start_datetime = rec.start_datetime + timedelta(hours=7).strftime('%d-%m-%y, %H:%M')
-                time = start_datetime
+                start_datetime = rec.start_datetime + timedelta(hours=7)
+                time = start_datetime.strftime('%d-%m-%y, %H:%M')
 
             date_time = day+', '+time
 
