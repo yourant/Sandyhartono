@@ -1,6 +1,6 @@
 "id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
 "izi_marketplace.access_mp_account_ru_mp_user","MP Account Access for MP User: RU","izi_marketplace.model_mp_account","izi_marketplace.group_mp_user",1,1,0,0
-"izi_marketplace.access_mp_token_r_mp_user","MP Token Access for MP User: R","izi_marketplace.model_mp_token","izi_marketplace.group_mp_user",1,0,0,0
+"izi_marketplace.access_mp_token_cr_mp_user","MP Token Access for MP User: CR","izi_marketplace.model_mp_token","izi_marketplace.group_mp_user",1,0,1,0
 "izi_marketplace.access_mp_product_r_mp_user","MP Product Access for MP User: R","izi_marketplace.model_mp_product","izi_marketplace.group_mp_user",1,0,0,0
 "izi_marketplace.access_mp_product_variant_r_mp_user","MP Product Variant Access for MP User: R","izi_marketplace.model_mp_product_variant","izi_marketplace.group_mp_user",1,0,0,0
 "izi_marketplace.access_mp_product_image_r_mp_user","MP Product Image Access for MP User: R","izi_marketplace.model_mp_product_image","izi_marketplace.group_mp_user",1,0,0,0
