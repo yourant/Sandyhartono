@@ -58,8 +58,8 @@ class WizardShopeeOrderPickup(models.TransientModel):
                     if start_datetime and end_datetime:
                         str_time = start_datetime + '-' + end_datetime
                     elif start_datetime and not end_datetime:
-                        start_datetime = self.pickup_id.start_datetime + timedelta(hours=7).strftime('%d-%m-%y, %H:%M')
-                        str_time = start_datetime
+                        start_datetime = self.pickup_id.start_datetime + timedelta(hours=7)
+                        str_time = start_datetime.strftime('%d-%m-%y, %H:%M')
 
                     date_time = day+', ' + str_time
                     order.sp_pickup_date = date_time
