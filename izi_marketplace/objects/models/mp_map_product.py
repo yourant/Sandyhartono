@@ -117,9 +117,9 @@ class MarketplaceMapProduct(models.Model):
     def generate_map_line_data(self, record):
         self.ensure_one()
         _logger.info('Record: %s' % record)
-        product = self.get_product(record)
         map_line_data = None
         if record and record.exists():
+            product = self.get_product(record)
             map_line_data = {
                 'map_id': self.id,
                 'name': record.display_name,
@@ -440,7 +440,7 @@ class MarketplaceMapProductLine(models.Model):
 
     @api.model
     def get_product_or_variant(self, map_line):
-        if map_line.mp_product_id and not map_line.mp_product_variant_id:
+        if map_line.mp_product_id and not map_line.mp_product_variant_id and not map_line.mp_product_id.mp_product_variant_ids:
             return map_line.mp_product_id
 
         if not map_line.mp_product_id and map_line.mp_product_variant_id:
