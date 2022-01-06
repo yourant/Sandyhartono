@@ -145,6 +145,10 @@ class SaleOrder(models.Model):
             values.update({
                 'team_id': mp_account.team_id.id,
             })
+        else:
+            values.update({
+                'team_id': False,
+            })
         if mp_account.user_id:
             values.update({
                 'user_id': mp_account.user_id.id,
