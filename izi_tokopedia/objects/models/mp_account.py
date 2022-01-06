@@ -340,7 +340,16 @@ class MarketplaceAccount(models.Model):
         mp_product_variant_obj.with_context(mp_account_ctx).handle_result_check_existing_records(
             check_existing_records)
 
+        # clean variant
+        mp_products = mp_product_obj.search([('mp_product_variant_ids', '!=', False),
+                                            ('tp_has_variant', '=', False),
+                                            ('mp_account_id', '=', self.id)])
+        for product in mp_products:
+            for variant in product.mp_product_variant_ids:
+                variant.unlink()
+
     # @api.multi
+
     def tokopedia_get_products(self):
         self.ensure_one()
         self.tokopedia_get_mp_product()
