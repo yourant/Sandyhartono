@@ -340,8 +340,15 @@ class MarketplaceAccount(models.Model):
 
             mp_product.mp_product_variant_ids.filtered(lambda r: r.sp_variant_id in variant_need_to_remove).unlink()
 
-    # @api.multi
+        # clean variant
+        mp_products = mp_product_obj.search([('mp_product_variant_ids', '!=', False),
+                                            ('sp_has_variant', '=', False),
+                                            ('mp_account_id', '=', self.id)])
+        for product in mp_products:
+            for variant in product.mp_product_variant_ids:
+                variant.unlink()
 
+    # @api.multi
     def shopee_get_products(self):
         self.ensure_one()
         self.shopee_get_mp_product()
