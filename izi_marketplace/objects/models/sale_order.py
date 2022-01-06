@@ -106,7 +106,8 @@ class SaleOrder(models.Model):
             if so.mp_account_id and so.mp_account_id.create_invoice:
                 for line in so.order_line:
                     if line.product_type == 'product':
-                        line.product_id.invoice_policy = 'order'
+                        if line.product_id.invoice_policy == 'delivery':
+                            line.product_id.invoice_policy = 'order'
                 if so.invoice_status == 'to invoice':
                     so._create_invoices(final=True)
                 for move in so.invoice_ids:
