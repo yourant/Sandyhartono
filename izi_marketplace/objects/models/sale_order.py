@@ -407,13 +407,13 @@ class SaleOrder(models.Model):
                                                     if tax.price_include:
                                                         continue
                                                     elif tax.amount_type == 'percent' and tax.amount > 0:
-                                                        normal_price = int(
-                                                            round(normal_price * (100 + tax.amount) / 100), 2)
+                                                        normal_price = round(normal_price * (100 + tax.amount) / 100, 2)
                                             # Calculate Discount %
                                             discount_percentage = 0
                                             if normal_price > 0 and price_unit > 0:
-                                                discount_percentage = int(
-                                                    round((normal_price - price_unit) * 100 / normal_price), 2)
+                                                discount_percentage = round(
+                                                    (normal_price - price_unit) * 100 / normal_price, 2)
+
                                                 if discount_percentage > 0:
                                                     order_line.write({
                                                         'price_unit': normal_price,
