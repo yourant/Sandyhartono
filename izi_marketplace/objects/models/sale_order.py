@@ -166,10 +166,12 @@ class SaleOrder(models.Model):
     def _finish_update_records(self, records):
         records = super(SaleOrder, self)._finish_update_records(records)
         records = self.process_order_component_config(records)
+        record_ids_to_cancel = []
         for rec in records:
             if rec.mp_order_status == 'cancel':
                 if rec.state != 'cancel' and rec.state != 'done':
-                    rec.action_cancel()
+                    record_ids_to_cancel.append(rec.id)
+        records.filtered(lambda r: r.id in record_ids_to_cancel).action_cancel()
         return records
 
     # @api.multi
@@ -377,7 +379,7 @@ class SaleOrder(models.Model):
                                     if line.discount_line_product_type == 'all' or (order_line.get('product_id', False) and order_line.get('product_id') in line.discount_line_product_ids.ids):
                                         price_unit = order_line.price_unit
                                         if 100 - line.percentage_value > 0:
-                                            new_price_unit = round(100 * price_unit / (100 - line.percentage_value))
+                                            new_price_unit = round(100 * price_unit / (100 - line.percentage_value), 2)
                                         order_line.write({
                                             'price_unit': new_price_unit,
                                             'discount': line.percentage_value,
@@ -386,6 +388,7 @@ class SaleOrder(models.Model):
                                     if line.discount_line_product_type == 'all' or (order_line.get('product_id', False) and order_line.get('product_id') in line.discount_line_product_ids.ids):
                                         price_unit = order_line.price_unit
                                         product = order_line.product_id
+                                        qty = order_line.product_uom_qty
                                         if product:
                                             normal_price = 0
                                             if product.map_line_ids:
@@ -405,12 +408,12 @@ class SaleOrder(models.Model):
                                                         continue
                                                     elif tax.amount_type == 'percent' and tax.amount > 0:
                                                         normal_price = int(
-                                                            round(normal_price * (100 + tax.amount) / 100))
+                                                            round(normal_price * (100 + tax.amount) / 100), 2)
                                             # Calculate Discount %
                                             discount_percentage = 0
                                             if normal_price > 0 and price_unit > 0:
                                                 discount_percentage = int(
-                                                    round((normal_price - price_unit) * 100 / normal_price))
+                                                    round((normal_price - price_unit) * 100 / normal_price), 2)
                                                 if discount_percentage > 0:
                                                     order_line.write({
                                                         'price_unit': normal_price,
@@ -449,7 +452,7 @@ class SaleOrder(models.Model):
                             if line.fixed_value:
                                 price_unit = line.fixed_value
                             elif line.percentage_value:
-                                price_unit = round(line.percentage_value * amount_total / 100)
+                                price_unit = round(line.percentage_value * amount_total / 100, 2)
                             record.write({
                                 'order_line': [(0, 0, {
                                     'name': line.name,
