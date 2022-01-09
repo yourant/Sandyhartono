@@ -45,6 +45,8 @@ class MarketplaceProduct(models.Model):
                                             compute="_compute_mp_product_main_image_url", store=True)
     mp_product_variant_ids = fields.One2many(comodel_name="mp.product.variant", inverse_name="mp_product_id",
                                              string="Marketplace Product Variant")
+    mp_product_wholesale_ids = fields.One2many(comodel_name="mp.product.wholesale", inverse_name="mp_product_id",
+                                               string="Marketplace Product Wholesale")
     mp_product_variant_count = fields.Integer(
         '# Product Variants', compute='_compute_product_variant_count')
     debug_store_product_img = fields.Boolean(related="mp_account_id.debug_store_product_img")

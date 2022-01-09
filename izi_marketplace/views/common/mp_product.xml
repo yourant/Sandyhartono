@@ -180,6 +180,24 @@
                   <field name="raw"/>
                 </group>
               </page>
+              <page string="Wholesales" name="wholesale">
+                <group string="Product Wholesales">
+                  <field name="mp_product_wholesale_ids" nolabel="1" view_mode='tree'>
+                    <tree>
+                      <field name="min_qty" readonly="1"/>
+                      <field name="max_qty" readonly="1"/>
+                      <field name="price" readonly="1"/>
+                    </tree>
+                  </field>
+                </group>
+              </page>
+              <page string="Debug" groups="base.group_no_one">
+                <group>
+                  <field name="mp_external_id"/>
+                  <field name="md5sign"/>
+                  <field name="raw"/>
+                </group>
+              </page>
             </notebook>
           </sheet>
         </form>
