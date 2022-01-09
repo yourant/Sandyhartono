@@ -12,7 +12,6 @@ class MarketplaceProduct(models.Model):
     sp_item_status = fields.Char(string="Shopee Product Status", readonly=True)
     sp_has_variant = fields.Boolean(string="Shopee is Variant", readonly=True)
 
-
     @classmethod
     def _add_rec_mp_field_mapping(cls, mp_field_mappings=None):
         if not mp_field_mappings:
@@ -56,9 +55,24 @@ class MarketplaceProduct(models.Model):
                 pictures.append((0, 0, base_data_image))
             return pictures
 
+        def _handle_wholesale(env, data):
+            if data:
+                wholesales = [(5, 0, 0)]
+                for wholesale in data:
+                    vals = {
+                        'mp_account_id': env.context['mp_account_id'],
+                        'min_qty': wholesale['min_count'],
+                        'max_qty': wholesale['max_count'],
+                        'price': wholesale['unit_price'],
+                    }
+                    wholesales.append((0, 0, vals))
+                return wholesales
+            return None
+
         mp_field_mapping.update({
             'list_price': ('item_list/price_info', _handle_price_info),
             'mp_product_image_ids': ('item_list/image', _handle_product_images),
+            'mp_product_wholesale_ids': ('item_list/wholesales', _handle_wholesale)
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))
