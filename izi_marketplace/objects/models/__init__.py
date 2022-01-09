@@ -7,6 +7,7 @@ from . import mp_token
 from . import mp_product
 from . import mp_product_image
 from . import mp_product_variant
+from . import mp_product_wholesale
 from . import mp_map_product
 from . import product_template
 from . import product_product

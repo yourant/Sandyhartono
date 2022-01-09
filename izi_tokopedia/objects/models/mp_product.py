@@ -44,8 +44,23 @@ class MarketplaceProduct(models.Model):
 
             return mp_product_image_data
 
+        def _handle_wholesale(env, data):
+            if data:
+                wholesales = [(5, 0, 0)]
+                for wholesale in data:
+                    vals = {
+                        'mp_account_id': env.context['mp_account_id'],
+                        'min_qty': wholesale['minQuantity'],
+                        'max_qty': wholesale['maxQuantity'],
+                        'price': wholesale['price']['value'],
+                    }
+                    wholesales.append((0, 0, vals))
+                return wholesales
+            return None
+
         mp_field_mapping.update({
-            'mp_product_image_ids': ('pictures', _handle_pictures)
+            'mp_product_image_ids': ('pictures', _handle_pictures),
+            'mp_product_wholesale_ids': ('wholesale', _handle_wholesale)
         })
 
         mp_field_mappings.append((marketplace, mp_field_mapping))

@@ -4,6 +4,7 @@
 "izi_marketplace.access_mp_product_r_mp_user","MP Product Access for MP User: R","izi_marketplace.model_mp_product","izi_marketplace.group_mp_user",1,0,0,0
 "izi_marketplace.access_mp_product_variant_r_mp_user","MP Product Variant Access for MP User: R","izi_marketplace.model_mp_product_variant","izi_marketplace.group_mp_user",1,0,0,0
 "izi_marketplace.access_mp_product_image_r_mp_user","MP Product Image Access for MP User: R","izi_marketplace.model_mp_product_image","izi_marketplace.group_mp_user",1,0,0,0
+"izi_marketplace.access_mp_product_wholesale_r_mp_user","MP Product Wholesale Access for MP User: R","izi_marketplace.model_mp_product_wholesale","izi_marketplace.group_mp_user",1,0,0,0
 "izi_marketplace.access_mp_map_product_crud_mp_user","MP Map Product Access for MP User: CRUD","izi_marketplace.model_mp_map_product","izi_marketplace.group_mp_user",1,1,1,1
 "izi_marketplace.access_mp_map_product_field_crud_mp_user","MP Map Product Field Access for MP User: CRUD","izi_marketplace.model_mp_map_product_field","izi_marketplace.group_mp_user",1,1,1,1
 "izi_marketplace.access_mp_map_product_line_crud_mp_user","MP Map Product Line Access for MP User: CRUD","izi_marketplace.model_mp_map_product_line","izi_marketplace.group_mp_user",1,1,1,1
@@ -13,6 +14,7 @@
 "izi_marketplace.access_mp_product_crud_mp_manager","MP Product Access for MP Manager: CRUD","izi_marketplace.model_mp_product","izi_marketplace.group_mp_manager",1,1,1,1
 "izi_marketplace.access_mp_product_variant_crud_mp_manager","MP Product Variant Access for MP Manager: CRUD","izi_marketplace.model_mp_product_variant","izi_marketplace.group_mp_manager",1,1,1,1
 "izi_marketplace.access_mp_product_image_crud_mp_manager","MP Product Image Access for MP Manager: CRUD","izi_marketplace.model_mp_product_image","izi_marketplace.group_mp_manager",1,1,1,1
+"izi_marketplace.access_mp_product_wholesale_crud_mp_manager","MP Product Wholesale Access for MP Manager: CRUD","izi_marketplace.model_mp_product_wholesale","izi_marketplace.group_mp_manager",1,1,1,1
 "izi_marketplace.access_order_component_config_crud_mp_manager",Order Component Config Access for MP Manager: CRUD,izi_marketplace.model_order_component_config,"izi_marketplace.group_mp_manager",1,1,1,1
 "izi_marketplace.access_order_component_config_line_crud_mp_manager",Order Component Config Line Access for MP Manager: CRUD,izi_marketplace.model_order_component_config_line,"izi_marketplace.group_mp_manager",1,1,1,1
 "izi_marketplace.access_mp_log_error_crud_mp_manager",MP Log Error Access for MP Manager: CRUD,izi_marketplace.model_mp_log_error,"izi_marketplace.group_mp_manager",1,1,1,1

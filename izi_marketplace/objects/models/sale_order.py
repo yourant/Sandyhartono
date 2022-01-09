@@ -396,11 +396,22 @@ class SaleOrder(models.Model):
                                                     if mp_product.mp_account_id == order_line.mp_account_id:
                                                         if mp_product.name == order_line.mp_product_name:
                                                             if mp_product.mp_product_variant_id:
-                                                                normal_price = mp_product.mp_product_variant_id.list_price
-                                                                break
+                                                                variant_obj = mp_product.mp_product_variant_id
+                                                                for wholesale in variant_obj.mp_product_id.mp_product_wholesale_ids:
+                                                                    if qty >= wholesale.min_qty and qty <= wholesale.max_qty:
+                                                                        normal_price = wholesale.price
+                                                                        break
+                                                                if normal_price == 0:
+                                                                    normal_price = mp_product.mp_product_variant_id.list_price
+                                                                    break
                                                             elif mp_product.mp_product_id:
-                                                                normal_price = mp_product.mp_product_id.list_price
-                                                                break
+                                                                for wholesale in mp_product.mp_product_id.mp_product_wholesale_ids:
+                                                                    if qty >= wholesale.min_qty and qty <= wholesale.max_qty:
+                                                                        normal_price = wholesale.price
+                                                                        break
+                                                                if normal_price == 0:
+                                                                    normal_price = mp_product.mp_product_id.list_price
+                                                                    break
                                             if normal_price == 0:
                                                 normal_price = product.product_tmpl_id.list_price
                                                 for tax in product.product_tmpl_id.taxes_id:
