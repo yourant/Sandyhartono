@@ -188,7 +188,7 @@ class SaleOrder(models.Model):
         tp_order_statuses = {
             'waiting': ['11', '100', '103', '200'],
             'to_cancel': ['401'],
-            'cancel': ['0', '2', '3', '4', '5', '10', '15', '690', '691', '695', '698', '699'],
+            'cancel': ['0', '2', '3', '4', '5', '10', '15'],
             'to_process': ['220', '221'],
             'in_process': [],
             'to_ship': ['400'],
