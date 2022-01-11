@@ -59,7 +59,8 @@ class SaleOrder(models.Model):
             'in_process': ['READY_TO_SHIP', 'RETRY_SHIP'],
             'to_ship': ['PROCESSED'],
             'in_ship': ['SHIPPED'],
-            'done': ['TO_CONFIRM_RECEIVE', 'COMPLETED'],
+            'delivered': ['TO_CONFIRM_RECEIVE'],
+            'done': ['COMPLETED'],
             'return': ['TO_RETURN']
         }
         mp_order_statuses.append((marketplace, (sp_order_status_field, sp_order_statuses)))

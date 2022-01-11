@@ -21,6 +21,7 @@
           <filter string="In Process" name="in_process" domain="[('mp_order_status','=', 'in_process')]"/>
           <filter string="To Ship" name="to_ship" domain="[('mp_order_status','=', 'to_ship')]"/>
           <filter string="In Shipping" name="in_ship" domain="[('mp_order_status','=', 'in_ship')]"/>
+          <filter string="Delivered" name="delivered" domain="[('mp_order_status','=', 'delivered')]"/>
           <filter string="Done" name="done" domain="[('mp_order_status','=', 'done')]"/>
           <filter string="Returned" name="return" domain="[('mp_order_status','=', 'return')]"/>
           <filter name="group_by_marketplace" string="Marketplace" context="{'group_by': 'marketplace'}"/>

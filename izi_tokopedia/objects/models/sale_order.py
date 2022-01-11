@@ -193,7 +193,8 @@ class SaleOrder(models.Model):
             'in_process': [],
             'to_ship': ['400'],
             'in_ship': ['450', '500', '501', '520', '530', '540'],
-            'done': ['600', '601', '700', '701'],
+            'delivered': ['600', '601', '690', '691', '695', '698', '699'],
+            'done': ['700', '701'],
             'return': ['550']
         }
         mp_order_statuses.append((marketplace, (tp_order_status_field, tp_order_statuses)))
