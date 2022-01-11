@@ -24,6 +24,7 @@ class SaleOrder(models.Model):
         ('in_process', 'In Process'),
         ('to_ship', 'To Ship'),
         ('in_ship', 'In Shipping'),
+        ('delivered', 'Delivered'),
         ('done', 'Done'),
         ('return', 'Returned'),
     ]
