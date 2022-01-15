@@ -11,5 +11,32 @@
                 </xpath>
             </field>
         </record>
+        <record model="ir.ui.view" id="izi_marketplace_fastprint.view_order_tree">
+            <field name="name">Sale Order View</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree[1]" position="inside">
+                    <field name="qty_warning" invisible="1"/>
+                </xpath>
+                <xpath expr="//tree" position="attributes">
+                    <attribute name="decoration-danger">qty_warning==True</attribute>
+                </xpath>
+
+            </field>
+        </record>
+        <record model="ir.ui.view" id="izi_marketplace_fastprint.view_quotation_tree">
+            <field name="name">Sale Order Tree View</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_quotation_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree[1]" position="inside">
+                    <field name="qty_warning" invisible="1"/>
+                </xpath>
+                <xpath expr="//tree" position="attributes">
+                    <attribute name="decoration-danger">qty_warning==True</attribute>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>
