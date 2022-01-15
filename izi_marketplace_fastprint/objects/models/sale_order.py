@@ -10,6 +10,16 @@ class SaleOrder(models.Model):
     mp_order_weight = fields.Float(string="MP Order Weight (KG)", digits='Stock Weight',
                                    help="The weight of the contents in Kg, not including any packaging, etc.",
                                    compute='_calculate_product_weight')
+    qty_warning = fields.Boolean(compute='_compute_qty_warning')
+
+    def _compute_qty_warning(self):
+        for rec in self:
+            qty_warning = False
+            for line in rec.order_line:
+                if line.product_id.qty_available < line.product_uom_qty and line.display_qty_widget:
+                    qty_warning = True
+                    break
+            rec.qty_warning = qty_warning
 
     def _calculate_product_weight(self):
         for rec in self:
