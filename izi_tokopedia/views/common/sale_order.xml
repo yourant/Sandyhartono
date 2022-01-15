@@ -24,6 +24,17 @@
       </field>
     </record>
 
+    <record id="izi_tokopedia.view_order_product_search" model="ir.ui.view">
+      <field name="name">Marketplace Order Report Search View</field>
+      <field name="model">sale.report</field>
+      <field name="inherit_id" ref="izi_marketplace.view_order_product_search"/>
+      <field name="arch" type="xml">
+        <xpath expr="//group[@name='filter_per_mp']" position="inside">
+          <filter string="Tokopedia" name="filter_to_tokopedia" domain="[('order_id.mp_account_id.marketplace','=', 'tokopedia')]"/>
+        </xpath>
+      </field>
+    </record>
+
     <record id="izi_tokopedia.form_sale_order" model="ir.ui.view">
       <field name="name">Sale Order Form View</field>
       <field name="model">sale.order</field>
